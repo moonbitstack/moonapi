@@ -4,13 +4,13 @@
 
 **A typed web framework for MoonBit — `← FastAPI`.**
 
-[![Check and Test](https://github.com/Lfan-ke/moonapi/actions/workflows/ci.yml/badge.svg)](https://github.com/Lfan-ke/moonapi/actions/workflows/ci.yml)
+[![Check and Test](https://github.com/moonbitstack/moonapi/actions/workflows/ci.yml/badge.svg)](https://github.com/moonbitstack/moonapi/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
 [![mooncakes](https://img.shields.io/badge/mooncakes-Lfan--ke%2Fmoonapi-brightgreen)](https://mooncakes.io/docs/Lfan-ke/moonapi)
 
 </div>
 
-`moonapi` builds an [`AsgiApp`](https://github.com/Lfan-ke/moonasgi) from typed routes and generates its own **OpenAPI / Swagger** document — the role FastAPI plays for Python. It depends only on `moonasgi`, so it's backend-agnostic (routing and OpenAPI run in-process on every backend); a server such as [`mooncat`](https://github.com/Lfan-ke/mooncat) runs the resulting app.
+`moonapi` builds an [`AsgiApp`](https://github.com/moonbitstack/moonasgi) from typed routes and generates its own **OpenAPI / Swagger** document — the role FastAPI plays for Python. It depends only on `moonasgi`, so it's backend-agnostic (routing and OpenAPI run in-process on every backend); a server such as [`mooncat`](https://github.com/moonbitstack/mooncat) runs the resulting app.
 
 ```mermaid
 flowchart LR

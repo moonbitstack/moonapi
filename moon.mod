@@ -1,10 +1,10 @@
 name = "Lfan-ke/moonapi"
 
-version = "0.8.0"
+version = "0.8.1"
 
 readme = "README.md"
 
-repository = "https://github.com/Lfan-ke/moonapi"
+repository = "https://github.com/moonbitstack/moonapi"
 
 license = "Apache-2.0"
 

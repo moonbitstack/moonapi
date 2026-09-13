@@ -10,7 +10,7 @@ moon run examples/01-openapi
 
 Everything runs in-process through `App::handle` / `drive_websocket`, so every
 example works on every backend; a server such as
-[`mooncat`](https://github.com/Lfan-ke/mooncat) runs the same `App::to_asgi`
+[`mooncat`](https://github.com/moonbitstack/mooncat) runs the same `App::to_asgi`
 over a real transport.
 
 | # | Example | What it shows | Key API |
@@ -41,6 +41,6 @@ over a real transport.
 | 23 | [`lifespan`](23-lifespan/) | Startup and shutdown hooks, run through the moonasgi lifespan core so the order is visible without a server | `App::on_startup`, `App::on_shutdown`, `App::lifespan_handler` |
 
 The document `openapi_json(version=OpenApi31)` prints is the same one a server
-([`mooncat`](https://github.com/Lfan-ke/mooncat)) serves at `/openapi.json`
+([`mooncat`](https://github.com/moonbitstack/mooncat)) serves at `/openapi.json`
 after `App::to_asgi`; swap `OpenApi31` for `OpenApi30` or `Swagger20` to emit the
 other spec versions off the identical routes.
