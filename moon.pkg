@@ -2,7 +2,7 @@
 // — it depends only on moonasgi, so it runs in-process on every backend; the
 // async transport lives in the server (mooncat) that serves its AsgiApp.
 import {
-  "Lfan-ke/moonasgi",
+  "moonbitstack/moonasgi",
   "moonbitlang/core/json",
   "moonbitlang/core/buffer",
   "moonbitlang/core/string",

@@ -1,5 +1,5 @@
 import {
-  "Lfan-ke/moonapi",
+  "moonbitstack/moonapi",
 }
 
 pkgtype(kind: "executable")

@@ -1,6 +1,6 @@
 import {
-  "Lfan-ke/moonapi",
-  "Lfan-ke/moonasgi",
+  "moonbitstack/moonapi",
+  "moonbitstack/moonasgi",
   "moonbitlang/core/encoding/utf8",
 }
 

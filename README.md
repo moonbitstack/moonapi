@@ -6,9 +6,11 @@
 
 [![Check and Test](https://github.com/moonbitstack/moonapi/actions/workflows/ci.yml/badge.svg)](https://github.com/moonbitstack/moonapi/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
-[![mooncakes](https://img.shields.io/badge/mooncakes-Lfan--ke%2Fmoonapi-brightgreen)](https://mooncakes.io/docs/Lfan-ke/moonapi)
+[![mooncakes](https://img.shields.io/badge/mooncakes-Lfan--ke%2Fmoonapi-brightgreen)](https://mooncakes.io/docs/moonbitstack/moonapi)
 
 </div>
+
+> Moved on mooncakes from `Lfan-ke/moonapi` to `moonbitstack/moonapi`.
 
 `moonapi` builds an [`AsgiApp`](https://github.com/moonbitstack/moonasgi) from typed routes and generates its own **OpenAPI / Swagger** document — the role FastAPI plays for Python. It depends only on `moonasgi`, so it's backend-agnostic (routing and OpenAPI run in-process on every backend); a server such as [`mooncat`](https://github.com/moonbitstack/mooncat) runs the resulting app.
 
