@@ -1,6 +1,5 @@
 import {
   "moonbitstack/moonapi",
-  "moonbitstack/moonasgi",
 }
 
 pkgtype(kind: "executable")

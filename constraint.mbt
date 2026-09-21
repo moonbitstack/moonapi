@@ -227,3 +227,6 @@ fn pattern_matches(s : String, p : String) -> Bool {
   let re = @string.Regex::Regex(p) catch { _ => return false }
   re.execute(s) is Some(_)
 }
+
+///|
+pub extend Constraint with Eq::{not_equal, equal}

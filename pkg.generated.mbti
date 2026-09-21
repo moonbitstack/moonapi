@@ -282,7 +282,11 @@ pub(all) struct Address {
   city : String
   zip : String
 } derive(Eq, ToJson)
+pub fn Address::equal(Self, Self) -> Bool
+pub fn Address::not_equal(Self, Self) -> Bool
 pub fn Address::schema() -> Schema
+pub fn Address::to_json(Self) -> Json
+pub fn Address::to_schema(Self) -> Schema
 pub impl ToSchema for Address
 
 pub(all) struct ApiInfo {
@@ -312,6 +316,8 @@ pub(all) enum ApiKeyIn {
   KeyQuery
   KeyCookie
 } derive(Eq)
+pub fn ApiKeyIn::equal(Self, Self) -> Bool
+pub fn ApiKeyIn::not_equal(Self, Self) -> Bool
 
 pub struct App {
   routes : Array[Route]
@@ -402,6 +408,8 @@ pub(all) enum Constraint {
   MinItems(Int)
   MaxItems(Int)
 } derive(Eq)
+pub fn Constraint::equal(Self, Self) -> Bool
+pub fn Constraint::not_equal(Self, Self) -> Bool
 
 pub(all) struct Contact {
   name : String
@@ -460,6 +468,8 @@ type DeclaredScheme
 pub(all) enum Dep {
   Greeting(String)
 } derive(Eq)
+pub fn Dep::equal(Self, Self) -> Bool
+pub fn Dep::not_equal(Self, Self) -> Bool
 
 pub struct Deps {
   open : () -> DepsScope
@@ -503,7 +513,9 @@ pub(all) struct Endpoint {
   request_required : Bool
   responses : Array[ResponseSpec]
 } derive(Eq)
+pub fn Endpoint::equal(Self, Self) -> Bool
 pub fn Endpoint::new(params? : Array[Param], request_body? : Schema?, request_required? : Bool, responses? : Array[ResponseSpec]) -> Self
+pub fn Endpoint::not_equal(Self, Self) -> Bool
 pub fn Endpoint::validate(Self, Context) -> Array[ValidationError]
 
 pub(all) struct Field {
@@ -514,32 +526,44 @@ pub(all) struct Field {
   constraints : Array[Constraint]
   default : Json?
 } derive(Eq)
+pub fn Field::equal(Self, Self) -> Bool
 pub fn Field::is_required(Self) -> Bool
 pub fn Field::new(String, Schema, required? : Bool, description? : String, constraints? : Array[Constraint], default? : Json) -> Self
+pub fn Field::not_equal(Self, Self) -> Bool
 
 pub(all) struct FormData {
   fields : Array[FormField]
   files : Array[UploadFile]
 } derive(Eq)
+pub fn FormData::equal(Self, Self) -> Bool
 pub fn FormData::field(Self, String) -> String?
 pub fn FormData::field_all(Self, String) -> Array[String]
 pub fn FormData::file(Self, String) -> UploadFile?
+pub fn FormData::not_equal(Self, Self) -> Bool
 
 pub(all) struct FormField {
   name : String
   value : String
 } derive(Eq)
+pub fn FormField::equal(Self, Self) -> Bool
+pub fn FormField::not_equal(Self, Self) -> Bool
 
 pub(all) struct FormLimits {
   max_parts : Int
   max_part_size : Int
 } derive(Eq)
+pub fn FormLimits::equal(Self, Self) -> Bool
 pub fn FormLimits::new(max_parts? : Int, max_part_size? : Int) -> Self
+pub fn FormLimits::not_equal(Self, Self) -> Bool
 
 pub(all) struct GreetReq {
   name : String
 } derive(Eq, ToJson, @json.FromJson)
+pub fn GreetReq::equal(Self, Self) -> Bool
+pub fn GreetReq::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn GreetReq::not_equal(Self, Self) -> Bool
 pub fn GreetReq::schema() -> Schema
+pub fn GreetReq::to_json(Self) -> Json
 
 pub(all) struct HttpBasicCredentials {
   username : String
@@ -560,6 +584,8 @@ pub(all) enum Method {
   Head
   Options
 } derive(Eq)
+pub fn Method::equal(Self, Self) -> Bool
+pub fn Method::not_equal(Self, Self) -> Bool
 
 type Mount
 
@@ -568,7 +594,11 @@ pub(all) struct NewUser {
   email : String
   age : Int
 } derive(Eq, ToJson)
+pub fn NewUser::equal(Self, Self) -> Bool
+pub fn NewUser::not_equal(Self, Self) -> Bool
 pub fn NewUser::schema() -> Schema
+pub fn NewUser::to_json(Self) -> Json
+pub fn NewUser::to_schema(Self) -> Schema
 pub impl ToSchema for NewUser
 
 pub struct OAuth2CodeBearer {
@@ -596,18 +626,24 @@ pub(all) struct OAuth2PasswordRequestForm {
   client_id : String?
   client_secret : String?
 } derive(Eq)
+pub fn OAuth2PasswordRequestForm::equal(Self, Self) -> Bool
+pub fn OAuth2PasswordRequestForm::not_equal(Self, Self) -> Bool
 
 pub(all) struct ObjectSchema {
   name : String
   fields : Array[Field]
   description : String
 } derive(Eq)
+pub fn ObjectSchema::equal(Self, Self) -> Bool
+pub fn ObjectSchema::not_equal(Self, Self) -> Bool
 
 pub(all) enum OpenApiVersion {
   Swagger20
   OpenApi30
   OpenApi31
 } derive(Eq)
+pub fn OpenApiVersion::equal(Self, Self) -> Bool
+pub fn OpenApiVersion::not_equal(Self, Self) -> Bool
 
 pub(all) struct Param {
   name : String
@@ -619,9 +655,11 @@ pub(all) struct Param {
   default : Json?
   alias_ : String
 } derive(Eq)
+pub fn Param::equal(Self, Self) -> Bool
 pub fn Param::is_required(Self) -> Bool
 pub fn Param::key(Self) -> String
 pub fn Param::new(String, ParamLoc, schema? : Schema, required? : Bool, description? : String, constraints? : Array[Constraint], default? : Json, alias_? : String) -> Self
+pub fn Param::not_equal(Self, Self) -> Bool
 
 pub(all) enum ParamLoc {
   InPath
@@ -629,6 +667,8 @@ pub(all) enum ParamLoc {
   InHeader
   InCookie
 } derive(Eq)
+pub fn ParamLoc::equal(Self, Self) -> Bool
+pub fn ParamLoc::not_equal(Self, Self) -> Bool
 
 pub(all) struct Provider[V] {
   factory : (Scope[V]) -> V
@@ -642,7 +682,9 @@ pub(all) struct ResponseSpec {
   description : String
   body : Schema?
 } derive(Eq)
+pub fn ResponseSpec::equal(Self, Self) -> Bool
 pub fn ResponseSpec::new(Int, description? : String, body? : Schema?) -> Self
+pub fn ResponseSpec::not_equal(Self, Self) -> Bool
 
 type Route
 
@@ -680,6 +722,8 @@ pub(all) enum SameSite {
   Lax
   Unrestricted
 } derive(Eq)
+pub fn SameSite::equal(Self, Self) -> Bool
+pub fn SameSite::not_equal(Self, Self) -> Bool
 
 pub(all) enum Schema {
   SStr
@@ -697,8 +741,10 @@ pub(all) enum Schema {
 } derive(Eq)
 pub fn Schema::array(Self) -> Self
 pub fn Schema::binary() -> Self
+pub fn Schema::equal(Self, Self) -> Bool
 pub fn Schema::format(Self, String) -> Self
 pub fn Schema::map(Self) -> Self
+pub fn Schema::not_equal(Self, Self) -> Bool
 pub fn Schema::nullable(Self) -> Self
 pub fn Schema::object(String, Array[Field]) -> Self
 
@@ -715,7 +761,9 @@ pub(all) struct SecurityRequirement {
   scheme : String
   scopes : Array[String]
 } derive(Eq)
+pub fn SecurityRequirement::equal(Self, Self) -> Bool
 pub fn SecurityRequirement::new(String, scopes? : Array[String]) -> Self
+pub fn SecurityRequirement::not_equal(Self, Self) -> Bool
 
 pub(all) enum SecurityScheme {
   OAuth2Password(token_url~ : String, scopes~ : Array[(String, String)])
@@ -761,7 +809,9 @@ pub(all) struct UploadFile {
   content : Bytes
   headers : Array[(String, String)]
 } derive(Eq)
+pub fn UploadFile::equal(Self, Self) -> Bool
 pub fn UploadFile::header(Self, String) -> String?
+pub fn UploadFile::not_equal(Self, Self) -> Bool
 pub fn UploadFile::size(Self) -> Int
 
 pub(all) struct User {
@@ -770,7 +820,11 @@ pub(all) struct User {
   address : Address
   tags : Array[String]
 } derive(Eq, ToJson)
+pub fn User::equal(Self, Self) -> Bool
+pub fn User::not_equal(Self, Self) -> Bool
 pub fn User::schema() -> Schema
+pub fn User::to_json(Self) -> Json
+pub fn User::to_schema(Self) -> Schema
 pub impl ToSchema for User
 
 pub(all) struct ValidationError {
@@ -805,6 +859,8 @@ pub(all) enum WsMessage {
   WsText(String)
   WsBinary(Bytes)
 } derive(Eq)
+pub fn WsMessage::equal(Self, Self) -> Bool
+pub fn WsMessage::not_equal(Self, Self) -> Bool
 
 type WsRoute
 

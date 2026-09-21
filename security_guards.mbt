@@ -491,3 +491,6 @@ pub fn App::secure_openid(
     verify_bearer(ctx, secret, scopes, now, auto_error)
   }
 }
+
+///|
+pub extend ApiKeyIn with Eq::{not_equal, equal}

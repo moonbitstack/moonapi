@@ -195,3 +195,6 @@ pub fn delete_cookie(
     same_site~,
   )
 }
+
+///|
+pub extend SameSite with Eq::{not_equal, equal}

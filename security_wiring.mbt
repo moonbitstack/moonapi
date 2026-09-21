@@ -65,3 +65,6 @@ fn security_json(reqs : Array[SecurityRequirement]) -> Json? {
   }
   Some(arr.to_json())
 }
+
+///|
+pub extend SecurityRequirement with Eq::{not_equal, equal}

@@ -236,3 +236,6 @@ async fn App::serve_websocket(
     send(ev)
   }
 }
+
+///|
+pub extend WsMessage with Eq::{not_equal, equal}

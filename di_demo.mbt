@@ -63,3 +63,15 @@ pub fn greet_app(container : Container[Dep]) -> App {
   )
   app
 }
+
+///|
+pub extend GreetReq with Eq::{not_equal, equal}
+
+///|
+pub extend GreetReq with FromJson::{from_json}
+
+///|
+pub extend GreetReq with ToJson::{to_json}
+
+///|
+pub extend Dep with Eq::{not_equal, equal}

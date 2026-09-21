@@ -361,3 +361,12 @@ fn object_body(
   }
   m.to_json()
 }
+
+///|
+pub extend Schema with Eq::{not_equal, equal}
+
+///|
+pub extend ObjectSchema with Eq::{not_equal, equal}
+
+///|
+pub extend Field with Eq::{not_equal, equal}

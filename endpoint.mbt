@@ -293,3 +293,15 @@ fn emit_endpoint(
   }
   op["responses"] = responses.to_json()
 }
+
+///|
+pub extend ParamLoc with Eq::{not_equal, equal}
+
+///|
+pub extend Param with Eq::{not_equal, equal}
+
+///|
+pub extend ResponseSpec with Eq::{not_equal, equal}
+
+///|
+pub extend Endpoint with Eq::{not_equal, equal}

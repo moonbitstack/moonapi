@@ -264,3 +264,6 @@ pub fn token_response(access_token : String) -> @moonasgi.Response {
   ])
   json(200, body.to_json())
 }
+
+///|
+pub extend OAuth2PasswordRequestForm with Eq::{not_equal, equal}

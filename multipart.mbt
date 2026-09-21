@@ -498,3 +498,15 @@ pub fn Context::form(
     Some({ fields: [], files: [], })
   }
 }
+
+///|
+pub extend FormField with Eq::{not_equal, equal}
+
+///|
+pub extend UploadFile with Eq::{not_equal, equal}
+
+///|
+pub extend FormData with Eq::{not_equal, equal}
+
+///|
+pub extend FormLimits with Eq::{not_equal, equal}

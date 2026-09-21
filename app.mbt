@@ -1427,3 +1427,6 @@ pub fn App::to_asgi(self : App) -> @moonasgi.AsgiApp {
     }
   }
 }
+
+///|
+pub extend Method with Eq::{not_equal, equal}

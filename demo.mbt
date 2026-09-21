@@ -142,3 +142,30 @@ pub fn demo_app() -> App {
   )
   app
 }
+
+///|
+pub extend Address with Eq::{not_equal, equal}
+
+///|
+pub extend Address with ToJson::{to_json}
+
+///|
+pub extend Address with ToSchema::{to_schema}
+
+///|
+pub extend NewUser with Eq::{not_equal, equal}
+
+///|
+pub extend NewUser with ToJson::{to_json}
+
+///|
+pub extend NewUser with ToSchema::{to_schema}
+
+///|
+pub extend User with Eq::{not_equal, equal}
+
+///|
+pub extend User with ToJson::{to_json}
+
+///|
+pub extend User with ToSchema::{to_schema}
