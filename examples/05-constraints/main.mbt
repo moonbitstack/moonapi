@@ -42,7 +42,7 @@ fn main {
     // A field whose value must be JSON null.
     @moonapi.Field::new("note", @moonapi.SNull, required=false),
   ])
-  let ep = @moonapi.Endpoint::new(request_body=Some(schema))
+  let ep = @moonapi.Endpoint::new(request_body=schema)
   let app = @moonapi.App::new()
   app.post(
     "/orders",
@@ -54,7 +54,7 @@ fn main {
         @moonapi.text(201, "order accepted")
       }
     },
-    endpoint=Some(ep),
+    endpoint=ep,
   )
   let hit = (label : String, body : String) => {
     let req : @moonasgi.Request = {

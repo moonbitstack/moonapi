@@ -35,7 +35,7 @@ pub(all) enum Dep {
 /// each request, so any `yield` teardown runs once the handler returns.
 pub fn greet_app(container : Container[Dep]) -> App {
   let app = App::new()
-  let ep = Endpoint::new(request_body=Some(GreetReq::schema()), responses=[
+  let ep = Endpoint::new(request_body=GreetReq::schema(), responses=[
     ResponseSpec::new(200, description="the greeting"),
     ResponseSpec::new(422, description="Validation Error"),
   ])
@@ -59,7 +59,7 @@ pub fn greet_app(container : Container[Dep]) -> App {
       })
     },
     summary="greet a user",
-    endpoint=Some(ep),
+    endpoint=ep,
   )
   app
 }

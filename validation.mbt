@@ -9,10 +9,14 @@ fn decode_field(raw : Bytes) -> String {
 ///|
 /// How much of a query string is a query string.
 ///
-/// Four thousand parameters is far past anything a link carries and well short
-/// of what a server notices; beyond it, the request is an attempt to make the
-/// server allocate, and it decodes to nothing.
-let query_limits : @mime.Limits = { parts: 4096, part_size: 1 << 16, }
+/// A thousand parameters is what `qs` allows Express by default, and far past
+/// anything a link carries; sixty-four kilobytes for one value is well past the
+/// eight the common servers allow a whole request line. Beyond either, the
+/// request is an attempt to make the server allocate.
+///
+/// An endpoint that genuinely takes more says so:
+/// `ctx.query("tag", limits=@mime.Limits::new(parts=100000))`.
+pub let query_limits : @mime.Limits = { parts: 1000, part_size: 1 << 16, }
 
 ///|
 /// Split a query string into decoded key/value pairs.
@@ -21,11 +25,9 @@ let query_limits : @mime.Limits = { parts: 4096, part_size: 1 << 16, }
 /// `moonhttp/mime`'s: splitting on the raw bytes so a percent-escaped `&` or `=`
 /// inside a value cannot be mistaken for a separator, `+` as a space, and a pair
 /// with no `=` as a bare key.
-fn query_pairs(raw : Bytes) -> Array[(String, String)] {
+fn query_pairs(raw : Bytes, limits : @mime.Limits) -> Array[(String, String)] {
   let out : Array[(String, String)] = []
-  let form = @mime.urlencoded(raw[:], limits=query_limits) catch {
-    _ => return out
-  }
+  let form = @mime.urlencoded(raw[:], limits~) catch { _ => return out }
   for field in form.entries() {
     out.push((field.name, field.value))
   }
@@ -36,8 +38,12 @@ fn query_pairs(raw : Bytes) -> Array[(String, String)] {
 /// Look up a query-string parameter by name, e.g. `?limit=10&q=cat%20dog`. Keys and
 /// values are percent/plus-decoded, so `q` above reads back as `cat dog`. When a key
 /// repeats, the first occurrence wins; use `query_all` to read every one.
-pub fn Context::query(self : Context, name : String) -> String? {
-  for kv in query_pairs(self.request.query_string) {
+pub fn Context::query(
+  self : Context,
+  name : String,
+  limits? : @mime.Limits = query_limits,
+) -> String? {
+  for kv in query_pairs(self.request.query_string, limits) {
     if kv.0 == name {
       return Some(kv.1)
     }
@@ -48,9 +54,13 @@ pub fn Context::query(self : Context, name : String) -> String? {
 ///|
 /// Every value given for `name`, in the order they appear — `?tag=a&tag=b` reads
 /// back as `["a", "b"]`. Empty when the key is absent.
-pub fn Context::query_all(self : Context, name : String) -> Array[String] {
+pub fn Context::query_all(
+  self : Context,
+  name : String,
+  limits? : @mime.Limits = query_limits,
+) -> Array[String] {
   let out : Array[String] = []
-  for kv in query_pairs(self.request.query_string) {
+  for kv in query_pairs(self.request.query_string, limits) {
     if kv.0 == name {
       out.push(kv.1)
     }

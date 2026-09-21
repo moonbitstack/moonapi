@@ -323,15 +323,13 @@ test "openapi status_code keys a typed endpoint's default response" {
     "/items",
     _ctx => text(201, "made"),
     status_code=201,
-    endpoint=Some(
-      Endpoint::new(params=[Param::new("q", InQuery, required=false)]),
-    ),
+    endpoint=Endpoint::new(params=[Param::new("q", InQuery, required=false)]),
   )
   app.post(
     "/declared",
     _ctx => text(200, "ok"),
     status_code=201,
-    endpoint=Some(Endpoint::new(responses=[ResponseSpec::new(200)])),
+    endpoint=Endpoint::new(responses=[ResponseSpec::new(200)]),
   )
   let doc = app.openapi()
   assert_eq(op_responses(doc, "/items", "post").keys().collect(), ["201"])
@@ -585,7 +583,7 @@ test "a declared endpoint is enforced with a 422 before the handler" {
       reached.push(ctx.param("id").unwrap())
       text(200, "ok")
     },
-    endpoint=Some(ep),
+    endpoint=ep,
   )
   // A well-formed request reaches the handler.
   assert_eq(app.handle(mkreq("GET", "/items/233")).status, 200)
@@ -606,7 +604,7 @@ test "validate=false leaves the descriptor to the handler" {
   app.get(
     "/items/:id",
     _ctx => text(200, "handler ran"),
-    endpoint=Some(ep),
+    endpoint=ep,
     validate=false,
   )
   assert_eq(app.handle(mkreq("GET", "/items/qwq")).status, 200)

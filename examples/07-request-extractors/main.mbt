@@ -33,7 +33,7 @@ fn main {
         )
       }
     },
-    endpoint=Some(search),
+    endpoint=search,
   )
   // A JSON body picked apart field by field, with no typed struct.
   app.post("/inspect", ctx => {

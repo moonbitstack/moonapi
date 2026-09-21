@@ -67,6 +67,46 @@ let docs_page = @moonapi.swagger_ui()           // a Swagger UI page
 
 Verified across all backends (`wasm`, `wasm-gc`, `js`, `native`) in CI, 0 warnings under `--deny-warn`.
 
+## Configuration
+
+Nothing here decides for you twice. Every bound is an argument with a published
+default, and every default is the one the mainstream framework uses.
+
+```moonbit
+ctx.query("tag")                                       // the preset bound
+ctx.query("tag", limits=@mime.Limits::new(parts=100000))
+ctx.form(limits=@mime.Limits::new(part_size=8 << 20))  // an upload endpoint
+
+create_access_token(sub, secret, now, extra={ "tenant": Json::string("acme") })
+sse_response(events, headers=[("cache-control", "no-store")])
+sse_response(events, space=false)
+```
+
+| Setting | Default | Why that one |
+|:--:|:--:|:--|
+| `query_limits.parts` | 1000 | `qs`, and therefore Express, allows a thousand query parameters |
+| `query_limits.part_size` | 64 KiB | Well past the 8 KiB the common servers allow a whole request line |
+| `form`'s `limits` | `@mime.limits` | Starlette's `max_files` and `max_fields`, with python-multipart's part size |
+| `expires_in_secs` | 3600 | The hour every OAuth2 example issues |
+| `space` on a stream | on | The space after a colon is universal on the wire and stripped by every reader |
+
+### Where a setting can arrive twice
+
+`create_access_token` computes `sub`, `iat`, `exp` and `scopes` from its
+arguments, and `extra` adds claims alongside them. `sse_response` sets the three
+headers a stream needs, and `headers` adds its own. Where the two name the same
+thing, the rule is published rather than implied:
+
+| Function | Who wins by default | What happens when both speak |
+|:--:|:--:|:--|
+| `create_access_token` | the arguments | aborts — a token whose subject is not the `subject` passed in is a mistake in the program |
+| `sse_response` | the caller's header | replaces ours, so a response never carries two `content-type` headers |
+
+Both take `wins` to turn the direction around and `clash` to choose between
+merging in silence, aborting, and handing the decision to a callback of your
+own. They are the same `wins` and `clash` `mooncred` uses, with the same
+meanings.
+
 ## Design notes
 
 Two places make an explicit, documented trade-off rather than a silent shortcut:

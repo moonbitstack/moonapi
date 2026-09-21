@@ -75,7 +75,7 @@ pub fn WebSocket::offered_subprotocols(self : WebSocket) -> Array[String] {
 /// no-op, so accept-once handlers stay simple.
 pub fn WebSocket::accept(
   self : WebSocket,
-  subprotocol? : String? = None,
+  subprotocol? : String,
   headers? : Array[(String, String)] = [],
 ) -> Unit {
   if self.accepted {

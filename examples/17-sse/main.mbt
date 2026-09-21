@@ -15,9 +15,9 @@ fn main {
     @sse.Event::of("hello"),
     @sse.Event::new(
       data="first line\nsecond line",
-      kind=Some("update"),
-      id=Some("233"),
-      retry=Some(3000),
+      kind="update",
+      id="233",
+      retry=3000,
     ),
     @sse.Event::ping(comment="ping"),
   ]

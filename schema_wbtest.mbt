@@ -254,8 +254,8 @@ fn enum_app() -> App {
   let body = Schema::object("Order", [
     Field::new("status", SEnum(SStr, ["qwq".to_json(), "hhh".to_json()])),
   ])
-  let ep = Endpoint::new(request_body=Some(body), responses=[
-    ResponseSpec::new(200, body=Some(body)),
+  let ep = Endpoint::new(request_body=body, responses=[
+    ResponseSpec::new(200, body~),
   ])
   let app = App::new()
   app.post(
@@ -268,7 +268,7 @@ fn enum_app() -> App {
         json(200, ctx.body_json().unwrap_or(Json::null()))
       }
     },
-    endpoint=Some(ep),
+    endpoint=ep,
   )
   app
 }

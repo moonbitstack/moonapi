@@ -31,7 +31,7 @@ test "ws: echo route mirrors text and binary frames" {
 ///|
 test "ws: accept is idempotent and records the chosen subprotocol" {
   let handler : WsHandler = ws => {
-    ws.accept(subprotocol=Some("chat"))
+    ws.accept(subprotocol="chat")
     ws.accept()
     ws.close(code=1001, reason="bye")
   }

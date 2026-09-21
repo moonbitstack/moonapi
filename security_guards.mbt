@@ -91,7 +91,7 @@ fn verify_bearer(
       })
     Some(t) => t
   }
-  let claims = @jwt.verify(token[:], HS256, hs256(secret), now~) catch {
+  let claims = @jwt.verify(token[:], HS256, hs256(secret), now=At(now)) catch {
     _ =>
       return refuse(auto_error, () => {
         unauthorized(

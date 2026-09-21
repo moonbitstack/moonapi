@@ -1,7 +1,7 @@
 ///|
 /// An echo handler: accept, then mirror each frame until the client disconnects.
 fn echo(ws : @moonapi.WebSocket) -> Unit {
-  ws.accept(subprotocol=Some("chat"))
+  ws.accept(subprotocol="chat")
   println(
     "  echo: room=\{ws.param("room").unwrap_or("?")} offered=[\{join_csv(ws.offered_subprotocols())}]",
   )

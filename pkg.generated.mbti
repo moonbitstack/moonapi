@@ -6,6 +6,7 @@ import {
   "moonbitstack/moonasgi/http",
   "moonbitstack/moonasgi/lifespan",
   "moonbitstack/moonasgi/spec",
+  "moonbitstack/mooncred/jwt",
   "moonbitstack/moonhttp/mime",
   "moonbitstack/moonhttp/sse",
 }
@@ -171,7 +172,7 @@ pub fn check_constraints(Json, Array[Constraint], Array[String], Array[Validatio
 
 pub fn cors(allow_origins? : Array[String], allow_all_origins? : Bool, allow_methods? : Array[String], allow_headers? : Array[String], allow_all_headers? : Bool, allow_credentials? : Bool, expose_headers? : Array[String], max_age? : Int) -> ((@http.Request) -> @http.Response) -> (@http.Request) -> @http.Response
 
-pub fn create_access_token(String, String, Int64, scopes? : Array[String], expires_in_secs? : Int64, extra? : Map[String, Json]) -> String
+pub fn create_access_token(String, String, Int64, scopes? : Array[String], expires_in_secs? : Int64, extra? : Map[String, Json], wins? : @jwt.Wins, clash? : @jwt.OnClash[Map[String, Json]]) -> String
 
 pub fn delete_cookie(@http.Response, String, path? : String, domain? : String, secure? : Bool, http_only? : Bool, same_site? : SameSite?) -> @http.Response
 
@@ -199,6 +200,8 @@ pub fn oauth2_app(() -> Int64, secret? : String) -> App
 
 pub fn parse_basic_auth(String) -> HttpBasicCredentials?
 
+pub let query_limits : @mime.Limits
+
 pub fn redirect(String, status? : Int) -> @http.Response
 
 pub fn redoc_ui(spec_url? : String, title? : String) -> String
@@ -207,7 +210,7 @@ pub fn[T : ToSchema] schema_of(T) -> Schema
 
 pub fn set_cookie(@http.Response, String, String, max_age? : Int, expires? : String, path? : String, domain? : String, secure? : Bool, http_only? : Bool, same_site? : SameSite?) -> @http.Response
 
-pub fn sse_response(Array[@sse.Event], status? : Int, headers? : Array[(String, String)]) -> @http.StreamingResponse
+pub fn sse_response(Array[@sse.Event], status? : Int, headers? : Array[(String, String)], space? : Bool, wins? : @jwt.Wins, clash? : @jwt.OnClash[Array[(String, String)]]) -> @http.StreamingResponse
 
 pub fn swagger_ui(spec_url? : String, title? : String) -> String
 
@@ -287,12 +290,12 @@ pub struct App {
 }
 pub fn App::add_security_scheme(Self, String, SecurityScheme, description? : String) -> Unit
 pub fn App::add_status_handler(Self, Int, (Context) -> @http.Response) -> Unit
-pub fn App::delete(Self, String, (Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint?, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn App::delete(Self, String, (Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
 pub fn App::depends(Self, Deps) -> Unit
 pub fn App::describe(Self, title? : String, api_version? : String, description? : String, terms_of_service? : String, contact? : Contact?, license? : License?, servers? : Array[Server]) -> Unit
 pub fn App::enable_docs(Self, openapi_url? : String?, docs_url? : String?, redoc_url? : String?, version? : OpenApiVersion) -> Unit
 pub fn App::exception_handler(Self, (Context, Error) -> @http.Response?) -> Unit
-pub fn App::get(Self, String, (Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint?, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn App::get(Self, String, (Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
 pub fn App::handle(Self, @http.Request) -> @http.Response
 pub fn App::handle_with_background(Self, @http.Request) -> (@http.Response, BackgroundTasks)
 pub fn App::handle_with_stream(Self, @http.Request) -> (@http.StreamingResponse, BackgroundTasks)
@@ -306,12 +309,12 @@ pub fn App::on_shutdown(Self, () -> Unit raise) -> Unit
 pub fn App::on_startup(Self, () -> Unit raise) -> Unit
 pub fn App::openapi(Self, version? : OpenApiVersion, title? : String, api_version? : String, description? : String, terms_of_service? : String, contact? : Contact?, license? : License?, servers? : Array[Server]) -> Json
 pub fn App::openapi_json(Self, version? : OpenApiVersion) -> String
-pub fn App::patch(Self, String, (Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint?, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
-pub fn App::post(Self, String, (Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint?, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
-pub fn App::put(Self, String, (Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint?, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
-pub fn App::route(Self, Method, String, (Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint?, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
-pub fn App::route_bg(Self, Method, String, (Context, BackgroundTasks) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint?, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
-pub fn App::route_stream(Self, Method, String, (Context) -> @http.StreamingResponse raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint?, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn App::patch(Self, String, (Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn App::post(Self, String, (Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn App::put(Self, String, (Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn App::route(Self, Method, String, (Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn App::route_bg(Self, Method, String, (Context, BackgroundTasks) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn App::route_stream(Self, Method, String, (Context) -> @http.StreamingResponse raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
 pub fn App::secure_api_key(Self, String, ApiKey, description? : String, auto_error? : Bool) -> Unit
 pub fn App::secure_basic(Self, String, BasicAuth, description? : String, auto_error? : Bool) -> Unit
 pub fn App::secure_bearer(Self, String, String, bearer_format? : String, description? : String, auto_error? : Bool) -> Unit
@@ -320,7 +323,7 @@ pub fn App::secure_oauth2(Self, String, OAuth2PasswordBearer, scopes? : Array[(S
 pub fn App::secure_oauth2_code(Self, String, OAuth2CodeBearer, scopes? : Array[(String, String)], description? : String, auto_error? : Bool) -> Unit
 pub fn App::secure_openid(Self, String, String, String, description? : String, auto_error? : Bool) -> Unit
 pub fn App::set_clock(Self, () -> Int64) -> Unit
-pub fn App::stream(Self, String, (Context) -> @http.StreamingResponse raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint?, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn App::stream(Self, String, (Context) -> @http.StreamingResponse raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
 pub fn App::to_asgi(Self) -> async (@spec.Scope, async () -> @spec.Event, async (@spec.Event) -> Unit) -> Unit
 pub fn App::url_for(Self, String, params? : Map[String, String]) -> String?
 pub fn App::websocket(Self, String, (WebSocket) -> Unit) -> Unit
@@ -400,8 +403,8 @@ pub fn Context::http_basic(Self) -> HttpBasicCredentials?
 pub fn Context::json_field(Self, String) -> Json?
 pub fn Context::oauth2_password_form(Self) -> OAuth2PasswordRequestForm?
 pub fn Context::param(Self, String) -> String?
-pub fn Context::query(Self, String) -> String?
-pub fn Context::query_all(Self, String) -> Array[String]
+pub fn Context::query(Self, String, limits? : @mime.Limits) -> String?
+pub fn Context::query_all(Self, String, limits? : @mime.Limits) -> Array[String]
 
 pub(all) struct CorsConfig {
   allow_origins : Array[String]
@@ -442,7 +445,7 @@ pub(all) struct Endpoint {
   responses : Array[ResponseSpec]
 } derive(Eq)
 pub fn Endpoint::equal(Self, Self) -> Bool
-pub fn Endpoint::new(params? : Array[Param], request_body? : Schema?, request_required? : Bool, responses? : Array[ResponseSpec]) -> Self
+pub fn Endpoint::new(params? : Array[Param], request_body? : Schema, request_required? : Bool, responses? : Array[ResponseSpec]) -> Self
 pub fn Endpoint::not_equal(Self, Self) -> Bool
 pub fn Endpoint::validate(Self, Context) -> Array[ValidationError]
 
@@ -586,7 +589,7 @@ pub(all) struct ResponseSpec {
   body : Schema?
 } derive(Eq)
 pub fn ResponseSpec::equal(Self, Self) -> Bool
-pub fn ResponseSpec::new(Int, description? : String, body? : Schema?) -> Self
+pub fn ResponseSpec::new(Int, description? : String, body? : Schema) -> Self
 pub fn ResponseSpec::not_equal(Self, Self) -> Bool
 
 type Route
@@ -595,15 +598,15 @@ pub struct Router {
   routes : Array[Route]
   ws_routes : Array[WsRoute]
 }
-pub fn Router::delete(Self, String, (Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint?, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
-pub fn Router::get(Self, String, (Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint?, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn Router::delete(Self, String, (Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn Router::get(Self, String, (Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
 pub fn Router::new() -> Self
-pub fn Router::patch(Self, String, (Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint?, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
-pub fn Router::post(Self, String, (Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint?, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
-pub fn Router::put(Self, String, (Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint?, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
-pub fn Router::route(Self, Method, String, (Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint?, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
-pub fn Router::route_bg(Self, Method, String, (Context, BackgroundTasks) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint?, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
-pub fn Router::stream(Self, String, (Context) -> @http.StreamingResponse raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint?, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn Router::patch(Self, String, (Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn Router::post(Self, String, (Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn Router::put(Self, String, (Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn Router::route(Self, Method, String, (Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn Router::route_bg(Self, Method, String, (Context, BackgroundTasks) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn Router::stream(Self, String, (Context) -> @http.StreamingResponse raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
 pub fn Router::websocket(Self, String, (WebSocket) -> Unit) -> Unit
 
 pub(all) enum SameSite {
@@ -709,7 +712,7 @@ pub struct WebSocket {
   mut closed : Bool
   outbox : Array[@spec.Event]
 }
-pub fn WebSocket::accept(Self, subprotocol? : String?, headers? : Array[(String, String)]) -> Unit
+pub fn WebSocket::accept(Self, subprotocol? : String, headers? : Array[(String, String)]) -> Unit
 pub fn WebSocket::close(Self, code? : Int, reason? : String) -> Unit
 pub fn WebSocket::offered_subprotocols(Self) -> Array[String]
 pub fn WebSocket::param(Self, String) -> String?

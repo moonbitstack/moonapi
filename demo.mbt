@@ -85,12 +85,8 @@ pub impl ToSchema for User with fn to_schema(_self) {
 /// `$ref`s) in `openapi.json`.
 pub fn demo_app() -> App {
   let app = App::new()
-  let create = Endpoint::new(request_body=Some(NewUser::schema()), responses=[
-    ResponseSpec::new(
-      201,
-      description="the created user",
-      body=Some(User::schema()),
-    ),
+  let create = Endpoint::new(request_body=NewUser::schema(), responses=[
+    ResponseSpec::new(201, description="the created user", body=User::schema()),
     ResponseSpec::new(422, description="Validation Error"),
   ])
   app.post(
@@ -114,10 +110,10 @@ pub fn demo_app() -> App {
       }
     },
     summary="create a user",
-    endpoint=Some(create),
+    endpoint=create,
   )
   let get_one = Endpoint::new(params=[Param::new("id", InPath, schema=SInt)], responses=[
-    ResponseSpec::new(200, body=Some(User::schema())),
+    ResponseSpec::new(200, body=User::schema()),
     ResponseSpec::new(404, description="Not Found"),
   ])
   app.get(
@@ -138,7 +134,7 @@ pub fn demo_app() -> App {
       }
     },
     summary="fetch a user",
-    endpoint=Some(get_one),
+    endpoint=get_one,
   )
   app
 }

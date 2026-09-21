@@ -9,7 +9,7 @@ fn body_app(body : Schema) -> App {
   app.post(
     "/thing",
     _ctx => text(200, "ok"),
-    endpoint=Some(Endpoint::new(request_body=Some(body))),
+    endpoint=Endpoint::new(request_body=body),
   )
   app
 }

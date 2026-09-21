@@ -94,7 +94,7 @@ pub(all) struct ResponseSpec {
 pub fn ResponseSpec::new(
   status : Int,
   description? : String = "OK",
-  body? : Schema? = None,
+  body? : Schema,
 ) -> ResponseSpec {
   { status, description, body, }
 }
@@ -117,7 +117,7 @@ pub(all) struct Endpoint {
 /// `200 OK` response.
 pub fn Endpoint::new(
   params? : Array[Param] = [],
-  request_body? : Schema? = None,
+  request_body? : Schema,
   request_required? : Bool = true,
   responses? : Array[ResponseSpec] = [],
 ) -> Endpoint {

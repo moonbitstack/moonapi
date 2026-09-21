@@ -5,11 +5,7 @@
 /// An app whose `GET /items` declares exactly `p` — test helper.
 fn param_app(p : Param) -> App {
   let app = App::new()
-  app.get(
-    "/items",
-    _ctx => text(200, "ok"),
-    endpoint=Some(Endpoint::new(params=[p])),
-  )
+  app.get("/items", _ctx => text(200, "ok"), endpoint=Endpoint::new(params=[p]))
   app
 }
 
@@ -120,12 +116,10 @@ test "header and cookie params: bounds are enforced where the value lives" {
   app.get(
     "/items",
     _ctx => text(200, "ok"),
-    endpoint=Some(
-      Endpoint::new(params=[
-        Param::new("x-page", InHeader, schema=SInt, constraints=[Maximum(9.0)]),
-        Param::new("session", InCookie, constraints=[MinLength(4)]),
-      ]),
-    ),
+    endpoint=Endpoint::new(params=[
+      Param::new("x-page", InHeader, schema=SInt, constraints=[Maximum(9.0)]),
+      Param::new("session", InCookie, constraints=[MinLength(4)]),
+    ]),
   )
   let ok = app.handle(
     mkreq_hdrs("GET", "/items", [("x-page", "3"), ("cookie", "session=abcd")]),

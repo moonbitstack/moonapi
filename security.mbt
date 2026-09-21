@@ -227,6 +227,12 @@ pub fn OAuth2PasswordBearer::authenticate(
 /// Stamps `sub`, `iat` (= `now_secs`), `exp` (= `now_secs + expires_in_secs`),
 /// and, when non-empty, `scopes`; `extra` merges in any further claims. Times are
 /// Unix seconds. `secret` is the shared HS256 key.
+///
+/// `extra` adds claims. Where it names one the arguments already set — `sub`,
+/// `iat`, `exp`, `scopes` — the arguments win and saying it twice aborts, because
+/// a token whose subject is not the `subject` passed in is a mistake in the
+/// program rather than a choice about configuration. `wins=Extra` hands the
+/// decision to `extra`, and `clash` can silence it or take a callback.
 pub fn create_access_token(
   subject : String,
   secret : String,
@@ -234,22 +240,47 @@ pub fn create_access_token(
   scopes? : Array[String] = [],
   expires_in_secs? : Int64 = 3600,
   extra? : Map[String, Json] = Map([]),
+  wins? : @jwt.Wins = Base,
+  clash? : @jwt.OnClash[Map[String, Json]] = Panic,
 ) -> String {
-  let claims : Map[String, Json] = Map([])
-  for k, v in extra {
-    claims[k] = v
-  }
   // `iat` / `exp` are RFC 7519 NumericDates — JSON numbers, so an off-the-shelf
   // verifier reads them (`Int64::to_json` would emit a string).
-  claims["sub"] = subject.to_json()
-  claims["iat"] = now_secs.to_double().to_json()
-  claims["exp"] = (now_secs + expires_in_secs).to_double().to_json()
+  let base : Map[String, Json] = Map([])
+  base["sub"] = subject.to_json()
+  base["iat"] = now_secs.to_double().to_json()
+  base["exp"] = (now_secs + expires_in_secs).to_double().to_json()
   if scopes.length() > 0 {
     let arr : Array[Json] = []
     for s in scopes {
       arr.push(s.to_json())
     }
-    claims["scopes"] = arr.to_json()
+    base["scopes"] = arr.to_json()
+  }
+  let merged : Map[String, Json] = Map([])
+  for k, v in base {
+    merged[k] = v
+  }
+  let mut clashed = false
+  for k, v in extra {
+    if base.get(k) is Some(_) {
+      clashed = true
+      if wins is Base {
+        continue
+      }
+    }
+    merged[k] = v
+  }
+  let claims = if clashed {
+    match clash {
+      Ignore => merged
+      Panic =>
+        abort(
+          "create_access_token: `extra` names a claim the arguments already set",
+        )
+      Handle(decide) => decide(base, merged)
+    }
+  } else {
+    merged
   }
   @jwt.sign(claims, HS256, hs256(secret))
 }
