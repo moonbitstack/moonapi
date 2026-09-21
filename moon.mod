@@ -1,6 +1,6 @@
 name = "moonbitstack/moonapi"
 
-version = "0.10.0"
+version = "0.11.0"
 
 readme = "README.md"
 
@@ -23,9 +23,9 @@ description = "moonapi — a typed web framework for MoonBit (\u2190 FastAPI): r
 import {
   "moonbitstack/moonasgi@0.10.0",
   "moonbitstack/moonbase@0.4.0",
-  "moonbitstack/moonjson@0.2.0",
-  "moonbitstack/mooncrypt@0.1.1",
-  "moonbitstack/mooncred@0.3.0",
-  "moonbitstack/moonhttp@0.2.0",
-  "moonbitstack/moonzip@0.2.0",
+  "moonbitstack/moonjson@0.3.0",
+  "moonbitstack/mooncrypt@0.2.2",
+  "moonbitstack/mooncred@0.5.0",
+  "moonbitstack/moonhttp@0.3.0",
+  "moonbitstack/moonzip@0.3.0",
 }

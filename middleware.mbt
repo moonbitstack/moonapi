@@ -44,7 +44,7 @@ fn http_exception_response(
   for h in headers {
     hs.push(h)
   }
-  @moonasgi.Response::new(status, hs, @moonjson.write_bytes(body.to_json()))
+  @moonasgi.Response::new(status, hs, @moonjson.dump(body.to_json()))
 }
 
 ///|
@@ -63,7 +63,7 @@ fn default_exception_response(err : Error) -> @moonasgi.Response {
       @moonasgi.Response::new(
         500,
         [("content-type", "application/json")],
-        @moonjson.write_bytes(body.to_json()),
+        @moonjson.dump(body.to_json()),
       )
     }
   }

@@ -178,7 +178,7 @@ fn unauthorized(
   @moonasgi.Response::new(
     401,
     [("content-type", "application/json"), ("www-authenticate", challenge)],
-    @moonjson.write_bytes(body.to_json()),
+    @moonjson.dump(body.to_json()),
   )
 }
 
@@ -191,7 +191,7 @@ fn forbidden(detail : String) -> @moonasgi.Response {
   @moonasgi.Response::new(
     403,
     [("content-type", "application/json")],
-    @moonjson.write_bytes(body.to_json()),
+    @moonjson.dump(body.to_json()),
   )
 }
 

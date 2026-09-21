@@ -76,7 +76,7 @@ pub fn Context::body_json(self : Context) -> Json? {
   if s == "" {
     return None
   }
-  Some(@moonjson.read(s[:], @moonjson.strict)) catch {
+  Some(@moonjson.loads(s[:], @moonjson.strict)) catch {
     _ => None
   }
 }

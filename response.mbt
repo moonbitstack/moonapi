@@ -3,46 +3,6 @@
 // serialise a value; these two decide what the headers say about it.
 
 ///|
-/// Whether `s` contains the ASCII code `c`.
-fn holds_code(s : String, c : Int) -> Bool {
-  for i = 0; i < s.length(); i = i + 1 {
-    if s[i].to_int() == c {
-      return true
-    }
-  }
-  false
-}
-
-///|
-/// Percent-encode `s` over its UTF-8 bytes, leaving ASCII letters, digits,
-/// `-._~` and anything in `safe` alone. Hex digits are upper case, as RFC 3986
-/// §2.1 asks producers to emit them.
-fn percent_encode(s : String, safe : String) -> String {
-  let hex = "0123456789ABCDEF"
-  let raw = @utf8.encode(s)
-  let sb = StringBuilder()
-  for i = 0; i < raw.length(); i = i + 1 {
-    let b = raw[i].to_int()
-    let unreserved = (b >= 0x41 && b <= 0x5A) ||
-      (b >= 0x61 && b <= 0x7A) ||
-      (b >= 0x30 && b <= 0x39) ||
-      b == 0x2D ||
-      b == 0x2E ||
-      b == 0x5F ||
-      b == 0x7E
-    let allowed = unreserved || (b < 0x80 && holds_code(safe, b))
-    if allowed {
-      sb.write_char(b.unsafe_to_char())
-    } else {
-      sb.write_string("%")
-      sb.write_char(hex[b / 16].unsafe_to_char())
-      sb.write_char(hex[b % 16].unsafe_to_char())
-    }
-  }
-  sb.to_string()
-}
-
-///|
 /// A redirect to `url` (← FastAPI's `RedirectResponse`). The body is empty and
 /// `Location` carries the target.
 ///
@@ -57,66 +17,9 @@ fn percent_encode(s : String, safe : String) -> String {
 pub fn redirect(url : String, status? : Int = 307) -> @moonasgi.Response {
   @moonasgi.Response::new(
     status,
-    [("location", percent_encode(url, ":/%#?=@[]!$&'()*+,;"))],
+    [("location", @mime.percent_encode(url[:], safe=":/%#?=@[]!$&'()*+,;"[:]))],
     b"",
   )
-}
-
-///|
-/// The media type a filename's extension implies, `application/octet-stream`
-/// when nothing does. Deliberately short: this exists so `file_response` can
-/// label the common downloads, not to be a copy of the IANA registry.
-fn media_type_of(filename : String) -> String {
-  let lower = filename.to_lower()
-  let mut dot = -1
-  for i = 0; i < lower.length(); i = i + 1 {
-    if lower[i] == '.' {
-      dot = i
-    }
-  }
-  if dot < 0 {
-    return "application/octet-stream"
-  }
-  match lower[dot + 1:].to_owned() {
-    "txt" | "text" | "log" => "text/plain; charset=utf-8"
-    "html" | "htm" => "text/html; charset=utf-8"
-    "css" => "text/css; charset=utf-8"
-    "csv" => "text/csv; charset=utf-8"
-    "md" => "text/markdown; charset=utf-8"
-    "js" | "mjs" => "text/javascript; charset=utf-8"
-    "json" => "application/json"
-    "xml" => "application/xml"
-    "pdf" => "application/pdf"
-    "zip" => "application/zip"
-    "gz" => "application/gzip"
-    "wasm" => "application/wasm"
-    "png" => "image/png"
-    "jpg" | "jpeg" => "image/jpeg"
-    "gif" => "image/gif"
-    "webp" => "image/webp"
-    "svg" => "image/svg+xml"
-    "ico" => "image/vnd.microsoft.icon"
-    "woff" => "font/woff"
-    "woff2" => "font/woff2"
-    "mp3" => "audio/mpeg"
-    "mp4" => "video/mp4"
-    _ => "application/octet-stream"
-  }
-}
-
-///|
-/// The `Content-Disposition` value naming `filename`. A name that survives
-/// percent-encoding unchanged is quoted as-is; anything else — a space, an
-/// accent, a quote — is sent as RFC 6266's `filename*`, which is the only form
-/// that can carry non-ASCII.
-fn disposition_of(filename : String, inline : Bool) -> String {
-  let kind = if inline { "inline" } else { "attachment" }
-  let quoted = percent_encode(filename, "/")
-  if quoted == filename {
-    kind + "; filename=\"" + filename + "\""
-  } else {
-    kind + "; filename*=utf-8''" + quoted
-  }
 }
 
 ///|
@@ -136,13 +39,19 @@ pub fn file_response(
   status? : Int = 200,
   inline? : Bool = false,
 ) -> @moonasgi.Response {
-  let ct = if media_type != "" { media_type } else { media_type_of(filename) }
+  let ct = if media_type != "" {
+    media_type
+  } else {
+    @media.type_of(filename[:])
+  }
   let headers : Array[(String, String)] = [
     ("content-type", ct),
     ("content-length", content.length().to_string()),
   ]
   if filename != "" {
-    headers.push(("content-disposition", disposition_of(filename, inline)))
+    headers.push(
+      ("content-disposition", @media.disposition(filename[:], inline~)),
+    )
   }
   @moonasgi.Response::new(status, headers, content)
 }

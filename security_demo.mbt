@@ -44,7 +44,7 @@ pub fn oauth2_app(now : () -> Int64, secret? : String = "demo-secret") -> App {
                 ("content-type", "application/json"),
                 ("www-authenticate", "Bearer"),
               ],
-              @moonjson.write_bytes(body.to_json()),
+              @moonjson.dump(body.to_json()),
             )
           }
       }

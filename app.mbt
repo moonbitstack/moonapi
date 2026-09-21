@@ -936,7 +936,7 @@ pub fn json(status : Int, value : Json) -> @moonasgi.Response {
   @moonasgi.Response::new(
     status,
     [("content-type", "application/json")],
-    @moonjson.write_bytes(value),
+    @moonjson.dump(value),
   )
 }
 
