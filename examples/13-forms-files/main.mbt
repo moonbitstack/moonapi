@@ -2,10 +2,10 @@
 /// The form and file extractors — FastAPI's `Form(...)` / `File(...)`. One
 /// `Context::form` parses both carriers: an `application/x-www-form-urlencoded`
 /// body (percent- and `+`-decoded) and a `multipart/form-data` body split on its
-/// boundary. `FormData::field` reads the first value, `field_all` every value a
-/// repeated field submitted, and `file` an `UploadFile` — filename, content-type,
+/// boundary. `Form::field` reads the first value, `values` every value a
+/// repeated field submitted, and `file` an `Upload` — filename, content-type,
 /// and the raw bytes byte-for-byte, so a binary upload survives untouched.
-/// `FormLimits` bounds what a sender may spend: a body over the limit comes back
+/// `@mime.Limits` bounds what a sender may spend: a body over the limit comes back
 /// as `None` and is answered `413` rather than parsed.
 ///
 ///     moon run examples/13-forms-files
@@ -14,7 +14,7 @@ fn main {
   let app = @moonapi.App::new()
   app.post("/upload", ctx => {
     // A title and three tags is the whole of this form, so more is not it.
-    let form = match ctx.form(limits=@moonapi.FormLimits::new(max_parts=4)) {
+    let form = match ctx.form(limits={ ..@mime.limits, parts: 4, }) {
       Some(f) => f
       None =>
         return @moonapi.text(
@@ -23,7 +23,7 @@ fn main {
         )
     }
     let title = form.field("title").unwrap_or("-")
-    let tags = form.field_all("tag")
+    let tags = form.values("tag")
     match form.file("doc") {
       Some(f) =>
         @moonapi.text(

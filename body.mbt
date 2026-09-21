@@ -34,7 +34,7 @@ pub fn[T : @json.FromJson] Context::body_validated(
   if raw == "" {
     return Err([ValidationError::missing(["body"])])
   }
-  let j = @json.parse(raw) catch {
+  let j = @moonjson.read(raw[:], @moonjson.strict) catch {
     _ =>
       return Err([
         ValidationError::type_error(

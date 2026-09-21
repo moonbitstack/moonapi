@@ -1,10 +1,21 @@
-// moonapi: a typed web framework (← FastAPI) on the moonasgi SEAM. Backend-agnostic
-// — it depends only on moonasgi, so it runs in-process on every backend; the
-// async transport lives in the server (mooncat) that serves its AsgiApp.
+// moonapi: a typed web framework (← FastAPI) on the moonasgi seam.
+// Backend-agnostic — the async transport lives in the server (mooncat) that
+// serves its AsgiApp.
+//
+// What is imported here is what moonapi is not: the algorithms, the token
+// format, the wire formats and the compression all belong to libraries of their
+// own, and the framework holds two lines of glue at each seam.
 import {
   "moonbitstack/moonasgi",
+  "moonbitstack/moonbase/base64",
+  "moonbitstack/moonjson",
+  "moonbitstack/mooncrypt/hash/sha2",
+  "moonbitstack/mooncrypt/mac/hmac",
+  "moonbitstack/mooncred/jwt",
+  "moonbitstack/moonhttp/mime",
+  "moonbitstack/moonhttp/sse",
+  "moonbitstack/moonzip/gzip",
   "moonbitlang/core/json",
   "moonbitlang/core/string",
   "moonbitlang/core/encoding/utf8",
-  "moonbitstack/moonbase/base64",
 }

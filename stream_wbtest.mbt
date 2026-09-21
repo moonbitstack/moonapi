@@ -105,9 +105,9 @@ test "an SSE route streams a chunk per event rather than one buffered body" {
   let app = App::new()
   app.stream("/events", _ctx => {
     sse_response([
-      ServerSentEvent::data("one"),
-      ServerSentEvent::data("two"),
-      ServerSentEvent::data("three"),
+      @sse.Event::of("one"),
+      @sse.Event::of("two"),
+      @sse.Event::of("three"),
     ])
   })
   let (resp, _bg) = app.handle_with_stream(mkreq("GET", "/events"))
@@ -220,7 +220,7 @@ test "a header-only middleware leaves the chunk boundaries intact" {
 test "a router's streaming route still streams after include_router" {
   let feed = Router::new()
   feed.stream("/events", _ctx => {
-    sse_response([ServerSentEvent::data("one"), ServerSentEvent::data("two")])
+    sse_response([@sse.Event::of("one"), @sse.Event::of("two")])
   })
   let app = App::new()
   app.include_router(feed, prefix="/v1")

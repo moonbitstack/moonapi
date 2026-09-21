@@ -9,14 +9,14 @@ suberror OrderError {
 /// The middleware and exception stack. `App::middleware` wraps the router:
 /// `cors(...)` answers preflight `OPTIONS` and decorates cross-origin responses,
 /// `gzip(...)` re-encodes large bodies with a real DEFLATE compressor (a
-/// companion `inflate` round-trips it). Handlers `raise` an `HttpException`
+/// companion `@gzip.gunzip` round-trips it). Handlers `raise` an `HttpException`
 /// (`http_error`) or a custom error; `App::exception_handler` maps the custom one
 /// and the built-in fallback handles the rest, while `add_status_handler` swaps a
 /// custom page in for any error status — here a routing `404`.
 ///
 ///     moon run examples/16-middleware
 #coverage.skip
-fn main {
+fn main raise {
   let app = @moonapi.App::new()
   app.middleware(
     @moonapi.cors(
@@ -75,9 +75,7 @@ fn main {
   // 4. GZip: a large body is DEFLATE-compressed and inflates back byte-exact.
   let z = app.handle(get("/big", [("accept-encoding", "gzip")]))
   let original = repeat_str("moonapi gzip payload ", 40)
-  let restored = @utf8.decode_lossy(
-    @moonapi.inflate(deflate_payload(z.body))[:],
-  )
+  let restored = @utf8.decode_lossy(@gzip.gunzip(z.body[:])[:])
   println(
     "GET /big -> \{z.status} encoding=\{header(z, "content-encoding")} \{original.length()}B -> \{z.body.length()}B, round-trips=\{restored == original}",
   )
@@ -124,15 +122,4 @@ fn repeat_str(unit : String, n : Int) -> String {
     sb.write_string(unit)
   }
   sb.to_string()
-}
-
-///|
-/// The raw DEFLATE payload inside a gzip stream: drop the 10-byte header and the
-/// 8-byte CRC-32 / ISIZE trailer, leaving what `inflate` decodes.
-fn deflate_payload(gz : Bytes) -> Bytes {
-  let buf = Buffer()
-  for i = 10; i < gz.length() - 8; i = i + 1 {
-    buf.write_byte(gz[i])
-  }
-  buf.to_bytes()
 }

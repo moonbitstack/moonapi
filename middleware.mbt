@@ -44,7 +44,7 @@ fn http_exception_response(
   for h in headers {
     hs.push(h)
   }
-  @moonasgi.Response::new(status, hs, @utf8.encode(body.to_json().stringify()))
+  @moonasgi.Response::new(status, hs, @moonjson.write_bytes(body.to_json()))
 }
 
 ///|
@@ -63,7 +63,7 @@ fn default_exception_response(err : Error) -> @moonasgi.Response {
       @moonasgi.Response::new(
         500,
         [("content-type", "application/json")],
-        @utf8.encode(body.to_json().stringify()),
+        @moonjson.write_bytes(body.to_json()),
       )
     }
   }
@@ -275,7 +275,7 @@ pub fn gzip(min_size? : Int = 500) -> @moonasgi.Middleware {
       if resp.header("content-encoding") is Some(_) {
         return resp
       }
-      let encoded = gzip_encode(resp.body)
+      let encoded = @gzip.gzip(resp.body[:])
       let hs : Array[(String, String)] = []
       for h in resp.headers {
         if h.0 != "content-length" {
@@ -297,53 +297,4 @@ fn accepts_gzip(request : @moonasgi.Request) -> Bool {
     None => false
     Some(v) => v.to_lower().contains("gzip")
   }
-}
-
-///|
-/// CRC-32 (IEEE 802.3 polynomial `0xEDB88320`, reflected) over `data`, the
-/// checksum the gzip trailer carries. Table-free bitwise form — core ships no
-/// zlib. Checked against the `zlib.crc32` vector in the tests.
-fn crc32(data : Bytes) -> UInt {
-  let mut crc : UInt = 0xFFFFFFFF
-  for i = 0; i < data.length(); i = i + 1 {
-    crc = crc ^ data[i].to_int().reinterpret_as_uint()
-    for _j = 0; _j < 8; _j = _j + 1 {
-      let mask = 0U - (crc & 1U)
-      crc = (crc >> 1) ^ (0xEDB88320U & mask)
-    }
-  }
-  crc ^ 0xFFFFFFFF
-}
-
-///|
-/// Append the low 32 bits of `n` to `buf`, little-endian — gzip's CRC-32 and
-/// ISIZE fields are both stored this way.
-fn write_u32_le(buf : Buffer, n : UInt) -> Unit {
-  buf.write_byte((n & 0xFF).to_byte())
-  buf.write_byte(((n >> 8) & 0xFF).to_byte())
-  buf.write_byte(((n >> 16) & 0xFF).to_byte())
-  buf.write_byte(((n >> 24) & 0xFF).to_byte())
-}
-
-///|
-/// Encode `data` as a gzip stream (RFC 1952): the 10-byte header, the real
-/// DEFLATE payload (`deflate_encode` — LZ77 + fixed Huffman, RFC 1951), then the
-/// CRC-32 and ISIZE trailer, both little-endian over the original bytes.
-fn gzip_encode(data : Bytes) -> Bytes {
-  let buf = Buffer()
-  // gzip header: magic, CM=deflate(8), no flags, mtime=0, XFL=0, OS=unknown.
-  buf.write_byte(b'\x1f')
-  buf.write_byte(b'\x8b')
-  buf.write_byte(b'\x08')
-  buf.write_byte(b'\x00')
-  buf.write_byte(b'\x00')
-  buf.write_byte(b'\x00')
-  buf.write_byte(b'\x00')
-  buf.write_byte(b'\x00')
-  buf.write_byte(b'\x00')
-  buf.write_byte(b'\xff')
-  buf.write_bytes(deflate_encode(data))
-  write_u32_le(buf, crc32(data))
-  write_u32_le(buf, data.length().reinterpret_as_uint())
-  buf.to_bytes()
 }

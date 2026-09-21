@@ -94,46 +94,6 @@ test "cors: credentials echo the origin rather than the wildcard" {
 }
 
 ///|
-test "gzip: crc32 matches the zlib vector" {
-  // zlib.crc32(b"hello") == 0x3610A686, zlib.crc32(b"") == 0.
-  assert_eq(crc32(b"hello"), 0x3610A686)
-  assert_eq(crc32(b""), 0U)
-  // zlib.crc32(b"The quick brown fox jumps over the lazy dog") == 0x414FA339.
-  assert_eq(crc32(b"The quick brown fox jumps over the lazy dog"), 0x414FA339)
-}
-
-///|
-test "gzip: encode is a valid gzip container with the right trailer" {
-  let out = gzip_encode(b"hello")
-  // header: magic 1f 8b, CM=deflate 08.
-  assert_eq(out[0].to_int(), 0x1f)
-  assert_eq(out[1].to_int(), 0x8b)
-  assert_eq(out[2].to_int(), 0x08)
-  // ISIZE trailer == input length (5), little-endian in the last four bytes.
-  let n = out.length()
-  assert_eq(out[n - 4].to_int(), 5)
-  assert_eq(out[n - 3].to_int(), 0)
-  assert_eq(out[n - 2].to_int(), 0)
-  assert_eq(out[n - 1].to_int(), 0)
-  // CRC-32 of the input sits in the four bytes before ISIZE (zlib.crc32(b"hello")).
-  let crc = out[n - 8].to_int() |
-    (out[n - 7].to_int() << 8) |
-    (out[n - 6].to_int() << 16) |
-    (out[n - 5].to_int() << 24)
-  assert_eq(crc.reinterpret_as_uint(), 0x3610A686)
-}
-
-///|
-/// The raw DEFLATE payload of a gzip stream: header is 10 bytes, trailer 8.
-fn deflate_payload(gz : Bytes) -> Bytes {
-  let buf = Buffer()
-  for i = 10; i < gz.length() - 8; i = i + 1 {
-    buf.write_byte(gz[i])
-  }
-  buf.to_bytes()
-}
-
-///|
 /// `unit` repeated `n` times as bytes — a compressible fixture with real matches.
 fn repeat_bytes(unit : String, n : Int) -> Bytes {
   let sb = StringBuilder()
@@ -144,33 +104,9 @@ fn repeat_bytes(unit : String, n : Int) -> Bytes {
 }
 
 ///|
-test "deflate: fixed-Huffman round-trips through inflate" {
-  // Empty, a short literal run, and a highly repetitive body (real matches).
-  let cases = [
-    b"",
-    b"a",
-    b"hello, hello, hello, world",
-    xbytes(2000),
-    repeat_bytes("the quick brown fox ", 40),
-  ]
-  for original in cases {
-    let round = inflate(deflate_encode(original))
-    assert_eq(round, original)
-  }
-}
-
-///|
-test "deflate: compresses a repetitive payload (a real ratio)" {
-  // 2000 identical bytes collapse to a handful of length/distance codes.
-  let original = xbytes(2000)
-  let compressed = deflate_encode(original)
-  assert_eq(compressed.length() < original.length(), true)
-  assert_eq(compressed.length() < 60, true)
-  // And it still decodes back to the original.
-  assert_eq(inflate(compressed), original)
-}
-
-///|
+/// What belongs here is the middleware, not the codec: that the response is
+/// marked as gzip, that it actually got smaller, and that it reads back. Whether
+/// DEFLATE is correct is moonzip's question, and moonzip asks zlib.
 test "gzip: the middleware body inflates back to the response and is smaller" {
   let body = repeat_bytes("moonapi gzip middleware payload ", 60)
   let app = App::new()
@@ -178,9 +114,10 @@ test "gzip: the middleware body inflates back to the response and is smaller" {
   app.get("/j", _ctx => @moonasgi.Response::new(200, [], body))
   let z = app.handle(req_h("GET", "/j", [("accept-encoding", "gzip")]))
   assert_eq(hdr(z, "content-encoding"), "gzip")
-  // The gzip body is smaller than the source and inflates back byte-exact.
+  assert_eq(hdr(z, "vary"), "Accept-Encoding")
+  assert_eq(hdr(z, "content-length"), z.body.length().to_string())
   assert_eq(z.body.length() < body.length(), true)
-  assert_eq(inflate(deflate_payload(z.body)), body)
+  assert_eq(@gzip.gunzip(z.body[:]), body)
 }
 
 ///|

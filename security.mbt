@@ -178,7 +178,7 @@ fn unauthorized(
   @moonasgi.Response::new(
     401,
     [("content-type", "application/json"), ("www-authenticate", challenge)],
-    @utf8.encode(body.to_json().stringify()),
+    @moonjson.write_bytes(body.to_json()),
   )
 }
 
@@ -191,7 +191,7 @@ fn forbidden(detail : String) -> @moonasgi.Response {
   @moonasgi.Response::new(
     403,
     [("content-type", "application/json")],
-    @utf8.encode(body.to_json().stringify()),
+    @moonjson.write_bytes(body.to_json()),
   )
 }
 
@@ -251,7 +251,7 @@ pub fn create_access_token(
     }
     claims["scopes"] = arr.to_json()
   }
-  jwt_sign(claims, secret)
+  @jwt.sign(claims, HS256, hs256(secret))
 }
 
 ///|

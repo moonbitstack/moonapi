@@ -1,4 +1,5 @@
 import {
+  "moonbitstack/moonzip/gzip",
   "moonbitstack/moonapi",
   "moonbitstack/moonasgi",
   "moonbitlang/core/encoding/utf8",

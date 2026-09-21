@@ -1,6 +1,6 @@
 ///|
-/// Server-Sent Events framing. A `ServerSentEvent` encodes to the WHATWG
-/// event-stream wire format: `ServerSentEvent::data` is the common data-only
+/// Server-Sent Events framing. An `@sse.Event` encodes to the WHATWG
+/// event-stream wire format: `Event::of` is the common data-only
 /// frame, `new` sets `event` / `id` / `retry`, multi-line data splits into
 /// several `data:` lines, and `keep_alive` emits a `:`-comment ping that
 /// dispatches nothing. `sse_response` wraps a batch into a `text/event-stream`
@@ -12,14 +12,14 @@
 #coverage.skip
 fn main {
   let events = [
-    @moonapi.ServerSentEvent::data("hello"),
-    @moonapi.ServerSentEvent::new(
-      "first line\nsecond line",
-      event=Some("update"),
+    @sse.Event::of("hello"),
+    @sse.Event::new(
+      data="first line\nsecond line",
+      kind=Some("update"),
       id=Some("233"),
       retry=Some(3000),
     ),
-    @moonapi.ServerSentEvent::keep_alive(comment="ping"),
+    @sse.Event::ping(comment="ping"),
   ]
   println("--- individual frames (blank line dispatches each event) ---")
   let frames = StringBuilder()

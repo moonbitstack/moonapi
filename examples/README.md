@@ -33,9 +33,6 @@ over a real transport.
 | 16 | [`middleware`](16-middleware/) | CORS preflight/actual, real DEFLATE `gzip` round-tripped by `inflate`, raised exceptions, custom status page | `App::middleware`, `cors`, `gzip`, `inflate`, `http_error`, `App::exception_handler`, `App::add_status_handler` |
 | 17 | [`sse`](17-sse/) | Server-Sent Event framing (`data`/`event`/`id`/`retry`/multi-line/comment) and the `text/event-stream` envelope | `ServerSentEvent::data/new/keep_alive/encode`, `sse_response` |
 | 18 | [`websocket`](18-websocket/) | Echo and request-reply handlers driven against an in-memory frame queue; the recorded events | `App::websocket`, `drive_websocket`, `WebSocket::accept/receive/send/close`, `WsMessage` |
-| 19 | [`crypto`](19-crypto/) | The self-built primitives checked against NIST / RFC 4231 vectors; base64url round-trip | `sha256`, `sha512`, `hmac_sha256`, `constant_time_eq`, `base64url_encode/decode` |
-| 20 | [`jwt-signing`](20-jwt-signing/) | Sign and verify a JWT under HS256, RS256, ES256, and EdDSA; tamper and alg-downgrade refusals | `jwt_sign/jwt_verify`, `jwt_sign_rs256/es256/eddsa`, `RsaPrivateKey`/`EcdsaPrivateKey`/`Ed25519PrivateKey`, `JwtError` |
-| 21 | [`signatures`](21-signatures/) | The raw RSA / ECDSA / Ed25519 sign+verify primitives under JWT, round-tripped and pinned to the RFC 7515 A.3 vector | `rsa_pkcs1_sha256_sign/verify`, `ecdsa_p256_sha256_sign/verify`, `ed25519_sign/verify`, `*PublicKey::from_hex` |
 
 | 22 | [`docs-ui`](22-docs-ui/) | The three documentation pages FastAPI serves — the spec, Swagger UI, ReDoc — and how to leave one off | `App::enable_docs`, `swagger_ui`, `redoc_ui`, `html` |
 | 23 | [`lifespan`](23-lifespan/) | Startup and shutdown hooks, run through the moonasgi lifespan core so the order is visible without a server | `App::on_startup`, `App::on_shutdown`, `App::lifespan_handler` |

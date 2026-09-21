@@ -70,11 +70,11 @@ fn main {
 fn show(events : Array[@moonasgi.Event]) -> Unit {
   for ev in events {
     let line = match ev {
-      @moonasgi.WebSocketAccept(subprotocol~, headers=_) =>
+      @spec.WebSocketAccept(subprotocol~, headers=_) =>
         "accept subprotocol=\{subprotocol.unwrap_or("-")}"
-      @moonasgi.WebSocketSendText(t) => "send text: \{t}"
-      @moonasgi.WebSocketSendBytes(b) => "send bytes: \{b.length()} byte(s)"
-      @moonasgi.WebSocketClose(code~, reason~) =>
+      @spec.WebSocketSendText(t) => "send text: \{t}"
+      @spec.WebSocketSendBytes(b) => "send bytes: \{b.length()} byte(s)"
+      @spec.WebSocketClose(code~, reason~) =>
         "close code=\{code} reason=\{reason}"
       _ => "other"
     }
