@@ -39,10 +39,6 @@ SECTIONS = [
      "one-shot resolution with per-request caching, and yield-style teardown run "
      "LIFO around the handler - the explicit MoonBit equivalent of FastAPI's "
      "Depends."),
-    ("multipart", "multipart.mbt", "Form & file extractors",
-     "Context::form parses an urlencoded body (percent- and plus-decoded) and a "
-     "multipart/form-data body, splitting the boundary stream into FormFields and "
-     "byte-exact UploadFiles - FastAPI's Form(...) and File(...) parameters."),
     ("security", "security.mbt", "OAuth2 & bearer security",
      "OAuth2 password-bearer: create_access_token issues a scoped HS256 JWT, and "
      "OAuth2PasswordBearer reads the Authorization header, verifies the token, and "
@@ -67,29 +63,11 @@ SECTIONS = [
      "DEFLATE compressor, below), per-status handlers for custom error pages, and "
      "exception handlers that map a raised HttpException to a response, with a "
      "built-in 500 fallback."),
-    ("deflate", "deflate.mbt", "DEFLATE / gzip compression",
-     "A real RFC 1951 DEFLATE compressor - LZ77 back-reference matching over a "
-     "32 KiB window, coded with the fixed Huffman table - and a companion inflate "
-     "that decodes stored and fixed-Huffman blocks, so gzip output round-trips and "
-     "any conforming inflater (gzip, zlib) reads it."),
-    ("sse", "sse.mbt", "Server-Sent Events",
-     "ServerSentEvent frames per the WHATWG event-stream format - id / event / "
-     "retry / multi-line data / comment keep-alives - and sse_response builds the "
-     "text/event-stream envelope."),
     ("websocket", "websocket.mbt", "WebSocket routes",
      "App::websocket over the moonasgi WS SEAM. The handler drives a WebSocket "
      "(accept / receive / send / close) as a synchronous core, so drive_websocket "
      "runs it against an in-memory frame queue in a test and the serving shell "
      "runs it over the async transport."),
-    ("jwt", "jwt.mbt", "JWT (HS256)",
-     "Sign and verify compact HS256 JSON Web Tokens over the self-built HMAC, with "
-     "base64url segments, exp / nbf checks, constant-time signature comparison, and "
-     "refusal of the alg:none downgrade."),
-    ("crypto", "crypto.mbt", "SHA-256 / HMAC",
-     "The self-built signing primitives behind JWT: SHA-256 (FIPS 180-4), "
-     "HMAC-SHA256 (RFC 2104), and a constant-time byte comparison - core ships no "
-     "crypto, so these are implemented here and checked against the NIST / RFC "
-     "4231 vectors."),
     ("response_model", "response_model.mbt", "response_model",
      "filter_response / json_model validate a handler's return value against a "
      "declared Schema and project it down to exactly the model's fields, so a route "
@@ -120,10 +98,6 @@ SECTIONS = [
     ("security-extractors", "security_extractors.mbt", "Security extractors",
      "Pulling the credential out of a request for each scheme: the Authorization "
      "header, an API key in a header, query or cookie, and HTTP basic."),
-    ("signatures", ("rsa.mbt", "ecdsa.mbt", "ed25519.mbt", "sha512.mbt"), "Signature primitives",
-     "The RSA PKCS#1 v1.5, ECDSA P-256 and Ed25519 sign/verify primitives JWT rests "
-     "on, with the SHA-512 they need — written here so token verification needs no "
-     "native binding and runs on every backend."),
     ("di-demo", "di_demo.mbt", "Dependency injection worked example",
      "A worked wiring of the container: providers, scopes and overrides, kept in "
      "the package so it is compiled and tested rather than only described."),
