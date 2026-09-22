@@ -48,8 +48,12 @@ test "set_cookie renders its attributes in the canonical order" {
     "sid",
     "qwq",
     max_age=3600,
-    expires="Wed, 21 Oct 2026 07:28:00 GMT",
-    path="/api",
+    expires=@moondate.Moment::Zoned(
+      date=@moondate.Date::new(2026, 10, 21),
+      time=@moondate.Time::new(7, 28),
+      zone=Utc,
+    ),
+    path=Some("/api"),
     domain="example.test",
     secure=true,
     http_only=true,
@@ -84,11 +88,11 @@ test "set_cookie SameSite: Unrestricted is None on the wire, and can be omitted"
 }
 
 ///|
-/// An empty `path` drops the attribute, which scopes the cookie to the
+/// A `path` of `None` drops the attribute, which scopes the cookie to the
 /// request's own directory rather than the whole site.
-test "set_cookie with an empty path omits Path" {
+test "set_cookie with no path omits Path" {
   assert_eq(
-    set_cookie(text(200, "ok"), "a", "1", path="").header("set-cookie"),
+    set_cookie(text(200, "ok"), "a", "1", path=None).header("set-cookie"),
     Some("a=1; SameSite=Lax"),
   )
 }
@@ -133,9 +137,12 @@ test "delete_cookie expires the cookie by Max-Age and by date" {
 /// to repeat the scope that set it or it will miss.
 test "delete_cookie carries the scope it is given" {
   assert_eq(
-    delete_cookie(text(200, "ok"), "sid", path="/api", domain="example.test").header(
-      "set-cookie",
-    ),
+    delete_cookie(
+      text(200, "ok"),
+      "sid",
+      path=Some("/api"),
+      domain="example.test",
+    ).header("set-cookie"),
     Some(
       "sid=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; Domain=example.test; Path=/api; SameSite=Lax",
     ),

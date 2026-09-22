@@ -93,35 +93,12 @@ pub fn Context::json_field(self : Context, name : String) -> Json? {
 
 ///|
 /// Look up a cookie by name from the request `Cookie` header, which is a
-/// `; `-separated list of `key=value` pairs. Surrounding spaces are trimmed;
-/// `None` if there is no `Cookie` header or the name is absent.
+/// `; `-separated list of `key=value` pairs. Spaces around a name or a value are
+/// the separators'; `None` if there is no `Cookie` header or the name is absent.
 pub fn Context::cookie(self : Context, name : String) -> String? {
   match self.request.header("cookie") {
     None => None
-    Some(raw) => {
-      let n = raw.length()
-      let mut start = 0
-      for i = 0; i <= n; i = i + 1 {
-        if i == n || raw[i] == ';' {
-          if i > start {
-            let pair = trim_spaces(raw[start:i].to_owned())
-            let m = pair.length()
-            let mut eq = -1
-            for j = 0; j < m; j = j + 1 {
-              if pair[j] == '=' {
-                eq = j
-                break
-              }
-            }
-            if eq >= 0 && pair[0:eq].to_owned() == name {
-              return Some(pair[eq + 1:m].to_owned())
-            }
-          }
-          start = i + 1
-        }
-      }
-      None
-    }
+    Some(raw) => @cookie.get(raw[:], name[:])
   }
 }
 

@@ -7,6 +7,8 @@ import {
   "moonbitstack/moonasgi/lifespan",
   "moonbitstack/moonasgi/spec",
   "moonbitstack/mooncred/jwt",
+  "moonbitstack/moondate",
+  "moonbitstack/moonhttp/cookie",
   "moonbitstack/moonhttp/mime",
   "moonbitstack/moonhttp/sse",
 }
@@ -174,7 +176,7 @@ pub fn cors(allow_origins? : Array[String], allow_all_origins? : Bool, allow_met
 
 pub fn create_access_token(String, String, Int64, scopes? : Array[String], expires_in_secs? : Int64, extra? : Map[String, Json], wins? : @jwt.Wins, clash? : @jwt.OnClash[Map[String, Json]]) -> String
 
-pub fn delete_cookie(@http.Response, String, path? : String, domain? : String, secure? : Bool, http_only? : Bool, same_site? : SameSite?) -> @http.Response
+pub fn delete_cookie(@http.Response, String, path? : String?, domain? : String, secure? : Bool, http_only? : Bool, same_site? : @cookie.SameSite?) -> @http.Response
 
 pub fn demo_app() -> App
 
@@ -208,7 +210,7 @@ pub fn redoc_ui(spec_url? : String, title? : String) -> String
 
 pub fn[T : ToSchema] schema_of(T) -> Schema
 
-pub fn set_cookie(@http.Response, String, String, max_age? : Int, expires? : String, path? : String, domain? : String, secure? : Bool, http_only? : Bool, same_site? : SameSite?) -> @http.Response
+pub fn set_cookie(@http.Response, String, String, max_age? : Int, expires? : @moondate.Moment, path? : String?, domain? : String, secure? : Bool, http_only? : Bool, same_site? : @cookie.SameSite?) -> @http.Response
 
 pub fn sse_response(Array[@sse.Event], status? : Int, headers? : Array[(String, String)], space? : Bool, wins? : @jwt.Wins, clash? : @jwt.OnClash[Array[(String, String)]]) -> @http.StreamingResponse
 
@@ -609,14 +611,6 @@ pub fn Router::route_bg(Self, Method, String, (Context, BackgroundTasks) -> @htt
 pub fn Router::stream(Self, String, (Context) -> @http.StreamingResponse raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int, responses? : Array[ResponseSpec], name? : String, endpoint? : Endpoint, security? : Array[SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
 pub fn Router::websocket(Self, String, (WebSocket) -> Unit) -> Unit
 
-pub(all) enum SameSite {
-  Strict
-  Lax
-  Unrestricted
-} derive(Eq)
-pub fn SameSite::equal(Self, Self) -> Bool
-pub fn SameSite::not_equal(Self, Self) -> Bool
-
 pub(all) enum Schema {
   SStr
   SInt
@@ -737,6 +731,8 @@ pub type ApiHandler = (Context) -> @http.Response raise
 
 pub type BackgroundHandler = (Context, BackgroundTasks) -> @http.Response raise
 
+pub using @cookie {type Cookie}
+
 pub using @sse {type Event}
 
 pub type ExceptionHandler = (Context, Error) -> @http.Response?
@@ -744,6 +740,8 @@ pub type ExceptionHandler = (Context, Error) -> @http.Response?
 pub using @mime {type Form}
 
 pub using @mime {type Limits}
+
+pub using @cookie {type SameSite}
 
 pub type StreamHandler = (Context) -> @http.StreamingResponse raise
 
