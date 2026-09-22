@@ -624,11 +624,13 @@ pub(all) enum Schema {
   SMap(Schema)
   SAny
   SFormat(Schema, String)
+  SJson(Json)
 } derive(Eq)
 pub fn Schema::array(Self) -> Self
 pub fn Schema::binary() -> Self
 pub fn Schema::equal(Self, Self) -> Bool
 pub fn Schema::format(Self, String) -> Self
+pub fn Schema::json(Json) -> Self
 pub fn Schema::map(Self) -> Self
 pub fn Schema::not_equal(Self, Self) -> Bool
 pub fn Schema::nullable(Self) -> Self

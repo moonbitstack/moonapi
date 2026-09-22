@@ -34,6 +34,7 @@ over a real transport.
 | 17 | [`sse`](17-sse/) | Server-Sent Event framing (`data`/`event`/`id`/`retry`/multi-line/comment) and the `text/event-stream` envelope | `ServerSentEvent::data/new/keep_alive/encode`, `sse_response` |
 | 18 | [`websocket`](18-websocket/) | Echo and request-reply handlers driven against an in-memory frame queue; the recorded events | `App::websocket`, `drive_websocket`, `WebSocket::accept/receive/send/close`, `WsMessage` |
 
+| 19 | [`json-schema`](19-json-schema/) | A body written as JSON Schema — a `pattern` and a closed set the constructors cannot say — emitted into the document and validated against | `Schema::json`, `Endpoint::new`, `validate_schema` |
 | 22 | [`docs-ui`](22-docs-ui/) | The three documentation pages FastAPI serves — the spec, Swagger UI, ReDoc — and how to leave one off | `App::enable_docs`, `swagger_ui`, `redoc_ui`, `html` |
 | 23 | [`lifespan`](23-lifespan/) | Startup and shutdown hooks, run through the moonasgi lifespan core so the order is visible without a server | `App::on_startup`, `App::on_shutdown`, `App::lifespan_handler` |
 

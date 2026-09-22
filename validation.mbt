@@ -179,6 +179,24 @@ pub fn ValidationError::type_error(
 }
 
 ///|
+/// `loc` with the segments of a JSON Pointer appended, `~1` and `~0` undone.
+fn pointer_loc(loc : Array[String], pointer : String) -> Array[String] {
+  let out : Array[String] = [..loc]
+  if pointer == "" {
+    return out
+  }
+  for segment in pointer[1:].split("/") {
+    out.push(
+      segment
+      .to_owned()
+      .replace_all(old="~1", new="/")
+      .replace_all(old="~0", new="~"),
+    )
+  }
+  out
+}
+
+///|
 /// `loc` with `seg` appended, as a fresh array so sibling error paths never
 /// share and mutate one another.
 fn loc_push(loc : Array[String], seg : String) -> Array[String] {
@@ -240,6 +258,27 @@ pub fn validate_schema(
   errs : Array[ValidationError],
 ) -> Unit {
   match (schema, value) {
+    // A JSON Schema validates itself: moonschema reads the same document the
+    // OpenAPI emitter writes, and each of its faults becomes one error here.
+    (SJson(document), _) => {
+      let validator = @moonschema.Schema::new(document) catch {
+        error => {
+          errs.push(
+            ValidationError::type_error(loc, "schema_error", error.to_string()),
+          )
+          return
+        }
+      }
+      for fault in validator.faults(value) {
+        errs.push(
+          ValidationError::type_error(
+            pointer_loc(loc, fault.at),
+            fault.keyword,
+            fault.message,
+          ),
+        )
+      }
+    }
     (SStr, String(_)) => ()
     (SStr, _) =>
       errs.push(

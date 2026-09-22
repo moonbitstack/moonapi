@@ -32,6 +32,10 @@ pub(all) enum Schema {
   // A schema refined by an OpenAPI `format`. `format: binary` is what an upload
   // is described as, and the reason this exists.
   SFormat(Schema, String)
+  // A schema written as JSON Schema itself, for what the constructors above
+  // cannot say: `pattern`, `allOf`, `$ref`, a vocabulary of one's own. It is
+  // emitted into the document as it stands and validated by `moonschema`.
+  SJson(Json)
 } derive(Eq)
 
 ///|
@@ -117,6 +121,14 @@ pub fn Schema::map(value : Schema) -> Schema {
 /// validator for.
 pub fn Schema::format(base : Schema, format : String) -> Schema {
   SFormat(base, format)
+}
+
+///|
+/// A schema written as JSON Schema itself (2020-12, which is what OpenAPI 3.1
+/// is). Use it for what the other constructors cannot say; it goes into the
+/// document unchanged.
+pub fn Schema::json(document : Json) -> Schema {
+  SJson(document)
 }
 
 ///|
@@ -277,6 +289,7 @@ fn emit_schema(
     }
     SFormat(base, format) =>
       with_key(emit_schema(base, defs, version), "format", format.to_json())
+    SJson(document) => document
   }
 }
 

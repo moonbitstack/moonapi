@@ -17,6 +17,7 @@ import {
   "moonbitstack/moonhttp/sse",
   "moonbitstack/moonhttp/cookie",
   "moonbitstack/moondate",
+  "moonbitstack/moonschema",
   "moonbitstack/moonzip/gzip",
   "moonbitlang/core/json",
   "moonbitlang/core/string",
