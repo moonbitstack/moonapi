@@ -1,0 +1,9 @@
+import {
+  "moonbitstack/moonapi",
+  "moonbitstack/moonasgi",
+  "moonbitstack/moonhttp/conditional",
+  "moonbitstack/mooncrypt/hash/sha2",
+  "moonbitlang/core/encoding/utf8",
+}
+
+pkgtype(kind: "executable")

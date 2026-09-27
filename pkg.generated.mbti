@@ -8,6 +8,7 @@ import {
   "moonbitstack/moonasgi/spec",
   "moonbitstack/mooncred/jwt",
   "moonbitstack/moondate",
+  "moonbitstack/moonhttp/conditional",
   "moonbitstack/moonhttp/cookie",
   "moonbitstack/moonhttp/mime",
   "moonbitstack/moonhttp/sse",
@@ -175,6 +176,10 @@ pub fn check_constraints(Json, Array[Constraint], Array[String], Array[Validatio
 pub fn cors(allow_origins? : Array[String], allow_all_origins? : Bool, allow_methods? : Array[String], allow_headers? : Array[String], allow_all_headers? : Bool, allow_credentials? : Bool, expose_headers? : Array[String], max_age? : Int) -> ((@http.Request) -> @http.Response) -> (@http.Request) -> @http.Response
 
 pub fn create_access_token(String, String, Int64, scopes? : Array[String], expires_in_secs? : Int64, extra? : Map[String, Json], wins? : @jwt.Wins, clash? : @jwt.OnClash[Map[String, Json]]) -> String
+
+pub fn data_response(String, filename? : String, status? : Int, inline? : Bool) -> @http.Response?
+
+pub fn data_url(Bytes, media_type? : String) -> String
 
 pub fn delete_cookie(@http.Response, String, path? : String?, domain? : String, secure? : Bool, http_only? : Bool, same_site? : @cookie.SameSite?) -> @http.Response
 
@@ -407,6 +412,7 @@ pub fn Context::oauth2_password_form(Self) -> OAuth2PasswordRequestForm?
 pub fn Context::param(Self, String) -> String?
 pub fn Context::query(Self, String, limits? : @mime.Limits) -> String?
 pub fn Context::query_all(Self, String, limits? : @mime.Limits) -> Array[String]
+pub fn Context::serve(Self, Bytes, filename? : String, media_type? : String, inline? : Bool, etag? : @conditional.Tag, modified? : @moondate.Moment, ranges? : Bool) -> @http.Response
 
 pub(all) struct CorsConfig {
   allow_origins : Array[String]

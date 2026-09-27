@@ -72,10 +72,13 @@ SECTIONS = [
      "filter_response / json_model validate a handler's return value against a "
      "declared Schema and project it down to exactly the model's fields, so a route "
      "exposes only what it promised - FastAPI's response_model."),
-    ("response", "response.mbt", "Redirects & file downloads",
+    ("response", "response.mbt", "Redirects, downloads & conditional serving",
      "The response kinds that are an envelope rather than a body: redirect (the "
-     "status and a percent-encoded Location) and file_response (a media type from "
-     "the filename, Content-Length, and an RFC 6266 Content-Disposition)."),
+     "status and an escaped Location), file_response (a media type from the "
+     "filename, Content-Length, and an RFC 6266 Content-Disposition), and "
+     "Context::serve, which is the same envelope with the request weighed - 304 "
+     "when the client's copy is current, 412 when a precondition fails, 206 for a "
+     "Range and 416 for one that cannot be met. Plus the data: URL both ways."),
     ("cookie", "cookie.mbt", "Cookies",
      "set_cookie and delete_cookie - one Set-Cookie header per cookie, attributes "
      "in RFC 6265 order, values stripped of the octets that could forge an "
@@ -98,6 +101,22 @@ SECTIONS = [
     ("security-extractors", "security_extractors.mbt", "Security extractors",
      "Pulling the credential out of a request for each scheme: the Authorization "
      "header, an API key in a header, query or cookie, and HTTP basic."),
+    ("form", "form.mbt", "Form & file extractors",
+     "Context::form reads both carriers a browser posts a form in - urlencoded "
+     "and multipart - into one shape, bounded by the limits the caller gives, so "
+     "a body over them is refused whole rather than truncated."),
+    ("events", "events.mbt", "Server-Sent Events",
+     "sse_response turns a stream of events into a text/event-stream response, one "
+     "chunk per event so each dispatches on arrival, with the three headers that "
+     "stop a proxy from buffering it into a file shaped like a stream."),
+    ("token", "token.mbt", "Access tokens",
+     "create_access_token names an algorithm and hands the signing to mooncred: "
+     "the claims, the expiry and the extra members a caller adds, with the "
+     "reserved ones it may not overwrite."),
+    ("security-guards", "security_guards.mbt", "Security guards",
+     "The check each scheme registers to run before the handler: the challenge a "
+     "401 owes, the 403 a missing scope earns, and the switch that lets an "
+     "anonymous caller through for a route that would rather decide for itself."),
     ("di-demo", "di_demo.mbt", "Dependency injection worked example",
      "A worked wiring of the container: providers, scopes and overrides, kept in "
      "the package so it is compiled and tested rather than only described."),
