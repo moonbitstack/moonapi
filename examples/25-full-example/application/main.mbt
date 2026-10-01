@@ -43,12 +43,9 @@ pub fn build() -> @moonapi.App {
     match ctx.oauth2_password_form() {
       Some(form) if form.username == "demo" && form.password == "demo" => {
         let now = @async.now() / 1000L
-        let token = @moonapi.create_access_token(
-          form.username,
-          secret,
-          now,
-          scopes=["profile:read"],
-        )
+        let token = @moonapi.create_access_token(form.username, secret, now, scopes=[
+          "profile:read",
+        ])
         @moonapi.token_response(token)
       }
       Some(_) => @moonapi.text(401, "invalid credentials")
