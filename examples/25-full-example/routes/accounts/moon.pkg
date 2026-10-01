@@ -1,0 +1,4 @@
+import {
+  "moonbitstack/moonapi",
+  "moonbitstack/moonapi/examples/25-full-example/services",
+}

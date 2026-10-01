@@ -276,11 +276,11 @@ document.addEventListener("DOMContentLoaded",()=>{
 });
 """
 
-CONTRACT = """let app = App::new()
-app.get("/users/:id", ctx => text(200, "user " + ctx.param("id").unwrap()))
+CONTRACT = """let app = @moonapi.App::new()
+app.get("/users/:id", ctx => @moonapi.text(200, "user " + ctx.param("id").unwrap()))
 
-let spec = app.openapi_json(version=OpenApi31)   // also OpenApi30 / Swagger20
-@mooncat.serve(app.to_asgi(), port=8000)         // run it (native)"""
+let spec = app.openapi_json(version=@moonapi.OpenApi31)   // also @moonapi.OpenApi30 / @moonapi.Swagger20
+@mooncat.serve(app.to_asgi(), host="127.0.0.1", port=8000)"""
 
 
 def esc(t):
@@ -314,13 +314,19 @@ def main():
             'transport lives in the server (mooncat) that runs the app.</p>'
             '<div class="badges">'
             '<a href="https://github.com/moonbitstack/moonapi/actions"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/moonbitstack/moonapi/ci.yml?branch=master&label=CI&logo=github"></a>'
-            '<img alt="tests" src="https://img.shields.io/badge/tests-86%20passing%20%C3%974%20backends-0ca678">'
             '<a href="https://github.com/moonbitstack/moonapi"><img alt="GitHub" src="https://img.shields.io/badge/GitHub-source-24292f?logo=github"></a>'
             '<img alt="license" src="https://img.shields.io/badge/license-Apache--2.0-6d5efc"></div>'
             '<div class="install"><span class="prompt">$</span><code>moon add moonbitstack/moonapi</code>'
             '<button class="copy" data-copy="moon add moonbitstack/moonapi">copy</button></div>'
             '<div class="contract"><h2><span class="spark">&#10038;</span> The contract at a glance</h2>'
-            '<pre>' + tint(CONTRACT) + '</pre></div></header>')
+            '<pre>' + tint(CONTRACT) + '</pre></div>'
+            '<div class="contract"><h2>Run the full example</h2>'
+            '<p class="pdesc">Start the native Mooncat server on Windows, macOS or Linux:</p>'
+            '<pre>moon run examples/25-full-example --target native</pre>'
+            '<p class="doc"><a href="http://127.0.0.1:8000/docs">Swagger UI</a> · '
+            '<a href="http://127.0.0.1:8000/redoc">ReDoc</a> · '
+            '<a href="http://127.0.0.1:8000/openapi.json">OpenAPI 3.0.3</a> · '
+            '<a href="https://github.com/moonbitstack/moonapi/blob/master/examples/README.md#full-example-api">API route list</a></p></div></header>')
 
     body = [HEAD, '<div class="layout">'] + side + [hero]
     total = 0

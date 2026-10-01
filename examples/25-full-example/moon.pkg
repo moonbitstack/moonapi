@@ -1,0 +1,9 @@
+import {
+  "moonbitstack/moonapi/examples/25-full-example/application",
+  "moonbitstack/mooncat",
+  "moonbitlang/async",
+}
+
+supported_targets = "+native"
+
+pkgtype(kind: "executable")

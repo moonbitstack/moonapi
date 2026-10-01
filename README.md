@@ -32,14 +32,23 @@ app.get("/users/:id", ctx => @moonapi.text(200, "user " + ctx.param("id").unwrap
 app.post("/users", _ctx => @moonapi.text(201, "created"))
 
 // One set of routes → every mainstream spec version:
-let v31 = app.openapi_json(version=OpenApi31)   // OpenAPI 3.1.0
-let v30 = app.openapi_json(version=OpenApi30)   // OpenAPI 3.0.3
-let v20 = app.openapi_json(version=Swagger20)   // Swagger 2.0
+let v31 = app.openapi_json(version=@moonapi.OpenApi31)   // OpenAPI 3.1.0
+let v30 = app.openapi_json(version=@moonapi.OpenApi30)   // OpenAPI 3.0.3
+let v20 = app.openapi_json(version=@moonapi.Swagger20)   // Swagger 2.0
 let docs_page = @moonapi.swagger_ui()           // a Swagger UI page
 
 // Serve it (native, via mooncat):
 @mooncat.serve(app.to_asgi(), port=8000)
 ```
+
+For a runnable integration of the root API, two routers, authentication,
+validation, middleware, background work, streaming and docs, see the
+[complete application example](examples/25-full-example/). The full example list
+is in [examples/README.md](examples/README.md). On Windows, macOS or Linux, start
+the native server with `moon run examples/25-full-example --target native`. The service
+provides Swagger UI at `http://127.0.0.1:8000/docs`, ReDoc at
+`http://127.0.0.1:8000/redoc`, and OpenAPI 3.0.3 at
+`http://127.0.0.1:8000/openapi.json`.
 
 ## What's here (`v0`)
 
@@ -80,9 +89,9 @@ ctx.query("tag")                                       // the preset bound
 ctx.query("tag", limits=@mime.Limits::new(parts=100000))
 ctx.form(limits=@mime.Limits::new(part_size=8 << 20))  // an upload endpoint
 
-create_access_token(sub, secret, now, extra={ "tenant": Json::string("acme") })
-sse_response(events, headers=[("cache-control", "no-store")])
-sse_response(events, space=false)
+@moonapi.create_access_token(sub, secret, now, extra={ "tenant": Json::string("acme") })
+@moonapi.sse_response(events, headers=[("cache-control", "no-store")])
+@moonapi.sse_response(events, space=false)
 ```
 
 | Setting | Default | Why that one |

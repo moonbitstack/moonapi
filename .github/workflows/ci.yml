@@ -19,17 +19,23 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: install-unix
-        if: ${{ matrix.os != 'windows-latest' }}
+      - name: openssl headers (ubuntu)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev
+
+      - name: install moon (unix)
+        if: runner.os != 'Windows'
         run: |
           curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
           echo "$HOME/.moon/bin" >> $GITHUB_PATH
 
-      - name: install-windows
-        if: ${{ matrix.os == 'windows-latest' }}
+      - name: install moon (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
         run: |
-          Set-ExecutionPolicy RemoteSigned -Scope CurrentUser; irm https://cli.moonbitlang.com/install/powershell.ps1 | iex
-          "C:\Users\runneradmin\.moon\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
+          Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+          Invoke-RestMethod https://cli.moonbitlang.com/install/powershell.ps1 | Invoke-Expression
+          Add-Content -Path $env:GITHUB_PATH -Value "$HOME\.moon\bin" -Encoding utf8
 
       - name: post install
         run: |
@@ -42,9 +48,12 @@ jobs:
       - name: moon build
         run: moon build --target all
 
+      - name: moon build (native server)
+        run: moon build --target native
+
       - name: moon test (all backends)
         run: moon test --target all
 
       - name: lint (fmt is clean)
         run: |
-          moon fmt && git diff --exit-code
+          moon fmt && git -c core.autocrlf=false diff --ignore-cr-at-eol --exit-code
