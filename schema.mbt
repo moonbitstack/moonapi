@@ -36,7 +36,16 @@ pub(all) enum Schema {
   // cannot say: `pattern`, `allOf`, `$ref`, a vocabulary of one's own. It is
   // emitted into the document as it stands and validated by `moonschema`.
   SJson(Json)
-} derive(Eq)
+} derive(Eq, Debug)
+
+///|
+pub extend Field with Debug::{to_repr}
+
+///|
+pub extend ObjectSchema with Debug::{to_repr}
+
+///|
+pub extend Schema with Debug::{to_repr}
 
 ///|
 /// The body of an object schema: its component `name` (empty = an anonymous
@@ -46,7 +55,7 @@ pub(all) struct ObjectSchema {
   name : String
   fields : Array[Field]
   description : String
-} derive(Eq)
+} derive(Eq, Debug)
 
 ///|
 /// One field of an object schema: its `name`, its `schema`, whether it is
@@ -59,7 +68,7 @@ pub(all) struct Field {
   description : String
   constraints : Array[Constraint]
   default : Json?
-} derive(Eq)
+} derive(Eq, Debug)
 
 ///|
 /// Build a field. `required` defaults to `true` (FastAPI treats a field without

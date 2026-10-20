@@ -6,6 +6,7 @@
 // format, the wire formats and the compression all belong to libraries of their
 // own, and the framework holds two lines of glue at each seam.
 import {
+  "moonbitstack/moonmodel",
   "moonbitstack/moonasgi",
   "moonbitstack/moonbase/base64",
   "moonbitstack/moonjson",

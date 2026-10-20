@@ -1,0 +1,9 @@
+// One description driving validation and the document: `moon run examples/26-described-model`.
+import {
+  "moonbitstack/moonapi",
+  "moonbitstack/moonasgi",
+  "moonbitstack/moonmodel",
+  "moonbitlang/core/encoding/utf8",
+}
+
+pkgtype(kind: "executable")

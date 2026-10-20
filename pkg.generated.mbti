@@ -2,6 +2,7 @@
 package "moonbitstack/moonapi"
 
 import {
+  "moonbitlang/core/debug",
   "moonbitlang/core/json",
   "moonbitstack/moonasgi/http",
   "moonbitstack/moonasgi/lifespan",
@@ -12,6 +13,7 @@ import {
   "moonbitstack/moonhttp/cookie",
   "moonbitstack/moonhttp/mime",
   "moonbitstack/moonhttp/sse",
+  "moonbitstack/moonmodel",
 }
 
 // Values
@@ -368,9 +370,10 @@ pub(all) enum Constraint {
   Pattern(String)
   MinItems(Int32)
   MaxItems(Int32)
-} derive(Eq)
+} derive(Eq, @debug.Debug)
 pub fn Constraint::equal(Self, Self) -> Bool
 pub fn Constraint::not_equal(Self, Self) -> Bool
+pub fn Constraint::to_repr(Self) -> @debug.Repr
 
 pub(all) struct Contact {
   name : String
@@ -464,11 +467,12 @@ pub(all) struct Field {
   description : String
   constraints : Array[Constraint]
   default : Json?
-} derive(Eq)
+} derive(Eq, @debug.Debug)
 pub fn Field::equal(Self, Self) -> Bool
 pub fn Field::is_required(Self) -> Bool
 pub fn Field::new(String, Schema, required? : Bool, description? : String, constraints? : Array[Constraint], default? : Json) -> Self
 pub fn Field::not_equal(Self, Self) -> Bool
+pub fn Field::to_repr(Self) -> @debug.Repr
 
 pub(all) struct GreetReq {
   name : String
@@ -547,9 +551,10 @@ pub(all) struct ObjectSchema {
   name : String
   fields : Array[Field]
   description : String
-} derive(Eq)
+} derive(Eq, @debug.Debug)
 pub fn ObjectSchema::equal(Self, Self) -> Bool
 pub fn ObjectSchema::not_equal(Self, Self) -> Bool
+pub fn ObjectSchema::to_repr(Self) -> @debug.Repr
 
 pub(all) enum OpenApiVersion {
   Swagger20
@@ -631,7 +636,7 @@ pub(all) enum Schema {
   SAny
   SFormat(Schema, String)
   SJson(Json)
-} derive(Eq)
+} derive(Eq, @debug.Debug)
 pub fn Schema::array(Self) -> Self
 pub fn Schema::binary() -> Self
 pub fn Schema::equal(Self, Self) -> Bool
@@ -641,6 +646,8 @@ pub fn Schema::map(Self) -> Self
 pub fn Schema::not_equal(Self, Self) -> Bool
 pub fn Schema::nullable(Self) -> Self
 pub fn Schema::object(String, Array[Field]) -> Self
+pub fn Schema::of_model(@moonmodel.Model, known? : Array[@moonmodel.Model]) -> (Self, Array[Unresolved])
+pub fn Schema::to_repr(Self) -> @debug.Repr
 
 pub struct Scope[V] {
   container : Container[V]
@@ -683,6 +690,14 @@ pub(all) struct Server {
   url : String
   description : String
 }
+
+pub(all) struct Unresolved {
+  field : String
+  model : String
+  why : String
+} derive(Eq)
+pub fn Unresolved::equal(Self, Self) -> Bool
+pub fn Unresolved::not_equal(Self, Self) -> Bool
 
 pub(all) struct User {
   id : Int32

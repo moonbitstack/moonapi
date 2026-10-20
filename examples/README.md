@@ -80,6 +80,7 @@ transport.
 | 23 | [`lifespan`](23-lifespan/) | Startup and shutdown hooks, run through the moonasgi lifespan core so the order is visible without a server | `App::on_startup`, `App::on_shutdown`, `App::lifespan_handler` |
 | 24 | [`files`](24-files/) | Serving a file the way RFC 9110 asks: a 304 for a repeat, a 206 for a resumed download, a 416 for a range that is not there, and the `data:` URL a browser hands back | `Context::serve`, `data_response`, `data_url`, `@conditional.hash` |
 | 25 | [`full-example`](25-full-example/) | Root endpoints plus two included routers in a multi-package layout, composed with auth, validation, middleware, forms, files, background tasks, SSE, WebSockets, lifecycle and OpenAPI | `App`, `Router`, `include_router`, `secure_oauth2`, `cors`, `gzip`, `route_bg`, `stream`, `websocket` |
+| 26 | [`described-model`](26-described-model/) | One moonmodel description driving both the validation and the document, a reference looked up in `known`, and the report for one that is not there | `Schema::of_model`, `Unresolved`, `Endpoint::validate`, `App::openapi_json` |
 
 The complete application serves OpenAPI 3.0.3 at `/openapi.json`. Other examples
 can emit Swagger 2.0, OpenAPI 3.0.3 or 3.1.0 by passing the corresponding version
