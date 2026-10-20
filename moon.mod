@@ -1,6 +1,6 @@
 name = "moonbitstack/moonapi"
 
-version = "0.13.1"
+version = "0.13.2"
 
 readme = "README.md"
 
