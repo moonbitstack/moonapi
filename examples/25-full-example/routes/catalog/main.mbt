@@ -47,7 +47,7 @@ fn echo_once(ws : @moonapi.WebSocket) -> Unit {
 }
 
 ///|
-pub fn exercise_websocket() -> Int {
+pub fn exercise_websocket() -> Int32 {
   let events = @moonapi.drive_websocket(
     echo_once,
     [@moonapi.WsText("hello")],

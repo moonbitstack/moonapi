@@ -97,7 +97,7 @@ test "per-op security: the requirement surfaces as the OpenAPI security array" {
         _ => []
       }
       assert_eq(scopes.length(), 1)
-      assert_eq(scopes[0], "items".to_json())
+      assert_eq(scopes[0], Json("items"))
     }
     _ => assert_eq("security entry is an object", "")
   }

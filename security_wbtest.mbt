@@ -71,11 +71,11 @@ test "create_access_token stamps sub / iat / exp / scopes and verifies" {
     expires_in_secs=60L,
   )
   let c = @jwt.verify(token[:], HS256, hs256("secret"), now=At(1000L))
-  assert_eq(c.get("sub"), Some("alice".to_json()))
+  assert_eq(c.get("sub"), Some(Json("alice")))
   // iat / exp are JSON numbers (NumericDate), not strings.
-  assert_eq(c.get("iat"), Some(1000.0.to_json()))
-  assert_eq(c.get("exp"), Some(1060.0.to_json()))
-  assert_eq(c.get("scopes"), Some(["me", "items"].to_json()))
+  assert_eq(c.get("iat"), Some(Json(1000.0)))
+  assert_eq(c.get("exp"), Some(Json(1060.0)))
+  assert_eq(c.get("scopes"), Some(Json(["me", "items"])))
 }
 
 ///|

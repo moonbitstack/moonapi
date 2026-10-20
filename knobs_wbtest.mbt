@@ -3,7 +3,7 @@
 
 ///|
 /// How many times `name` appears among a response's headers.
-fn header_count(headers : Array[(String, String)], name : String) -> Int {
+fn header_count(headers : Array[(String, String)], name : String) -> Int32 {
   let mut n = 0
   for h in headers {
     if h.0.to_lower() == name {

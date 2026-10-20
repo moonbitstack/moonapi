@@ -26,7 +26,7 @@ test "response_model drops fields the model doesn't declare" {
     Err(_) => Json::null()
   }
   assert_eq(json_str(filtered, "name"), "ada")
-  assert_eq(dig(filtered, ["id"]).unwrap(), (7).to_json())
+  assert_eq(dig(filtered, ["id"]).unwrap(), Json(7))
   // Extra top-level fields are gone.
   assert_eq(dig(filtered, ["password_hash"]) is None, true)
   assert_eq(dig(filtered, ["internal"]) is None, true)

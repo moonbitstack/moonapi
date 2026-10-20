@@ -7,8 +7,8 @@ fn mkreq(m : String, path : String) -> @moonasgi.Request {
 fn mkreq_full(
   m : String,
   path : String,
-  query? : Bytes = b"",
-  body? : Bytes = b"",
+  query~ : Bytes = b"",
+  body~ : Bytes = b"",
 ) -> @moonasgi.Request {
   { http_method: m, path, query_string: query, headers: [], body, }
 }
@@ -270,7 +270,7 @@ test "openapi operation deprecated flag" {
     Some(Object(op)) => op.get("deprecated")
     _ => None
   }
-  assert_eq(dep, Some(true.to_json()))
+  assert_eq(dep, Some(Json(true)))
   // A live operation omits the key entirely (FastAPI parity — false is not emitted).
   let has_dep = match op_of(doc, "/new", "get") {
     Some(Object(op)) => op.contains("deprecated")
@@ -300,9 +300,9 @@ test "openapi operation description, operationId and status_code" {
   }
   assert_eq(
     op.get("description"),
-    Some("Stores the item and answers with where it went.".to_json()),
+    Some(Json("Stores the item and answers with where it went.")),
   )
-  assert_eq(op.get("operationId"), Some("create_item".to_json()))
+  assert_eq(op.get("operationId"), Some(Json("create_item")))
   // `status_code` is what the success response is keyed by, in place of 200.
   assert_eq(op_responses(doc, "/items", "post").keys().collect(), ["201"])
   // A route that says none of it emits none of it, the way FastAPI does.
@@ -362,8 +362,8 @@ test "openapi_extra is merged last and overrides a generated field" {
   guard op_of(app.openapi(), "/thing", "get") is Some(Object(op)) else {
     fail("the operation should be present")
   }
-  assert_eq(op.get("summary"), Some("hand-written".to_json()))
-  assert_eq(op.get("x-internal"), Some(true.to_json()))
+  assert_eq(op.get("summary"), Some(Json("hand-written")))
+  assert_eq(op.get("x-internal"), Some(Json(true)))
   // What it does not name is left as generated.
   assert_eq(op.contains("responses"), true)
 }
@@ -384,24 +384,24 @@ test "openapi richer info: description/contact/license + servers" {
   guard m.get("info") is Some(Object(info)) else {
     fail("info should be present")
   }
-  assert_eq(info.get("description"), Some("qwq api".to_json()))
+  assert_eq(info.get("description"), Some(Json("qwq api")))
   guard info.get("contact") is Some(Object(c)) else {
     fail("contact should be present")
   }
-  assert_eq(c.get("name"), Some("heke1228".to_json()))
-  assert_eq(c.get("email"), Some("emm@qq.com".to_json()))
+  assert_eq(c.get("name"), Some(Json("heke1228")))
+  assert_eq(c.get("email"), Some(Json("emm@qq.com")))
   // An empty contact field is omitted, not emitted as "".
   assert_eq(c.get("url"), None)
   guard info.get("license") is Some(Object(l)) else {
     fail("license should be present")
   }
-  assert_eq(l.get("name"), Some("Apache-2.0".to_json()))
+  assert_eq(l.get("name"), Some(Json("Apache-2.0")))
   guard m.get("servers") is Some(Array(sv)) else {
     fail("servers should be present")
   }
   assert_eq(sv.length(), 1)
   guard sv[0] is Object(s0) else { fail("server should be an object") }
-  assert_eq(s0.get("url"), Some("https://api.example.com".to_json()))
+  assert_eq(s0.get("url"), Some(Json("https://api.example.com")))
 }
 
 ///|

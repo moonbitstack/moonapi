@@ -14,7 +14,7 @@ pub(all) struct HttpBasicCredentials {
 
 ///|
 /// The index of the first `:` in `s`, or `-1`.
-fn first_colon(s : String) -> Int {
+fn first_colon(s : String) -> Int32 {
   for i = 0; i < s.length(); i = i + 1 {
     if s[i] == ':' {
       return i

@@ -30,7 +30,7 @@ pub(all) struct Provider[V] {
 /// a no-op — the common "plain value, nothing to release" case.
 pub fn[V] Provider::new(
   factory : () -> V,
-  teardown? : (V, Error?) -> Unit = (_v, _e) => (),
+  teardown~ : (V, Error?) -> Unit = (_v, _e) => (),
 ) -> Provider[V] {
   { factory: _scope => factory(), teardown, }
 }
@@ -40,7 +40,7 @@ pub fn[V] Provider::new(
 /// `Scope` it is handed — the sub-dependency case (FastAPI's nested `Depends`).
 pub fn[V] Provider::scoped(
   factory : (Scope[V]) -> V,
-  teardown? : (V, Error?) -> Unit = (_v, _e) => (),
+  teardown~ : (V, Error?) -> Unit = (_v, _e) => (),
 ) -> Provider[V] {
   { factory, teardown, }
 }
@@ -68,7 +68,7 @@ pub fn[V] Container::provide(
   self : Container[V],
   key : String,
   factory : () -> V,
-  teardown? : (V, Error?) -> Unit = (_v, _e) => (),
+  teardown~ : (V, Error?) -> Unit = (_v, _e) => (),
 ) -> Container[V] {
   self.providers[key] = Provider::new(factory, teardown~)
   self
@@ -82,7 +82,7 @@ pub fn[V] Container::provide_using(
   self : Container[V],
   key : String,
   factory : (Scope[V]) -> V,
-  teardown? : (V, Error?) -> Unit = (_v, _e) => (),
+  teardown~ : (V, Error?) -> Unit = (_v, _e) => (),
 ) -> Container[V] {
   self.providers[key] = Provider::scoped(factory, teardown~)
   self
@@ -96,7 +96,7 @@ pub fn[V] Container::override_(
   self : Container[V],
   key : String,
   factory : () -> V,
-  teardown? : (V, Error?) -> Unit = (_v, _e) => (),
+  teardown~ : (V, Error?) -> Unit = (_v, _e) => (),
 ) -> Container[V] {
   self.overrides[key] = Provider::new(factory, teardown~)
   self

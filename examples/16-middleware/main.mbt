@@ -110,13 +110,13 @@ fn header(resp : @moonasgi.Response, name : String) -> String {
 ///|
 /// A `{"detail": msg}` JSON value — the FastAPI error-body shape.
 fn order_detail(msg : String) -> Json {
-  let m : Map[String, Json] = Map([("detail", msg.to_json())])
-  m.to_json()
+  let m : Map[String, Json] = Map([("detail", Json(msg))])
+  Json(m)
 }
 
 ///|
 /// `unit` repeated `n` times — a compressible fixture with real LZ77 matches.
-fn repeat_str(unit : String, n : Int) -> String {
+fn repeat_str(unit : String, n : Int32) -> String {
   let sb = StringBuilder()
   for _i = 0; _i < n; _i = _i + 1 {
     sb.write_string(unit)

@@ -14,12 +14,12 @@ pub fn dependencies(log : Array[String]) -> @moonapi.Container[String] {
 
 ///|
 pub fn detail(message : String) -> Json {
-  let value : Map[String, Json] = Map([("detail", message.to_json())])
-  value.to_json()
+  let value : Map[String, Json] = Map([("detail", Json(message))])
+  Json(value)
 }
 
 ///|
-pub fn repeat_text(text : String, count : Int) -> String {
+pub fn repeat_text(text : String, count : Int32) -> String {
   let output = StringBuilder()
   for _index = 0; _index < count; _index = _index + 1 {
     output.write_string(text)

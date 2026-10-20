@@ -9,7 +9,7 @@
 ///
 /// The URL is escaped as a whole URI reference, so an encoded one is not encoded
 /// twice and a `\r\n` cannot open a header of its own.
-pub fn redirect(url : String, status? : Int = 307) -> @moonasgi.Response {
+pub fn redirect(url : String, status~ : Int32 = 307) -> @moonasgi.Response {
   @moonasgi.Response::new(
     status,
     [("location", @url.escape_text(url[:], kind=Whole))],
@@ -28,10 +28,10 @@ pub fn redirect(url : String, status? : Int = 307) -> @moonasgi.Response {
 /// Always the whole thing. [`Context::serve`] weighs the request first.
 pub fn file_response(
   content : Bytes,
-  filename? : String = "",
-  media_type? : String = "",
-  status? : Int = 200,
-  inline? : Bool = false,
+  filename~ : String = "",
+  media_type~ : String = "",
+  status~ : Int32 = 200,
+  inline~ : Bool = false,
 ) -> @moonasgi.Response {
   @moonasgi.Response::new(
     status,
@@ -48,9 +48,9 @@ pub fn file_response(
 /// picture" without touching base64.
 pub fn data_response(
   url : String,
-  filename? : String = "",
-  status? : Int = 200,
-  inline? : Bool = true,
+  filename~ : String = "",
+  status~ : Int32 = 200,
+  inline~ : Bool = true,
 ) -> @moonasgi.Response? {
   try {
     let url = @dataurl.Url::decode(url[:])
@@ -65,7 +65,7 @@ pub fn data_response(
 ///|
 /// The content as a `data:` URL, for embedding it instead of costing a second
 /// request.
-pub fn data_url(content : Bytes, media_type? : String = "") -> String {
+pub fn data_url(content : Bytes, media_type~ : String = "") -> String {
   let kind = if media_type != "" { media_type } else { @dataurl.kind }
   @dataurl.Url::new(content, kind~).encode()
 }
@@ -86,12 +86,12 @@ pub fn data_url(content : Bytes, media_type? : String = "") -> String {
 pub fn Context::serve(
   self : Context,
   content : Bytes,
-  filename? : String = "",
-  media_type? : String = "",
-  inline? : Bool = false,
+  filename~ : String = "",
+  media_type~ : String = "",
+  inline~ : Bool = false,
   etag? : @conditional.Tag,
   modified? : @moondate.Moment,
-  ranges? : Bool = true,
+  ranges~ : Bool = true,
 ) -> @moonasgi.Response {
   let tag = match etag {
     Some(tag) => tag
@@ -173,7 +173,7 @@ fn partial(
 ///|
 /// What the body is, how long, and what to save it as.
 fn envelope(
-  length : Int,
+  length : Int32,
   filename : String,
   media_type : String,
   inline : Bool,

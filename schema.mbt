@@ -71,9 +71,9 @@ pub(all) struct Field {
 pub fn Field::new(
   name : String,
   schema : Schema,
-  required? : Bool = true,
-  description? : String = "",
-  constraints? : Array[Constraint] = [],
+  required~ : Bool = true,
+  description~ : String = "",
+  constraints~ : Array[Constraint] = [],
   default? : Json,
 ) -> Field {
   { name, schema, required, description, constraints, default, }
@@ -170,8 +170,8 @@ fn ref_base(v : OpenApiVersion) -> String {
 ///|
 /// A bare `{"type": t}` scalar schema object.
 fn scalar_schema(t : String) -> Json {
-  let m : Map[String, Json] = Map([("type", t.to_json())])
-  m.to_json()
+  let m : Map[String, Json] = Map([("type", Json(t))])
+  Json(m)
 }
 
 ///|
@@ -204,7 +204,7 @@ fn with_key(j : Json, key : String, value : Json) -> Json {
         out[k] = v
       }
       out[key] = value
-      out.to_json()
+      Json(out)
     }
     _ => j
   }
@@ -214,7 +214,7 @@ fn with_key(j : Json, key : String, value : Json) -> Json {
 /// Return `j` with a `description` sibling added (legal beside `$ref` in OpenAPI
 /// 3.1 / JSON-Schema 2020-12).
 fn with_description(j : Json, desc : String) -> Json {
-  with_key(j, "description", desc.to_json())
+  with_key(j, "description", Json(desc))
 }
 
 ///|
@@ -246,18 +246,18 @@ fn emit_schema(
     SNull => scalar_schema("null")
     SArray(item) => {
       let m : Map[String, Json] = Map([
-        ("type", "array".to_json()),
+        ("type", Json("array")),
         ("items", emit_schema(item, defs, version)),
       ])
-      m.to_json()
+      Json(m)
     }
     SObject(os) =>
       if os.name != "" {
         register_object(os, defs, version)
         let r : Map[String, Json] = Map([
-          ("$ref", (ref_base(version) + os.name).to_json()),
+          ("$ref", Json(ref_base(version) + os.name)),
         ])
-        r.to_json()
+        Json(r)
       } else {
         object_body(os, defs, version)
       }
@@ -268,8 +268,8 @@ fn emit_schema(
           for k, v in o {
             m[k] = v
           }
-          m["enum"] = values.to_json()
-          m.to_json()
+          m["enum"] = Json(values)
+          Json(m)
         }
         other => other
       }
@@ -277,18 +277,18 @@ fn emit_schema(
       nullable_json(emit_schema(inner, defs, version), version)
     SMap(value) => {
       let m : Map[String, Json] = Map([
-        ("type", "object".to_json()),
+        ("type", Json("object")),
         ("additionalProperties", emit_schema(value, defs, version)),
       ])
-      m.to_json()
+      Json(m)
     }
     // The empty schema — JSON-Schema for "anything at all".
     SAny => {
       let m : Map[String, Json] = Map([])
-      m.to_json()
+      Json(m)
     }
     SFormat(base, format) =>
-      with_key(emit_schema(base, defs, version), "format", format.to_json())
+      with_key(emit_schema(base, defs, version), "format", Json(format))
     SJson(document) => document
   }
 }
@@ -301,17 +301,15 @@ fn emit_schema(
 /// extend, has to be widened with an `anyOf` instead.
 fn nullable_json(j : Json, version : OpenApiVersion) -> Json {
   match version {
-    Swagger20 => with_key(j, "x-nullable", true.to_json())
-    OpenApi30 => with_key(j, "nullable", true.to_json())
+    Swagger20 => with_key(j, "x-nullable", Json(true))
+    OpenApi30 => with_key(j, "nullable", Json(true))
     OpenApi31 =>
       if j is Object(o) && o.get("type") is Some(String(t)) {
-        with_key(j, "type", [t.to_json(), "null".to_json()].to_json())
+        with_key(j, "type", Json([Json(t), Json("null")]))
       } else {
-        let null_type : Map[String, Json] = Map([("type", "null".to_json())])
-        let m : Map[String, Json] = Map([
-          ("anyOf", [j, null_type.to_json()].to_json()),
-        ])
-        m.to_json()
+        let null_type : Map[String, Json] = Map([("type", Json("null"))])
+        let m : Map[String, Json] = Map([("anyOf", Json([j, Json(null_type)]))])
+        Json(m)
       }
   }
 }
@@ -359,20 +357,20 @@ fn object_body(
       fs
     }
     if f.is_required() {
-      required.push(f.name.to_json())
+      required.push(Json(f.name))
     }
   }
   let m : Map[String, Json] = Map([
-    ("type", "object".to_json()),
-    ("properties", props.to_json()),
+    ("type", Json("object")),
+    ("properties", Json(props)),
   ])
   if required.length() > 0 {
-    m["required"] = required.to_json()
+    m["required"] = Json(required)
   }
   if os.description != "" {
-    m["description"] = os.description.to_json()
+    m["description"] = Json(os.description)
   }
-  m.to_json()
+  Json(m)
 }
 
 ///|

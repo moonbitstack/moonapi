@@ -12,9 +12,9 @@
 #coverage.skip
 fn main {
   let color = @moonapi.SEnum(@moonapi.SStr, [
-    "red".to_json(),
-    "green".to_json(),
-    "blue".to_json(),
+    Json("red"),
+    Json("green"),
+    Json("blue"),
   ])
   let schema = @moonapi.Schema::object("Order", [
     @moonapi.Field::new("qty", @moonapi.SInt, constraints=[

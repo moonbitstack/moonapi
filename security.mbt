@@ -172,13 +172,13 @@ pub fn Context::bearer_token(self : Context) -> String? {
 /// `Basic realm="…"` for Basic, `Bearer scope="…"` for a scoped bearer route.
 fn unauthorized(
   detail : String,
-  challenge? : String = "Bearer",
+  challenge~ : String = "Bearer",
 ) -> @moonasgi.Response {
-  let body : Map[String, Json] = Map([("detail", detail.to_json())])
+  let body : Map[String, Json] = Map([("detail", Json(detail))])
   @moonasgi.Response::new(
     401,
     [("content-type", "application/json"), ("www-authenticate", challenge)],
-    @moonjson.dump(body.to_json()),
+    @moonjson.dump(Json(body)),
   )
 }
 
@@ -187,11 +187,11 @@ fn unauthorized(
 /// valid but lacks a required scope. The token authenticated the caller, so this
 /// is authorization, not authentication: 403, not 401.
 fn forbidden(detail : String) -> @moonasgi.Response {
-  let body : Map[String, Json] = Map([("detail", detail.to_json())])
+  let body : Map[String, Json] = Map([("detail", Json(detail))])
   @moonasgi.Response::new(
     403,
     [("content-type", "application/json")],
-    @moonjson.dump(body.to_json()),
+    @moonjson.dump(Json(body)),
   )
 }
 
@@ -215,7 +215,7 @@ pub fn OAuth2PasswordBearer::authenticate(
   self : OAuth2PasswordBearer,
   ctx : Context,
   now_secs : Int64,
-  scopes? : Array[String] = [],
+  scopes~ : Array[String] = [],
 ) -> Result[AuthenticatedUser, @moonasgi.Response] {
   verify_bearer(ctx, self.secret, SecurityScopes::new(scopes~), now_secs, true)
 }
@@ -237,24 +237,24 @@ pub fn create_access_token(
   subject : String,
   secret : String,
   now_secs : Int64,
-  scopes? : Array[String] = [],
-  expires_in_secs? : Int64 = 3600,
-  extra? : Map[String, Json] = Map([]),
-  wins? : @jwt.Wins = Base,
-  clash? : @jwt.OnClash[Map[String, Json]] = Panic,
+  scopes~ : Array[String] = [],
+  expires_in_secs~ : Int64 = 3600,
+  extra~ : Map[String, Json] = Map([]),
+  wins~ : @jwt.Wins = Base,
+  clash~ : @jwt.OnClash[Map[String, Json]] = Panic,
 ) -> String {
   // `iat` / `exp` are RFC 7519 NumericDates — JSON numbers, so an off-the-shelf
   // verifier reads them (`Int64::to_json` would emit a string).
   let base : Map[String, Json] = Map([])
-  base["sub"] = subject.to_json()
-  base["iat"] = now_secs.to_double().to_json()
-  base["exp"] = (now_secs + expires_in_secs).to_double().to_json()
+  base["sub"] = Json(subject)
+  base["iat"] = Json(now_secs.to_double())
+  base["exp"] = Json((now_secs + expires_in_secs).to_double())
   if scopes.length() > 0 {
     let arr : Array[Json] = []
     for s in scopes {
-      arr.push(s.to_json())
+      arr.push(Json(s))
     }
-    base["scopes"] = arr.to_json()
+    base["scopes"] = Json(arr)
   }
   let merged : Map[String, Json] = Map([])
   for k, v in base {
@@ -290,10 +290,10 @@ pub fn create_access_token(
 /// — the OAuth2 password-grant reply FastAPI's token endpoint returns.
 pub fn token_response(access_token : String) -> @moonasgi.Response {
   let body : Map[String, Json] = Map([
-    ("access_token", access_token.to_json()),
-    ("token_type", "bearer".to_json()),
+    ("access_token", Json(access_token)),
+    ("token_type", Json("bearer")),
   ])
-  json(200, body.to_json())
+  json(200, Json(body))
 }
 
 ///|

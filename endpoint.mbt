@@ -48,12 +48,12 @@ pub(all) struct Param {
 pub fn Param::new(
   name : String,
   loc : ParamLoc,
-  schema? : Schema = SStr,
-  required? : Bool = true,
-  description? : String = "",
-  constraints? : Array[Constraint] = [],
+  schema~ : Schema = SStr,
+  required~ : Bool = true,
+  description~ : String = "",
+  constraints~ : Array[Constraint] = [],
   default? : Json,
-  alias_? : String = "",
+  alias_~ : String = "",
 ) -> Param {
   { name, loc, schema, required, description, constraints, default, alias_, }
 }
@@ -83,7 +83,7 @@ pub fn Param::is_required(self : Param) -> Bool {
 /// A single response descriptor: the HTTP `status`, a human `description`, and an
 /// optional body `schema` (`None` for an empty body, e.g. `204`).
 pub(all) struct ResponseSpec {
-  status : Int
+  status : Int32
   description : String
   body : Schema?
 } derive(Eq)
@@ -92,8 +92,8 @@ pub(all) struct ResponseSpec {
 /// Build a response descriptor. `description` defaults to `"OK"` and there is no
 /// body unless one is given.
 pub fn ResponseSpec::new(
-  status : Int,
-  description? : String = "OK",
+  status : Int32,
+  description~ : String = "OK",
   body? : Schema,
 ) -> ResponseSpec {
   { status, description, body, }
@@ -116,10 +116,10 @@ pub(all) struct Endpoint {
 /// describes an endpoint with no parameters, no body, and (on emit) a default
 /// `200 OK` response.
 pub fn Endpoint::new(
-  params? : Array[Param] = [],
+  params~ : Array[Param] = [],
   request_body? : Schema,
-  request_required? : Bool = true,
-  responses? : Array[ResponseSpec] = [],
+  request_required~ : Bool = true,
+  responses~ : Array[ResponseSpec] = [],
 ) -> Endpoint {
   { params, request_body, request_required, responses, }
 }
@@ -135,12 +135,12 @@ fn param_json(
   version : OpenApiVersion,
 ) -> Json {
   let m : Map[String, Json] = Map([
-    ("name", p.key().to_json()),
-    ("in", loc_str(p.loc).to_json()),
-    ("required", p.is_required().to_json()),
+    ("name", Json(p.key())),
+    ("in", Json(loc_str(p.loc))),
+    ("required", Json(p.is_required())),
   ])
   if p.description != "" {
-    m["description"] = p.description.to_json()
+    m["description"] = Json(p.description)
   }
   match version {
     // Swagger 2.0 puts a scalar's type and its constraint keywords on the
@@ -148,7 +148,7 @@ fn param_json(
     Swagger20 =>
       match scalar_name(p.schema) {
         Some(t) => {
-          m["type"] = t.to_json()
+          m["type"] = Json(t)
           merge_into(m, param_facets(p, version))
         }
         None =>
@@ -165,7 +165,7 @@ fn param_json(
         version,
       )
   }
-  m.to_json()
+  Json(m)
 }
 
 ///|
@@ -183,7 +183,7 @@ fn param_facets_on(j : Json, p : Param, version : OpenApiVersion) -> Json {
 /// object — for the Swagger 2.0 shape, which merges them into the parameter.
 fn param_facets(p : Param, version : OpenApiVersion) -> Json {
   let empty : Map[String, Json] = Map([])
-  param_facets_on(empty.to_json(), p, version)
+  param_facets_on(Json(empty), p, version)
 }
 
 ///|
@@ -200,30 +200,28 @@ fn attach_request_body(
   match version {
     Swagger20 => {
       let bp : Map[String, Json] = Map([
-        ("name", "body".to_json()),
-        ("in", "body".to_json()),
-        ("required", required.to_json()),
+        ("name", Json("body")),
+        ("in", Json("body")),
+        ("required", Json(required)),
         ("schema", emit_schema(body, defs, version)),
       ])
       let existing : Array[Json] = match op.get("parameters") {
         Some(Array(a)) => a
         _ => []
       }
-      existing.push(bp.to_json())
-      op["parameters"] = existing.to_json()
+      existing.push(Json(bp))
+      op["parameters"] = Json(existing)
     }
     _ => {
       let media : Map[String, Json] = Map([
         ("schema", emit_schema(body, defs, version)),
       ])
-      let content : Map[String, Json] = Map([
-        ("application/json", media.to_json()),
-      ])
+      let content : Map[String, Json] = Map([("application/json", Json(media))])
       let rb : Map[String, Json] = Map([
-        ("required", required.to_json()),
-        ("content", content.to_json()),
+        ("required", Json(required)),
+        ("content", Json(content)),
       ])
-      op["requestBody"] = rb.to_json()
+      op["requestBody"] = Json(rb)
     }
   }
 }
@@ -237,7 +235,7 @@ fn response_json(
   defs : Map[String, Json],
   version : OpenApiVersion,
 ) -> Json {
-  let m : Map[String, Json] = Map([("description", rs.description.to_json())])
+  let m : Map[String, Json] = Map([("description", Json(rs.description))])
   match rs.body {
     Some(body) =>
       match version {
@@ -247,14 +245,14 @@ fn response_json(
             ("schema", emit_schema(body, defs, version)),
           ])
           let content : Map[String, Json] = Map([
-            ("application/json", media.to_json()),
+            ("application/json", Json(media)),
           ])
-          m["content"] = content.to_json()
+          m["content"] = Json(content)
         }
       }
     None => ()
   }
-  m.to_json()
+  Json(m)
 }
 
 ///|
@@ -268,14 +266,14 @@ fn emit_endpoint(
   ep : Endpoint,
   defs : Map[String, Json],
   version : OpenApiVersion,
-  ok_status : Int,
+  ok_status : Int32,
 ) -> Unit {
   let params : Array[Json] = []
   for p in ep.params {
     params.push(param_json(p, defs, version))
   }
   if params.length() > 0 {
-    op["parameters"] = params.to_json()
+    op["parameters"] = Json(params)
   }
   match ep.request_body {
     Some(body) =>
@@ -291,7 +289,7 @@ fn emit_endpoint(
   for rs in specs {
     responses[rs.status.to_string()] = response_json(rs, defs, version)
   }
-  op["responses"] = responses.to_json()
+  op["responses"] = Json(responses)
 }
 
 ///|

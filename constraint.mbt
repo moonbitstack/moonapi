@@ -13,11 +13,11 @@ pub(all) enum Constraint {
   ExclusiveMinimum(Double) // gt:  x > n
   ExclusiveMaximum(Double) // lt:  x < n
   MultipleOf(Double) // multiple_of
-  MinLength(Int) // min_length (characters)
-  MaxLength(Int) // max_length
+  MinLength(Int32) // min_length (characters)
+  MaxLength(Int32) // max_length
   Pattern(String) // pattern (regular expression)
-  MinItems(Int) // min_length on a list
-  MaxItems(Int) // max_length on a list
+  MinItems(Int32) // min_length on a list
+  MaxItems(Int32) // max_length on a list
 } derive(Eq)
 
 ///|
@@ -48,31 +48,31 @@ pub fn with_constraints(
   }
   for c in constraints {
     match c {
-      Minimum(x) => m["minimum"] = x.to_json()
-      Maximum(x) => m["maximum"] = x.to_json()
+      Minimum(x) => m["minimum"] = Json(x)
+      Maximum(x) => m["maximum"] = Json(x)
       ExclusiveMinimum(x) =>
         if numeric_exclusive {
-          m["exclusiveMinimum"] = x.to_json()
+          m["exclusiveMinimum"] = Json(x)
         } else {
-          m["minimum"] = x.to_json()
-          m["exclusiveMinimum"] = true.to_json()
+          m["minimum"] = Json(x)
+          m["exclusiveMinimum"] = Json(true)
         }
       ExclusiveMaximum(x) =>
         if numeric_exclusive {
-          m["exclusiveMaximum"] = x.to_json()
+          m["exclusiveMaximum"] = Json(x)
         } else {
-          m["maximum"] = x.to_json()
-          m["exclusiveMaximum"] = true.to_json()
+          m["maximum"] = Json(x)
+          m["exclusiveMaximum"] = Json(true)
         }
-      MultipleOf(x) => m["multipleOf"] = x.to_json()
-      MinLength(n) => m["minLength"] = n.to_json()
-      MaxLength(n) => m["maxLength"] = n.to_json()
-      Pattern(p) => m["pattern"] = p.to_json()
-      MinItems(n) => m["minItems"] = n.to_json()
-      MaxItems(n) => m["maxItems"] = n.to_json()
+      MultipleOf(x) => m["multipleOf"] = Json(x)
+      MinLength(n) => m["minLength"] = Json(n)
+      MaxLength(n) => m["maxLength"] = Json(n)
+      Pattern(p) => m["pattern"] = Json(p)
+      MinItems(n) => m["minItems"] = Json(n)
+      MaxItems(n) => m["maxItems"] = Json(n)
     }
   }
-  m.to_json()
+  Json(m)
 }
 
 ///|
@@ -213,7 +213,7 @@ fn num_str(x : Double) -> String {
 
 ///|
 /// The character length of a string (code points, not UTF-16 units).
-fn char_len(s : String) -> Int {
+fn char_len(s : String) -> Int32 {
   let mut n = 0
   for _ in s {
     n = n + 1

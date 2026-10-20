@@ -27,13 +27,13 @@ pub fn set_cookie(
   resp : @moonasgi.Response,
   name : String,
   value : String,
-  max_age? : Int,
+  max_age? : Int32,
   expires? : @moondate.Moment,
-  path? : String? = Some("/"),
+  path~ : String? = Some("/"),
   domain? : String,
-  secure? : Bool = false,
-  http_only? : Bool = false,
-  same_site? : @cookie.SameSite? = Some(Lax),
+  secure~ : Bool = false,
+  http_only~ : Bool = false,
+  same_site~ : @cookie.SameSite? = Some(Lax),
 ) -> @moonasgi.Response {
   let cookie = @cookie.Cookie::new(
     name,
@@ -64,11 +64,11 @@ pub fn set_cookie(
 pub fn delete_cookie(
   resp : @moonasgi.Response,
   name : String,
-  path? : String? = Some("/"),
+  path~ : String? = Some("/"),
   domain? : String,
-  secure? : Bool = false,
-  http_only? : Bool = false,
-  same_site? : @cookie.SameSite? = Some(Lax),
+  secure~ : Bool = false,
+  http_only~ : Bool = false,
+  same_site~ : @cookie.SameSite? = Some(Lax),
 ) -> @moonasgi.Response {
   set_cookie(
     resp,

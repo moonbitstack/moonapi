@@ -19,12 +19,12 @@ fn main {
     // The handler builds a full record; the model decides what leaves.
     let internal : Json = {
       let m : Map[String, Json] = Map([
-        ("id", (233).to_json()),
-        ("name", "lfanke".to_json()),
-        ("password_hash", "deadbeef".to_json()),
-        ("email", "lfanke@example.com".to_json()),
+        ("id", Json(233)),
+        ("name", Json("lfanke")),
+        ("password_hash", Json("deadbeef")),
+        ("email", Json("lfanke@example.com")),
       ])
-      m.to_json()
+      Json(m)
     }
     @moonapi.json_model(200, public_user, internal)
   })
@@ -41,11 +41,11 @@ fn main {
   // filter_response directly: conforming value keeps only declared fields.
   let ok : Json = {
     let m : Map[String, Json] = Map([
-      ("id", (1).to_json()),
-      ("name", "qwq".to_json()),
-      ("secret", "hidden".to_json()),
+      ("id", Json(1)),
+      ("name", Json("qwq")),
+      ("secret", Json("hidden")),
     ])
-    m.to_json()
+    Json(m)
   }
   match @moonapi.filter_response(public_user, ok) {
     Ok(filtered) => println("filtered -> \{filtered.stringify()}")
@@ -55,11 +55,8 @@ fn main {
   // A value of the wrong shape (name is a number) fails the model: a 500 body,
   // since a broken return value is a server fault, not the client's.
   let bad : Json = {
-    let m : Map[String, Json] = Map([
-      ("id", (1).to_json()),
-      ("name", (0).to_json()),
-    ])
-    m.to_json()
+    let m : Map[String, Json] = Map([("id", Json(1)), ("name", Json(0))])
+    Json(m)
   }
   match @moonapi.filter_response(public_user, bad) {
     Ok(_) => println("unexpected pass")

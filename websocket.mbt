@@ -19,7 +19,7 @@ pub(all) enum WsMessage {
 /// path segments, as with an HTTP `Context`.
 pub struct WebSocket {
   inbox : Array[WsMessage]
-  mut cursor : Int
+  mut cursor : Int32
   params : Map[String, String]
   subprotocols : Array[String]
   mut accepted : Bool
@@ -76,7 +76,7 @@ pub fn WebSocket::offered_subprotocols(self : WebSocket) -> Array[String] {
 pub fn WebSocket::accept(
   self : WebSocket,
   subprotocol? : String,
-  headers? : Array[(String, String)] = [],
+  headers~ : Array[(String, String)] = [],
 ) -> Unit {
   if self.accepted {
     return
@@ -134,8 +134,8 @@ pub fn WebSocket::send_bytes(self : WebSocket, bytes : Bytes) -> Unit {
 /// and `reason`. Idempotent.
 pub fn WebSocket::close(
   self : WebSocket,
-  code? : Int = 1000,
-  reason? : String = "",
+  code~ : Int32 = 1000,
+  reason~ : String = "",
 ) -> Unit {
   if self.closed {
     return
@@ -181,8 +181,8 @@ fn App::match_ws(
 pub fn drive_websocket(
   handler : WsHandler,
   inbound : Array[WsMessage],
-  params? : Map[String, String] = Map([]),
-  subprotocols? : Array[String] = [],
+  params~ : Map[String, String] = Map([]),
+  subprotocols~ : Array[String] = [],
 ) -> Array[@moonasgi.Event] {
   let sock = WebSocket::new(inbound, params, subprotocols)
   handler(sock)

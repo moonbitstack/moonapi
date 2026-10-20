@@ -51,9 +51,9 @@ pub fn greet_app(container : Container[Dep]) -> App {
           Err(errs) => unprocessable(errs)
           Ok(req) => {
             let m : Map[String, Json] = Map([
-              ("message", "\{greeting}, \{req.name}".to_json()),
+              ("message", Json("\{greeting}, \{req.name}")),
             ])
-            json(200, m.to_json())
+            json(200, Json(m))
           }
         }
       })

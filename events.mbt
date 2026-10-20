@@ -20,11 +20,11 @@
 /// when overriding `content-type`, which stops the stream being a stream.
 pub fn sse_response(
   events : Array[@sse.Event],
-  status? : Int = 200,
-  headers? : Array[(String, String)] = [],
-  space? : Bool = true,
-  wins? : @jwt.Wins = Extra,
-  clash? : @jwt.OnClash[Array[(String, String)]] = Ignore,
+  status~ : Int32 = 200,
+  headers~ : Array[(String, String)] = [],
+  space~ : Bool = true,
+  wins~ : @jwt.Wins = Extra,
+  clash~ : @jwt.OnClash[Array[(String, String)]] = Ignore,
 ) -> @moonasgi.StreamingResponse {
   let chunks : Array[Bytes] = events.map(event => {
     @utf8.encode(event.encode(space~)[:])

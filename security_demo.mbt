@@ -17,7 +17,7 @@ fn authenticate_user(username : String, password : String) -> Bool {
 /// Build the OAuth2 demo application. `secret` is the shared HS256 key; `now`
 /// supplies the current Unix time (seconds) for both issuing and verifying, so a
 /// caller controls time in tests. Tokens live for one hour.
-pub fn oauth2_app(now : () -> Int64, secret? : String = "demo-secret") -> App {
+pub fn oauth2_app(now : () -> Int64, secret~ : String = "demo-secret") -> App {
   let app = App::new()
   let scheme = OAuth2PasswordBearer::new("/token", secret)
   app.post(
@@ -36,7 +36,7 @@ pub fn oauth2_app(now : () -> Int64, secret? : String = "demo-secret") -> App {
             token_response(token)
           } else {
             let body : Map[String, Json] = Map([
-              ("detail", "Incorrect username or password".to_json()),
+              ("detail", Json("Incorrect username or password")),
             ])
             @moonasgi.Response::new(
               401,
@@ -44,7 +44,7 @@ pub fn oauth2_app(now : () -> Int64, secret? : String = "demo-secret") -> App {
                 ("content-type", "application/json"),
                 ("www-authenticate", "Bearer"),
               ],
-              @moonjson.dump(body.to_json()),
+              @moonjson.dump(Json(body)),
             )
           }
       }
@@ -59,13 +59,13 @@ pub fn oauth2_app(now : () -> Int64, secret? : String = "demo-secret") -> App {
         Ok(user) => {
           let scopes : Array[Json] = []
           for s in user.scopes {
-            scopes.push(s.to_json())
+            scopes.push(Json(s))
           }
           let body : Map[String, Json] = Map([
-            ("username", user.subject.to_json()),
-            ("scopes", scopes.to_json()),
+            ("username", Json(user.subject)),
+            ("scopes", Json(scopes)),
           ])
-          json(200, body.to_json())
+          json(200, Json(body))
         }
       }
     },
@@ -78,10 +78,10 @@ pub fn oauth2_app(now : () -> Int64, secret? : String = "demo-secret") -> App {
         Err(resp) => resp
         Ok(user) => {
           let body : Map[String, Json] = Map([
-            ("owner", user.subject.to_json()),
-            ("items", ["hammer", "nail"].to_json()),
+            ("owner", Json(user.subject)),
+            ("items", Json(["hammer", "nail"])),
           ])
-          json(200, body.to_json())
+          json(200, Json(body))
         }
       }
     },

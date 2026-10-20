@@ -41,7 +41,7 @@ fn query_pairs(raw : Bytes, limits : @mime.Limits) -> Array[(String, String)] {
 pub fn Context::query(
   self : Context,
   name : String,
-  limits? : @mime.Limits = query_limits,
+  limits~ : @mime.Limits = query_limits,
 ) -> String? {
   for kv in query_pairs(self.request.query_string, limits) {
     if kv.0 == name {
@@ -57,7 +57,7 @@ pub fn Context::query(
 pub fn Context::query_all(
   self : Context,
   name : String,
-  limits? : @mime.Limits = query_limits,
+  limits~ : @mime.Limits = query_limits,
 ) -> Array[String] {
   let out : Array[String] = []
   for kv in query_pairs(self.request.query_string, limits) {
@@ -120,7 +120,7 @@ fn trim_spaces(s : String) -> String {
 ///|
 /// Parse a base-10 integer, `None` if `s` is not a well-formed integer literal
 /// (optional leading `+`/`-`, then one or more ASCII digits, nothing else).
-fn parse_int(s : String) -> Int? {
+fn parse_int(s : String) -> Int32? {
   let n = s.length()
   if n == 0 {
     return None
@@ -212,11 +212,11 @@ fn loc_push(loc : Array[String], seg : String) -> Array[String] {
 /// Render one validation error as its JSON object.
 fn ValidationError::to_json(self : ValidationError) -> Json {
   let m : Map[String, Json] = Map([
-    ("type", self.kind.to_json()),
-    ("loc", self.loc.to_json()),
-    ("msg", self.msg.to_json()),
+    ("type", Json(self.kind)),
+    ("loc", Json(self.loc)),
+    ("msg", Json(self.msg)),
   ])
-  m.to_json()
+  Json(m)
 }
 
 ///|
@@ -227,8 +227,8 @@ pub fn validation_error_body(errors : Array[ValidationError]) -> Json {
   for e in errors {
     detail.push(e.to_json())
   }
-  let doc : Map[String, Json] = Map([("detail", detail.to_json())])
-  doc.to_json()
+  let doc : Map[String, Json] = Map([("detail", Json(detail))])
+  Json(doc)
 }
 
 ///|
@@ -443,18 +443,18 @@ fn scalar_json(base : Schema, v : String) -> Json {
   match base {
     SInt =>
       match parse_int(v) {
-        Some(n) => n.to_json()
-        None => v.to_json()
+        Some(n) => Json(n)
+        None => Json(v)
       }
     SBool =>
       match v {
-        "true" | "True" | "1" => true.to_json()
-        "false" | "False" | "0" => false.to_json()
-        _ => v.to_json()
+        "true" | "True" | "1" => Json(true)
+        "false" | "False" | "0" => Json(false)
+        _ => Json(v)
       }
     SNullable(inner) => scalar_json(inner, v)
     SFormat(base, _) => scalar_json(base, v)
-    _ => v.to_json()
+    _ => Json(v)
   }
 }
 

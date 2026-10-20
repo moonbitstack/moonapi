@@ -6,12 +6,12 @@ fn scheme_3x(doc : Json, name : String) -> Json {
       match m.get("components") {
         Some(Object(c)) =>
           match c.get("securitySchemes") {
-            Some(Object(s)) => s.get(name).unwrap_or(false.to_json())
-            _ => false.to_json()
+            Some(Object(s)) => s.get(name).unwrap_or(Json(false))
+            _ => Json(false)
           }
-        _ => false.to_json()
+        _ => Json(false)
       }
-    _ => false.to_json()
+    _ => Json(false)
   }
 }
 
@@ -21,10 +21,10 @@ fn scheme_20(doc : Json, name : String) -> Json {
   match doc {
     Object(m) =>
       match m.get("securityDefinitions") {
-        Some(Object(s)) => s.get(name).unwrap_or(false.to_json())
-        _ => false.to_json()
+        Some(Object(s)) => s.get(name).unwrap_or(Json(false))
+        _ => Json(false)
       }
-    _ => false.to_json()
+    _ => Json(false)
   }
 }
 
@@ -45,7 +45,7 @@ test "securityScheme: OAuth2 password flow in OpenAPI 3.1" {
       match m.get("flows") {
         Some(Object(f)) =>
           match f.get("password") {
-            Some(Object(p)) => json_str(p.to_json(), "tokenUrl")
+            Some(Object(p)) => json_str(Json(p), "tokenUrl")
             _ => ""
           }
         _ => ""

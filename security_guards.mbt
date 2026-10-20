@@ -20,7 +20,7 @@ pub struct SecurityScopes {
 
 ///|
 /// The scopes required at one call site; empty means authentication only.
-pub fn SecurityScopes::new(scopes? : Array[String] = []) -> SecurityScopes {
+pub fn SecurityScopes::new(scopes~ : Array[String] = []) -> SecurityScopes {
   { scopes, }
 }
 
@@ -134,7 +134,7 @@ pub fn OAuth2CodeBearer::new(
   authorization_url : String,
   token_url : String,
   secret : String,
-  refresh_url? : String = "",
+  refresh_url~ : String = "",
 ) -> OAuth2CodeBearer {
   { authorization_url, token_url, refresh_url, secret, }
 }
@@ -143,7 +143,7 @@ pub fn OAuth2CodeBearer::new(
 /// The security scheme that describes this flow, advertising `scopes`.
 pub fn OAuth2CodeBearer::scheme(
   self : OAuth2CodeBearer,
-  scopes? : Array[(String, String)] = [],
+  scopes~ : Array[(String, String)] = [],
 ) -> SecurityScheme {
   OAuth2Code(
     authorization_url=self.authorization_url,
@@ -258,7 +258,7 @@ pub struct BasicAuth {
 /// another.
 pub fn BasicAuth::new(
   verify : (HttpBasicCredentials) -> Bool,
-  realm? : String = "",
+  realm~ : String = "",
 ) -> BasicAuth {
   { realm, verify, }
 }
@@ -283,7 +283,7 @@ pub struct DigestAuth {
 /// Build an HTTP Digest scheme, optionally naming the protection `realm`.
 pub fn DigestAuth::new(
   verify : (String) -> Bool,
-  realm? : String = "",
+  realm~ : String = "",
 ) -> DigestAuth {
   { realm, verify, }
 }
@@ -382,8 +382,8 @@ pub fn App::secure_api_key(
   self : App,
   name : String,
   key : ApiKey,
-  description? : String = "",
-  auto_error? : Bool = true,
+  description~ : String = "",
+  auto_error~ : Bool = true,
 ) -> Unit {
   self.security_schemes.push({ name, kind: key.scheme(), description, })
   self.enforcers[name] = (ctx, _scopes, _now) => {
@@ -399,8 +399,8 @@ pub fn App::secure_basic(
   self : App,
   name : String,
   basic : BasicAuth,
-  description? : String = "",
-  auto_error? : Bool = true,
+  description~ : String = "",
+  auto_error~ : Bool = true,
 ) -> Unit {
   self.security_schemes.push({ name, kind: HttpBasic, description, })
   self.enforcers[name] = (ctx, _scopes, _now) => {
@@ -416,8 +416,8 @@ pub fn App::secure_digest(
   self : App,
   name : String,
   digest : DigestAuth,
-  description? : String = "",
-  auto_error? : Bool = true,
+  description~ : String = "",
+  auto_error~ : Bool = true,
 ) -> Unit {
   self.security_schemes.push({ name, kind: HttpDigest, description, })
   self.enforcers[name] = (ctx, _scopes, _now) => {
@@ -435,9 +435,9 @@ pub fn App::secure_bearer(
   self : App,
   name : String,
   secret : String,
-  bearer_format? : String = "JWT",
-  description? : String = "",
-  auto_error? : Bool = true,
+  bearer_format~ : String = "JWT",
+  description~ : String = "",
+  auto_error~ : Bool = true,
 ) -> Unit {
   self.security_schemes.push({
     name,
@@ -460,9 +460,9 @@ pub fn App::secure_oauth2_code(
   self : App,
   name : String,
   code : OAuth2CodeBearer,
-  scopes? : Array[(String, String)] = [],
-  description? : String = "",
-  auto_error? : Bool = true,
+  scopes~ : Array[(String, String)] = [],
+  description~ : String = "",
+  auto_error~ : Bool = true,
 ) -> Unit {
   self.security_schemes.push({ name, kind: code.scheme(scopes~), description, })
   self.enforcers[name] = (ctx, required, now) => {
@@ -483,8 +483,8 @@ pub fn App::secure_openid(
   name : String,
   url : String,
   secret : String,
-  description? : String = "",
-  auto_error? : Bool = true,
+  description~ : String = "",
+  auto_error~ : Bool = true,
 ) -> Unit {
   self.security_schemes.push({ name, kind: OpenIdConnect(url~), description, })
   self.enforcers[name] = (ctx, scopes, now) => {

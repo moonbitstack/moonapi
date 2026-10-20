@@ -12,7 +12,7 @@
 /// challenge). Caught by the app and mapped to a response.
 pub(all) suberror HttpException {
   HttpException(
-    status~ : Int,
+    status~ : Int32,
     detail~ : Json,
     headers~ : Array[(String, String)]
   )
@@ -23,11 +23,11 @@ pub(all) suberror HttpException {
 /// optional extra `headers`. `raise http_error(404, "Item not found")` reads
 /// like FastAPI's `raise HTTPException(404, "Item not found")`.
 pub fn http_error(
-  status : Int,
+  status : Int32,
   detail : String,
-  headers? : Array[(String, String)] = [],
+  headers~ : Array[(String, String)] = [],
 ) -> HttpException {
-  HttpException(status~, detail=detail.to_json(), headers~)
+  HttpException(status~, detail=Json(detail), headers~)
 }
 
 ///|
@@ -35,7 +35,7 @@ pub fn http_error(
 /// given status, with the exception's extra headers merged in after the
 /// content-type.
 fn http_exception_response(
-  status : Int,
+  status : Int32,
   detail : Json,
   headers : Array[(String, String)],
 ) -> @moonasgi.Response {
@@ -44,7 +44,7 @@ fn http_exception_response(
   for h in headers {
     hs.push(h)
   }
-  @moonasgi.Response::new(status, hs, @moonjson.dump(body.to_json()))
+  @moonasgi.Response::new(status, hs, @moonjson.dump(Json(body)))
 }
 
 ///|
@@ -58,12 +58,12 @@ fn default_exception_response(err : Error) -> @moonasgi.Response {
       http_exception_response(status, detail, headers)
     _ => {
       let body : Map[String, Json] = Map([
-        ("detail", "Internal Server Error".to_json()),
+        ("detail", Json("Internal Server Error")),
       ])
       @moonasgi.Response::new(
         500,
         [("content-type", "application/json")],
-        @moonjson.dump(body.to_json()),
+        @moonjson.dump(Json(body)),
       )
     }
   }
@@ -92,7 +92,7 @@ pub(all) struct CorsConfig {
   allow_all_headers : Bool
   allow_credentials : Bool
   expose_headers : Array[String]
-  max_age : Int
+  max_age : Int32
 }
 
 ///|
@@ -156,16 +156,16 @@ fn with_headers(
 /// `Vary: Origin`, exposed headers, and the credentials flag). A request with
 /// no `Origin`, or one from a disallowed origin, passes through untouched.
 pub fn cors(
-  allow_origins? : Array[String] = [],
-  allow_all_origins? : Bool = false,
-  allow_methods? : Array[String] = [
+  allow_origins~ : Array[String] = [],
+  allow_all_origins~ : Bool = false,
+  allow_methods~ : Array[String] = [
     "GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS",
   ],
-  allow_headers? : Array[String] = [],
-  allow_all_headers? : Bool = false,
-  allow_credentials? : Bool = false,
-  expose_headers? : Array[String] = [],
-  max_age? : Int = 600,
+  allow_headers~ : Array[String] = [],
+  allow_all_headers~ : Bool = false,
+  allow_credentials~ : Bool = false,
+  expose_headers~ : Array[String] = [],
+  max_age~ : Int32 = 600,
 ) -> @moonasgi.Middleware {
   let cfg : CorsConfig = {
     allow_origins,
@@ -262,7 +262,7 @@ fn CorsConfig::preflight_response(
 /// ISIZE — around a real RFC 1951 DEFLATE payload: LZ77 back-references coded with
 /// the fixed Huffman table (`deflate.mbt`), so the body actually shrinks. Dynamic
 /// Huffman would tighten the ratio further and is the documented next step.
-pub fn gzip(min_size? : Int = 500) -> @moonasgi.Middleware {
+pub fn gzip(min_size~ : Int32 = 500) -> @moonasgi.Middleware {
   downstream => {
     request => {
       let resp = downstream(request)

@@ -24,18 +24,18 @@ fn version_field(v : OpenApiVersion) -> (String, String) {
 /// which is the one structural difference between the two shapes.
 fn path_parameter(name : String, version : OpenApiVersion) -> Json {
   let param : Map[String, Json] = Map([
-    ("name", name.to_json()),
-    ("in", "path".to_json()),
-    ("required", true.to_json()),
+    ("name", Json(name)),
+    ("in", Json("path")),
+    ("required", Json(true)),
   ])
   match version {
-    Swagger20 => param["type"] = "string".to_json()
+    Swagger20 => param["type"] = Json("string")
     _ => {
-      let schema : Map[String, Json] = Map([("type", "string".to_json())])
-      param["schema"] = schema.to_json()
+      let schema : Map[String, Json] = Map([("type", Json("string"))])
+      param["schema"] = Json(schema)
     }
   }
-  param.to_json()
+  Json(param)
 }
 
 ///|
@@ -139,7 +139,7 @@ pub fn ApiInfo::new() -> ApiInfo {
 /// `include_in_schema=false` are left out.
 pub fn App::openapi(
   self : App,
-  version? : OpenApiVersion = OpenApi31,
+  version~ : OpenApiVersion = OpenApi31,
   title? : String,
   api_version? : String,
   description? : String,
@@ -169,21 +169,21 @@ pub fn App::openapi(
     }
     let op : Map[String, Json] = Map([])
     if route.summary != "" {
-      op["summary"] = route.summary.to_json()
+      op["summary"] = Json(route.summary)
     }
     if route.description != "" {
-      op["description"] = route.description.to_json()
+      op["description"] = Json(route.description)
     }
     // FastAPI omits `tags` entirely when empty rather than emitting `[]`.
     if !route.tags.is_empty() {
-      op["tags"] = route.tags.to_json()
+      op["tags"] = Json(route.tags)
     }
     // FastAPI omits `deprecated` unless the route is actually deprecated.
     if route.deprecated {
-      op["deprecated"] = true.to_json()
+      op["deprecated"] = Json(true)
     }
     if route.operation_id != "" {
-      op["operationId"] = route.operation_id.to_json()
+      op["operationId"] = Json(route.operation_id)
     }
     let ok_status = route.status_code.unwrap_or(200)
     match route.endpoint {
@@ -194,13 +194,13 @@ pub fn App::openapi(
       None => {
         let params = path_parameters(full_path, version)
         if params.length() > 0 {
-          op["parameters"] = params.to_json()
+          op["parameters"] = Json(params)
         }
-        let ok : Map[String, Json] = Map([("description", "OK".to_json())])
+        let ok : Map[String, Json] = Map([("description", Json("OK"))])
         let responses : Map[String, Json] = Map([
-          (ok_status.to_string(), ok.to_json()),
+          (ok_status.to_string(), Json(ok)),
         ])
-        op["responses"] = responses.to_json()
+        op["responses"] = Json(responses)
       }
     }
     // The route's own `responses` are written after the descriptor's, so on a
@@ -213,7 +213,7 @@ pub fn App::openapi(
       for rs in route.responses {
         responses[rs.status.to_string()] = response_json(rs, defs, version)
       }
-      op["responses"] = responses.to_json()
+      op["responses"] = Json(responses)
     }
     // Per-operation security requirements (← FastAPI's `Security(...)`).
     match security_json(route.security) {
@@ -232,52 +232,52 @@ pub fn App::openapi(
       Some(Object(m)) => m
       _ => Map([])
     }
-    item[method_lower(route.verb)] = op.to_json()
-    paths[doc_path] = item.to_json()
+    item[method_lower(route.verb)] = Json(op)
+    paths[doc_path] = Json(item)
   }
   let info : Map[String, Json] = Map([
-    ("title", title.to_json()),
-    ("version", api_version.to_json()),
+    ("title", Json(title)),
+    ("version", Json(api_version)),
   ])
   if description != "" {
-    info["description"] = description.to_json()
+    info["description"] = Json(description)
   }
   if terms_of_service != "" {
-    info["termsOfService"] = terms_of_service.to_json()
+    info["termsOfService"] = Json(terms_of_service)
   }
   match contact {
     Some(c) => {
       let cm : Map[String, Json] = Map([])
       if c.name != "" {
-        cm["name"] = c.name.to_json()
+        cm["name"] = Json(c.name)
       }
       if c.url != "" {
-        cm["url"] = c.url.to_json()
+        cm["url"] = Json(c.url)
       }
       if c.email != "" {
-        cm["email"] = c.email.to_json()
+        cm["email"] = Json(c.email)
       }
       if !cm.is_empty() {
-        info["contact"] = cm.to_json()
+        info["contact"] = Json(cm)
       }
     }
     None => ()
   }
   match license {
     Some(l) => {
-      let lm : Map[String, Json] = Map([("name", l.name.to_json())])
+      let lm : Map[String, Json] = Map([("name", Json(l.name))])
       if l.url != "" {
-        lm["url"] = l.url.to_json()
+        lm["url"] = Json(l.url)
       }
-      info["license"] = lm.to_json()
+      info["license"] = Json(lm)
     }
     None => ()
   }
   let (root_key, version_str) = version_field(version)
   let doc : Map[String, Json] = Map([
-    (root_key, version_str.to_json()),
-    ("info", info.to_json()),
-    ("paths", paths.to_json()),
+    (root_key, Json(version_str)),
+    ("info", Json(info)),
+    ("paths", Json(paths)),
   ])
   // `servers` is an OpenAPI 3.x construct (2.0 uses host/basePath), so emit it
   // only for the 3.x dialects.
@@ -287,13 +287,13 @@ pub fn App::openapi(
       _ => {
         let sarr : Array[Json] = []
         for s in servers {
-          let sm : Map[String, Json] = Map([("url", s.url.to_json())])
+          let sm : Map[String, Json] = Map([("url", Json(s.url))])
           if s.description != "" {
-            sm["description"] = s.description.to_json()
+            sm["description"] = Json(s.description)
           }
-          sarr.push(sm.to_json())
+          sarr.push(Json(sm))
         }
-        doc["servers"] = sarr.to_json()
+        doc["servers"] = Json(sarr)
       }
     }
   }
@@ -311,25 +311,25 @@ pub fn App::openapi(
   match version {
     Swagger20 => {
       if !defs.is_empty() {
-        doc["definitions"] = defs.to_json()
+        doc["definitions"] = Json(defs)
       }
       if has_schemes {
-        doc["securityDefinitions"] = rendered.to_json()
+        doc["securityDefinitions"] = Json(rendered)
       }
     }
     _ =>
       if !defs.is_empty() || has_schemes {
         let comp : Map[String, Json] = Map([])
         if !defs.is_empty() {
-          comp["schemas"] = defs.to_json()
+          comp["schemas"] = Json(defs)
         }
         if has_schemes {
-          comp["securitySchemes"] = rendered.to_json()
+          comp["securitySchemes"] = Json(rendered)
         }
-        doc["components"] = comp.to_json()
+        doc["components"] = Json(comp)
       }
   }
-  doc.to_json()
+  Json(doc)
 }
 
 ///|
@@ -398,7 +398,7 @@ fn join_prefix(prefix : String, path : String) -> String {
 /// The app's OpenAPI / Swagger document for `version`, stringified.
 pub fn App::openapi_json(
   self : App,
-  version? : OpenApiVersion = OpenApi31,
+  version~ : OpenApiVersion = OpenApi31,
 ) -> String {
   self.openapi(version~).stringify(indent=2)
 }
@@ -408,8 +408,8 @@ pub fn App::openapi_json(
 /// second reading of the same spec FastAPI serves at `/redoc`, three-panel and
 /// built for reading rather than for trying calls out.
 pub fn redoc_ui(
-  spec_url? : String = "/openapi.json",
-  title? : String = "moonapi",
+  spec_url~ : String = "/openapi.json",
+  title~ : String = "moonapi",
 ) -> String {
   "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>\{title}</title>\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<style>body { margin: 0; }</style>\n</head>\n<body>\n<redoc spec-url=\"\{spec_url}\"></redoc>\n<script src=\"https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js\"></script>\n</body>\n</html>\n"
 }
@@ -417,8 +417,8 @@ pub fn redoc_ui(
 ///|
 /// A self-contained Swagger UI page rendering the document served at `spec_url`.
 pub fn swagger_ui(
-  spec_url? : String = "/openapi.json",
-  title? : String = "moonapi",
+  spec_url~ : String = "/openapi.json",
+  title~ : String = "moonapi",
 ) -> String {
   "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>\{title}</title>\n<link rel=\"stylesheet\" href=\"https://unpkg.com/swagger-ui-dist/swagger-ui.css\">\n</head>\n<body>\n<div id=\"swagger-ui\"></div>\n<script src=\"https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js\"></script>\n<script>\nwindow.onload = () => { window.ui = SwaggerUIBundle({ url: \"\{spec_url}\", dom_id: \"#swagger-ui\" }); };\n</script>\n</body>\n</html>\n"
 }

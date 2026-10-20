@@ -23,7 +23,7 @@ pub(all) struct SecurityRequirement {
 /// scopes=["items"])])` reads like FastAPI's `Security(oauth2, scopes=["items"])`.
 pub fn SecurityRequirement::new(
   scheme : String,
-  scopes? : Array[String] = [],
+  scopes~ : Array[String] = [],
 ) -> SecurityRequirement {
   { scheme, scopes, }
 }
@@ -46,10 +46,10 @@ type SecurityEnforcer = (Context, SecurityScopes, Int64) -> Result[
 fn SecurityRequirement::to_json(self : SecurityRequirement) -> Json {
   let arr : Array[Json] = []
   for s in self.scopes {
-    arr.push(s.to_json())
+    arr.push(Json(s))
   }
-  let m : Map[String, Json] = Map([(self.scheme, arr.to_json())])
-  m.to_json()
+  let m : Map[String, Json] = Map([(self.scheme, Json(arr))])
+  Json(m)
 }
 
 ///|
@@ -63,7 +63,7 @@ fn security_json(reqs : Array[SecurityRequirement]) -> Json? {
   for r in reqs {
     arr.push(r.to_json())
   }
-  Some(arr.to_json())
+  Some(Json(arr))
 }
 
 ///|

@@ -32,7 +32,7 @@ pub fn BackgroundTasks::add_task(
 ///|
 /// How many tasks are queued — the app checks this to skip the drain when a route
 /// scheduled nothing.
-pub fn BackgroundTasks::len(self : BackgroundTasks) -> Int {
+pub fn BackgroundTasks::len(self : BackgroundTasks) -> Int32 {
   self.tasks.length()
 }
 

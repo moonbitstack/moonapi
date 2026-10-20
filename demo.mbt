@@ -30,7 +30,7 @@ pub impl ToSchema for Address with fn to_schema(_self) {
 pub(all) struct NewUser {
   name : String
   email : String
-  age : Int
+  age : Int32
 } derive(ToJson, Eq)
 
 ///|
@@ -54,7 +54,7 @@ pub impl ToSchema for NewUser with fn to_schema(_self) {
 /// carries an array of tags, so its emitted schema exercises objects, `$ref`s,
 /// and arrays together.
 pub(all) struct User {
-  id : Int
+  id : Int32
   name : String
   address : Address
   tags : Array[String]

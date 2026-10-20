@@ -23,14 +23,14 @@ fn project_through(model : Schema, value : Json) -> Json {
           None => ()
         }
       }
-      out.to_json()
+      Json(out)
     }
     (SArray(item), Array(a)) => {
       let out : Array[Json] = []
       for v in a {
         out.push(project_through(item, v))
       }
-      out.to_json()
+      Json(out)
     }
     _ => value
   }
@@ -62,7 +62,7 @@ pub fn filter_response(
 /// mismatch a `500` whose body lists the response-validation errors — the return
 /// value didn't match what the route promised, which is a server-side fault.
 pub fn json_model(
-  status : Int,
+  status : Int32,
   model : Schema,
   value : Json,
 ) -> @moonasgi.Response {

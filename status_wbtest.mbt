@@ -7,7 +7,7 @@
 ///|
 /// The 63 HTTP codes FastAPI re-exports, each against the number in its own name.
 test "every HTTP status constant is bound to the code its name spells" {
-  let named : Array[(Int, Int)] = [
+  let named : Array[(Int32, Int32)] = [
     (HTTP_100_CONTINUE, 100),
     (HTTP_101_SWITCHING_PROTOCOLS, 101),
     (HTTP_102_PROCESSING, 102),
@@ -81,7 +81,7 @@ test "every HTTP status constant is bound to the code its name spells" {
 ///|
 /// The 15 WebSocket close codes, the same way.
 test "every WebSocket close constant is bound to the code its name spells" {
-  let named : Array[(Int, Int)] = [
+  let named : Array[(Int32, Int32)] = [
     (WS_1000_NORMAL_CLOSURE, 1000),
     (WS_1001_GOING_AWAY, 1001),
     (WS_1002_PROTOCOL_ERROR, 1002),

@@ -5,14 +5,14 @@ pub fn make_router(profile_schema : @moonapi.Schema) -> @moonapi.Router {
     "/me",
     ctx => {
       let full_profile : Map[String, Json] = Map([
-        ("id", (233).to_json()),
-        ("name", ctx.cookie("display_name").unwrap_or("demo").to_json()),
-        ("email", "demo@example.com".to_json()),
+        ("id", Json(233)),
+        ("name", Json(ctx.cookie("display_name").unwrap_or("demo"))),
+        ("email", Json("demo@example.com")),
       ])
       let response = @moonapi.json_model(
         200,
         profile_schema,
-        full_profile.to_json(),
+        Json(full_profile),
       )
       @moonapi.set_cookie(response, "last_seen", "today", http_only=true)
     },

@@ -69,7 +69,7 @@ test "include_router: deprecated marks the group, include_in_schema hides it" {
     Some(Object(op)) => op.get("deprecated")
     _ => None
   }
-  assert_eq(dep, Some(true.to_json()))
+  assert_eq(dep, Some(Json(true)))
   // A route that opted out of the schema stays out, and still answers.
   assert_eq(path_exists(doc, "/admin/probe"), false)
   assert_eq(app.handle(mkreq("GET", "/admin/probe")).status, 200)

@@ -79,7 +79,7 @@ test "openapi 3.1: request body is a typed $ref into components/schemas" {
   // The endpoint's requestBody is required by default.
   assert_eq(
     dig(doc, ["paths", "/users", "post", "requestBody", "required"]).unwrap(),
-    true.to_json(),
+    Json(true),
   )
 }
 
@@ -214,7 +214,7 @@ test "descriptor-driven validation: unparseable path param -> located 422" {
   // A well-formed integer id passes and returns a User.
   let ok = app.handle(mkreq_full("GET", "/users/7"))
   assert_eq(ok.status, 200)
-  assert_eq(dig(resp_json(ok), ["id"]).unwrap(), (7).to_json())
+  assert_eq(dig(resp_json(ok), ["id"]).unwrap(), Json(7))
 }
 
 ///|
@@ -252,7 +252,7 @@ test "schema descriptor validates a nested tree directly" {
 /// validation enforces membership.
 fn enum_app() -> App {
   let body = Schema::object("Order", [
-    Field::new("status", SEnum(SStr, ["qwq".to_json(), "hhh".to_json()])),
+    Field::new("status", SEnum(SStr, [Json("qwq"), Json("hhh")])),
   ])
   let ep = Endpoint::new(request_body=body, responses=[
     ResponseSpec::new(200, body~),
@@ -281,10 +281,7 @@ test "openapi 3.1: enum schema keeps its base type and carries the value set" {
   ]).unwrap()
   // FastAPI emits {"type":"string","enum":[...]} — the base type stays alongside.
   assert_eq(json_str(status, "type"), "string")
-  assert_eq(
-    dig(status, ["enum"]).unwrap(),
-    ["qwq".to_json(), "hhh".to_json()].to_json(),
-  )
+  assert_eq(dig(status, ["enum"]).unwrap(), Json([Json("qwq"), Json("hhh")]))
 }
 
 ///|

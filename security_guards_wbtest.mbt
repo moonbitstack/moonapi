@@ -8,7 +8,7 @@ fn mkreq_hdrs(
   verb : String,
   path : String,
   headers : Array[(String, String)],
-  query? : Bytes = b"",
+  query~ : Bytes = b"",
 ) -> @moonasgi.Request {
   { http_method: verb, path, query_string: query, headers, body: b"", }
 }

@@ -51,22 +51,19 @@ test "nullable: each dialect says it its own way" {
   let new = dig(app.openapi(version=OpenApi31), [
     "components", "schemas", "Note", "properties", "title",
   ]).unwrap()
-  assert_eq(
-    dig(new, ["type"]).unwrap(),
-    ["string".to_json(), "null".to_json()].to_json(),
-  )
+  assert_eq(dig(new, ["type"]).unwrap(), Json([Json("string"), Json("null")]))
   // 3.0 has the `nullable` flag.
   let mid = dig(app.openapi(version=OpenApi30), [
     "components", "schemas", "Note", "properties", "title",
   ]).unwrap()
   assert_eq(json_str(mid, "type"), "string")
-  assert_eq(dig(mid, ["nullable"]), Some(true.to_json()))
+  assert_eq(dig(mid, ["nullable"]), Some(Json(true)))
   // 2.0 has nothing in the specification proper, so it uses the extension its
   // tooling reads.
   let old = dig(app.openapi(version=Swagger20), [
     "definitions", "Note", "properties", "title",
   ]).unwrap()
-  assert_eq(dig(old, ["x-nullable"]), Some(true.to_json()))
+  assert_eq(dig(old, ["x-nullable"]), Some(Json(true)))
 }
 
 ///|
@@ -199,14 +196,14 @@ test "format: a binary upload is a string that says what it holds" {
 test "field default: emitted, and the field is no longer required" {
   let app = body_app(
     Schema::object("Page", [
-      Field::new("size", SInt, default=(20).to_json()),
+      Field::new("size", SInt, default=Json(20)),
       Field::new("q", SStr),
     ]),
   )
   let model = dig(app.openapi(version=OpenApi31), [
     "components", "schemas", "Page",
   ]).unwrap()
-  assert_eq(dig(model, ["properties", "size", "default"]), Some((20).to_json()))
+  assert_eq(dig(model, ["properties", "size", "default"]), Some(Json(20)))
   // A field that has a default is never missing, so it is out of `required`.
   let req : Array[String] = []
   for v in dig_arr(model, ["required"]) {
@@ -263,7 +260,7 @@ test "format: a formatted scalar parameter is documented and parsed as its base"
   let schema = dig(only_param(app, OpenApi31), ["schema"]).unwrap()
   assert_eq(json_str(schema, "type"), "integer")
   assert_eq(json_str(schema, "format"), "int64")
-  assert_eq(dig(schema, ["minimum"]), Some(1.0.to_json()))
+  assert_eq(dig(schema, ["minimum"]), Some(Json(1.0)))
   let bad = app.handle(mkreq_full("GET", "/items", query=b"at=soon"))
   assert_eq(bad.status, 422)
   assert_eq(json_str(detail0(bad), "type"), "int_parsing")

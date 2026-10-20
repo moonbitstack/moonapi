@@ -45,8 +45,8 @@ test "query param: a declared range is enforced with a 422 and documented" {
   // And the document says so, rather than leaving the client to discover it.
   let schema = dig(only_param(app, OpenApi31), ["schema"]).unwrap()
   assert_eq(json_str(schema, "type"), "integer")
-  assert_eq(dig(schema, ["minimum"]), Some(1.0.to_json()))
-  assert_eq(dig(schema, ["maximum"]), Some(100.0.to_json()))
+  assert_eq(dig(schema, ["minimum"]), Some(Json(1.0)))
+  assert_eq(dig(schema, ["maximum"]), Some(Json(100.0)))
 }
 
 ///|
@@ -68,21 +68,21 @@ test "query param: a string parameter's length and pattern bounds are enforced" 
     200,
   )
   let schema = dig(only_param(app, OpenApi31), ["schema"]).unwrap()
-  assert_eq(dig(schema, ["minLength"]), Some((3).to_json()))
+  assert_eq(dig(schema, ["minLength"]), Some(Json(3)))
   assert_eq(json_str(schema, "pattern"), "^[a-z]+$")
 }
 
 ///|
 test "query param: a default makes it optional and is emitted" {
   let app = param_app(
-    Param::new("limit", InQuery, schema=SInt, default=(10).to_json()),
+    Param::new("limit", InQuery, schema=SInt, default=Json(10)),
   )
   // `required=true` was left at its default, but a parameter with a default is
   // never missing — the request without it is accepted.
   assert_eq(app.handle(mkreq("GET", "/items")).status, 200)
   let p = only_param(app, OpenApi31)
-  assert_eq(dig(p, ["required"]), Some(false.to_json()))
-  assert_eq(dig(p, ["schema", "default"]), Some((10).to_json()))
+  assert_eq(dig(p, ["required"]), Some(Json(false)))
+  assert_eq(dig(p, ["schema", "default"]), Some(Json(10)))
 }
 
 ///|
@@ -91,7 +91,7 @@ test "query param: without a default, a required one is still reported missing" 
   let miss = app.handle(mkreq("GET", "/items"))
   assert_eq(miss.status, 422)
   assert_eq(json_str(detail0(miss), "type"), "missing")
-  assert_eq(dig(only_param(app, OpenApi31), ["required"]), Some(true.to_json()))
+  assert_eq(dig(only_param(app, OpenApi31), ["required"]), Some(Json(true)))
 }
 
 ///|
@@ -144,16 +144,16 @@ test "query param: Swagger 2.0 carries the bounds on the parameter itself" {
       schema=SInt,
       required=false,
       constraints=[Minimum(1.0), Maximum(100.0)],
-      default=(10).to_json(),
+      default=Json(10),
     ),
   )
   // 2.0 has no `schema` for a scalar parameter, so type, bounds and default all
   // sit on the parameter object.
   let p = only_param(app, Swagger20)
   assert_eq(json_str(p, "type"), "integer")
-  assert_eq(dig(p, ["minimum"]), Some(1.0.to_json()))
-  assert_eq(dig(p, ["maximum"]), Some(100.0.to_json()))
-  assert_eq(dig(p, ["default"]), Some((10).to_json()))
+  assert_eq(dig(p, ["minimum"]), Some(Json(1.0)))
+  assert_eq(dig(p, ["maximum"]), Some(Json(100.0)))
+  assert_eq(dig(p, ["default"]), Some(Json(10)))
   assert_eq(dig(p, ["schema"]) is None, true)
 }
 
@@ -166,12 +166,12 @@ test "query param: an exclusive bound takes each dialect's form" {
   )
   // 3.1 (JSON-Schema 2020-12) makes it a number.
   let new = dig(only_param(app, OpenApi31), ["schema"]).unwrap()
-  assert_eq(dig(new, ["exclusiveMinimum"]), Some(0.0.to_json()))
+  assert_eq(dig(new, ["exclusiveMinimum"]), Some(Json(0.0)))
   assert_eq(dig(new, ["minimum"]) is None, true)
   // 3.0 makes it a flag beside `minimum`.
   let old = dig(only_param(app, OpenApi30), ["schema"]).unwrap()
-  assert_eq(dig(old, ["exclusiveMinimum"]), Some(true.to_json()))
-  assert_eq(dig(old, ["minimum"]), Some(0.0.to_json()))
+  assert_eq(dig(old, ["exclusiveMinimum"]), Some(Json(true)))
+  assert_eq(dig(old, ["minimum"]), Some(Json(0.0)))
   // Enforced either way.
   assert_eq(
     app.handle(mkreq_full("GET", "/items", query=b"limit=0")).status,

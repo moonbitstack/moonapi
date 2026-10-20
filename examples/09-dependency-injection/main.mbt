@@ -29,7 +29,7 @@ fn Dep::show(self : Dep) -> String {
 ///     moon run examples/09-dependency-injection
 #coverage.skip
 fn main raise {
-  let opens : Array[Int] = [0]
+  let opens : Array[Int32] = [0]
   let c : @moonapi.Container[Dep] = @moonapi.Container::new()
   c.provide("config", () => Cfg("prod-dsn")) |> ignore
   // A connection that resolves `config` through the scope, counts its opens, and

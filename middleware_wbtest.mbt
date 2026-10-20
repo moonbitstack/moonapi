@@ -95,7 +95,7 @@ test "cors: credentials echo the origin rather than the wildcard" {
 
 ///|
 /// `unit` repeated `n` times as bytes — a compressible fixture with real matches.
-fn repeat_bytes(unit : String, n : Int) -> Bytes {
+fn repeat_bytes(unit : String, n : Int32) -> Bytes {
   let sb = StringBuilder()
   for _i = 0; _i < n; _i = _i + 1 {
     sb.write_string(unit)
@@ -200,7 +200,7 @@ test "exception: an unhandled error becomes a 500" {
 
 ///|
 /// A body of `n` `x` bytes — an above-threshold response for the gzip tests.
-fn xbytes(n : Int) -> Bytes {
+fn xbytes(n : Int32) -> Bytes {
   let buf = Buffer()
   for i = 0; i < n; i = i + 1 {
     buf.write_byte(b'x')

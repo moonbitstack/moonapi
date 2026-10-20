@@ -115,7 +115,7 @@ struct Route {
   // The status the success response is documented under. Documentation only: the
   // handler builds its own response, and rewriting the status it chose would make
   // the app disagree with itself rather than with the spec.
-  status_code : Int?
+  status_code : Int32?
   // Documented alongside whatever the endpoint descriptor produced, and written
   // after it, so the status a route names here is the one that stands.
   responses : Array[ResponseSpec]
@@ -162,7 +162,7 @@ pub struct App {
   exception_handlers : Array[ExceptionHandler]
   security_schemes : Array[DeclaredScheme]
   enforcers : Map[String, SecurityEnforcer]
-  status_handlers : Map[Int, (Context) -> @moonasgi.Response]
+  status_handlers : Map[Int32, (Context) -> @moonasgi.Response]
   mounts : Array[(String, Mount)]
   // Run in registration order when the server starts, and in reverse when it stops,
   // so a resource is torn down before whatever it was built on.
@@ -297,7 +297,7 @@ pub fn App::add_security_scheme(
   self : App,
   name : String,
   scheme : SecurityScheme,
-  description? : String = "",
+  description~ : String = "",
 ) -> Unit {
   self.security_schemes.push({ name, kind: scheme, description, })
 }
@@ -322,19 +322,19 @@ pub fn App::route(
   verb : Method,
   path : String,
   handler : ApiHandler,
-  summary? : String = "",
-  description? : String = "",
-  tags? : Array[String] = [],
-  deprecated? : Bool = false,
-  operation_id? : String = "",
-  status_code? : Int,
-  responses? : Array[ResponseSpec] = [],
-  name? : String = "",
+  summary~ : String = "",
+  description~ : String = "",
+  tags~ : Array[String] = [],
+  deprecated~ : Bool = false,
+  operation_id~ : String = "",
+  status_code? : Int32,
+  responses~ : Array[ResponseSpec] = [],
+  name~ : String = "",
   endpoint? : Endpoint,
-  security? : Array[SecurityRequirement] = [],
-  dependencies? : Array[String] = [],
-  include_in_schema? : Bool = true,
-  validate? : Bool = true,
+  security~ : Array[SecurityRequirement] = [],
+  dependencies~ : Array[String] = [],
+  include_in_schema~ : Bool = true,
+  validate~ : Bool = true,
   openapi_extra? : Json,
 ) -> Unit {
   self.routes.push({
@@ -367,19 +367,19 @@ pub fn App::route_bg(
   verb : Method,
   path : String,
   handler : BackgroundHandler,
-  summary? : String = "",
-  description? : String = "",
-  tags? : Array[String] = [],
-  deprecated? : Bool = false,
-  operation_id? : String = "",
-  status_code? : Int,
-  responses? : Array[ResponseSpec] = [],
-  name? : String = "",
+  summary~ : String = "",
+  description~ : String = "",
+  tags~ : Array[String] = [],
+  deprecated~ : Bool = false,
+  operation_id~ : String = "",
+  status_code? : Int32,
+  responses~ : Array[ResponseSpec] = [],
+  name~ : String = "",
   endpoint? : Endpoint,
-  security? : Array[SecurityRequirement] = [],
-  dependencies? : Array[String] = [],
-  include_in_schema? : Bool = true,
-  validate? : Bool = true,
+  security~ : Array[SecurityRequirement] = [],
+  dependencies~ : Array[String] = [],
+  include_in_schema~ : Bool = true,
+  validate~ : Bool = true,
   openapi_extra? : Json,
 ) -> Unit {
   self.routes.push({
@@ -418,19 +418,19 @@ pub fn App::route_stream(
   verb : Method,
   path : String,
   handler : StreamHandler,
-  summary? : String = "",
-  description? : String = "",
-  tags? : Array[String] = [],
-  deprecated? : Bool = false,
-  operation_id? : String = "",
-  status_code? : Int,
-  responses? : Array[ResponseSpec] = [],
-  name? : String = "",
+  summary~ : String = "",
+  description~ : String = "",
+  tags~ : Array[String] = [],
+  deprecated~ : Bool = false,
+  operation_id~ : String = "",
+  status_code? : Int32,
+  responses~ : Array[ResponseSpec] = [],
+  name~ : String = "",
   endpoint? : Endpoint,
-  security? : Array[SecurityRequirement] = [],
-  dependencies? : Array[String] = [],
-  include_in_schema? : Bool = true,
-  validate? : Bool = true,
+  security~ : Array[SecurityRequirement] = [],
+  dependencies~ : Array[String] = [],
+  include_in_schema~ : Bool = true,
+  validate~ : Bool = true,
   openapi_extra? : Json,
 ) -> Unit {
   self.routes.push({
@@ -461,19 +461,19 @@ pub fn App::stream(
   self : App,
   path : String,
   handler : StreamHandler,
-  summary? : String = "",
-  description? : String = "",
-  tags? : Array[String] = [],
-  deprecated? : Bool = false,
-  operation_id? : String = "",
-  status_code? : Int,
-  responses? : Array[ResponseSpec] = [],
-  name? : String = "",
+  summary~ : String = "",
+  description~ : String = "",
+  tags~ : Array[String] = [],
+  deprecated~ : Bool = false,
+  operation_id~ : String = "",
+  status_code? : Int32,
+  responses~ : Array[ResponseSpec] = [],
+  name~ : String = "",
   endpoint? : Endpoint,
-  security? : Array[SecurityRequirement] = [],
-  dependencies? : Array[String] = [],
-  include_in_schema? : Bool = true,
-  validate? : Bool = true,
+  security~ : Array[SecurityRequirement] = [],
+  dependencies~ : Array[String] = [],
+  include_in_schema~ : Bool = true,
+  validate~ : Bool = true,
   openapi_extra? : Json,
 ) -> Unit {
   self.route_stream(
@@ -504,19 +504,19 @@ pub fn App::get(
   self : App,
   path : String,
   handler : ApiHandler,
-  summary? : String = "",
-  description? : String = "",
-  tags? : Array[String] = [],
-  deprecated? : Bool = false,
-  operation_id? : String = "",
-  status_code? : Int,
-  responses? : Array[ResponseSpec] = [],
-  name? : String = "",
+  summary~ : String = "",
+  description~ : String = "",
+  tags~ : Array[String] = [],
+  deprecated~ : Bool = false,
+  operation_id~ : String = "",
+  status_code? : Int32,
+  responses~ : Array[ResponseSpec] = [],
+  name~ : String = "",
   endpoint? : Endpoint,
-  security? : Array[SecurityRequirement] = [],
-  dependencies? : Array[String] = [],
-  include_in_schema? : Bool = true,
-  validate? : Bool = true,
+  security~ : Array[SecurityRequirement] = [],
+  dependencies~ : Array[String] = [],
+  include_in_schema~ : Bool = true,
+  validate~ : Bool = true,
   openapi_extra? : Json,
 ) -> Unit {
   self.route(
@@ -551,10 +551,10 @@ pub fn App::get(
 /// back would surprise anyone mounting this app under a prefix.
 pub fn App::enable_docs(
   self : App,
-  openapi_url? : String? = Some("/openapi.json"),
-  docs_url? : String? = Some("/docs"),
-  redoc_url? : String? = Some("/redoc"),
-  version? : OpenApiVersion = OpenApi31,
+  openapi_url~ : String? = Some("/openapi.json"),
+  docs_url~ : String? = Some("/docs"),
+  redoc_url~ : String? = Some("/redoc"),
+  version~ : OpenApiVersion = OpenApi31,
 ) -> Unit {
   let title = self.info.title
   if openapi_url is Some(url) {
@@ -591,19 +591,19 @@ pub fn App::post(
   self : App,
   path : String,
   handler : ApiHandler,
-  summary? : String = "",
-  description? : String = "",
-  tags? : Array[String] = [],
-  deprecated? : Bool = false,
-  operation_id? : String = "",
-  status_code? : Int,
-  responses? : Array[ResponseSpec] = [],
-  name? : String = "",
+  summary~ : String = "",
+  description~ : String = "",
+  tags~ : Array[String] = [],
+  deprecated~ : Bool = false,
+  operation_id~ : String = "",
+  status_code? : Int32,
+  responses~ : Array[ResponseSpec] = [],
+  name~ : String = "",
   endpoint? : Endpoint,
-  security? : Array[SecurityRequirement] = [],
-  dependencies? : Array[String] = [],
-  include_in_schema? : Bool = true,
-  validate? : Bool = true,
+  security~ : Array[SecurityRequirement] = [],
+  dependencies~ : Array[String] = [],
+  include_in_schema~ : Bool = true,
+  validate~ : Bool = true,
   openapi_extra? : Json,
 ) -> Unit {
   self.route(
@@ -633,19 +633,19 @@ pub fn App::put(
   self : App,
   path : String,
   handler : ApiHandler,
-  summary? : String = "",
-  description? : String = "",
-  tags? : Array[String] = [],
-  deprecated? : Bool = false,
-  operation_id? : String = "",
-  status_code? : Int,
-  responses? : Array[ResponseSpec] = [],
-  name? : String = "",
+  summary~ : String = "",
+  description~ : String = "",
+  tags~ : Array[String] = [],
+  deprecated~ : Bool = false,
+  operation_id~ : String = "",
+  status_code? : Int32,
+  responses~ : Array[ResponseSpec] = [],
+  name~ : String = "",
   endpoint? : Endpoint,
-  security? : Array[SecurityRequirement] = [],
-  dependencies? : Array[String] = [],
-  include_in_schema? : Bool = true,
-  validate? : Bool = true,
+  security~ : Array[SecurityRequirement] = [],
+  dependencies~ : Array[String] = [],
+  include_in_schema~ : Bool = true,
+  validate~ : Bool = true,
   openapi_extra? : Json,
 ) -> Unit {
   self.route(
@@ -675,19 +675,19 @@ pub fn App::patch(
   self : App,
   path : String,
   handler : ApiHandler,
-  summary? : String = "",
-  description? : String = "",
-  tags? : Array[String] = [],
-  deprecated? : Bool = false,
-  operation_id? : String = "",
-  status_code? : Int,
-  responses? : Array[ResponseSpec] = [],
-  name? : String = "",
+  summary~ : String = "",
+  description~ : String = "",
+  tags~ : Array[String] = [],
+  deprecated~ : Bool = false,
+  operation_id~ : String = "",
+  status_code? : Int32,
+  responses~ : Array[ResponseSpec] = [],
+  name~ : String = "",
   endpoint? : Endpoint,
-  security? : Array[SecurityRequirement] = [],
-  dependencies? : Array[String] = [],
-  include_in_schema? : Bool = true,
-  validate? : Bool = true,
+  security~ : Array[SecurityRequirement] = [],
+  dependencies~ : Array[String] = [],
+  include_in_schema~ : Bool = true,
+  validate~ : Bool = true,
   openapi_extra? : Json,
 ) -> Unit {
   self.route(
@@ -717,19 +717,19 @@ pub fn App::delete(
   self : App,
   path : String,
   handler : ApiHandler,
-  summary? : String = "",
-  description? : String = "",
-  tags? : Array[String] = [],
-  deprecated? : Bool = false,
-  operation_id? : String = "",
-  status_code? : Int,
-  responses? : Array[ResponseSpec] = [],
-  name? : String = "",
+  summary~ : String = "",
+  description~ : String = "",
+  tags~ : Array[String] = [],
+  deprecated~ : Bool = false,
+  operation_id~ : String = "",
+  status_code? : Int32,
+  responses~ : Array[ResponseSpec] = [],
+  name~ : String = "",
   endpoint? : Endpoint,
-  security? : Array[SecurityRequirement] = [],
-  dependencies? : Array[String] = [],
-  include_in_schema? : Bool = true,
-  validate? : Bool = true,
+  security~ : Array[SecurityRequirement] = [],
+  dependencies~ : Array[String] = [],
+  include_in_schema~ : Bool = true,
+  validate~ : Bool = true,
   openapi_extra? : Json,
 ) -> Unit {
   self.route(
@@ -769,9 +769,9 @@ pub fn App::secure_oauth2(
   self : App,
   name : String,
   bearer : OAuth2PasswordBearer,
-  scopes? : Array[(String, String)] = [],
-  description? : String = "",
-  auto_error? : Bool = true,
+  scopes~ : Array[(String, String)] = [],
+  description~ : String = "",
+  auto_error~ : Bool = true,
 ) -> Unit {
   self.security_schemes.push({
     name,
@@ -791,7 +791,7 @@ pub fn App::secure_oauth2(
 /// error page. Successful handler returns are never rewritten.
 pub fn App::add_status_handler(
   self : App,
-  status : Int,
+  status : Int32,
   handler : (Context) -> @moonasgi.Response,
 ) -> Unit {
   self.status_handlers[status] = handler
@@ -894,7 +894,7 @@ fn render_path(pattern : String, params : Map[String, String]) -> String? {
 pub fn App::url_for(
   self : App,
   name : String,
-  params? : Map[String, String] = Map([]),
+  params~ : Map[String, String] = Map([]),
 ) -> String? {
   // Every route starts out unnamed, so an empty name would match the first one.
   if name == "" {
@@ -912,7 +912,7 @@ pub fn App::url_for(
 
 ///|
 /// A plain-text response.
-pub fn text(status : Int, body : String) -> @moonasgi.Response {
+pub fn text(status : Int32, body : String) -> @moonasgi.Response {
   @moonasgi.Response::new(
     status,
     [("content-type", "text/plain; charset=utf-8")],
@@ -922,7 +922,7 @@ pub fn text(status : Int, body : String) -> @moonasgi.Response {
 
 ///|
 /// An HTML response — what the documentation pages are served as.
-pub fn html(status : Int, body : String) -> @moonasgi.Response {
+pub fn html(status : Int32, body : String) -> @moonasgi.Response {
   @moonasgi.Response::new(
     status,
     [("content-type", "text/html; charset=utf-8")],
@@ -932,7 +932,7 @@ pub fn html(status : Int, body : String) -> @moonasgi.Response {
 
 ///|
 /// A JSON response serialised from a `Json` value.
-pub fn json(status : Int, value : Json) -> @moonasgi.Response {
+pub fn json(status : Int32, value : Json) -> @moonasgi.Response {
   @moonasgi.Response::new(
     status,
     [("content-type", "application/json")],
@@ -1114,15 +1114,12 @@ fn App::route_and_dispatch(
     // a resource reads it rather than guessing.
     self.apply_status(
       ctx,
-      http_exception_response(405, "Method Not Allowed".to_json(), [
+      http_exception_response(405, Json("Method Not Allowed"), [
         ("allow", dedupe(allowed).join(", ")),
       ]),
     )
   } else {
-    self.apply_status(
-      ctx,
-      http_exception_response(404, "Not Found".to_json(), []),
-    )
+    self.apply_status(ctx, http_exception_response(404, Json("Not Found"), []))
   }
 }
 

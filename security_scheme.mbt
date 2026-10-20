@@ -51,7 +51,7 @@ struct DeclaredScheme {
 /// `(name, description)` pairs advertised in the OpenAPI document.
 pub fn OAuth2PasswordBearer::scheme(
   self : OAuth2PasswordBearer,
-  scopes? : Array[(String, String)] = [],
+  scopes~ : Array[(String, String)] = [],
 ) -> SecurityScheme {
   OAuth2Password(token_url=self.token_url, scopes~)
 }
@@ -61,9 +61,9 @@ pub fn OAuth2PasswordBearer::scheme(
 fn scopes_object(scopes : Array[(String, String)]) -> Json {
   let m : Map[String, Json] = Map([])
   for pair in scopes {
-    m[pair.0] = pair.1.to_json()
+    m[pair.0] = Json(pair.1)
   }
-  m.to_json()
+  Json(m)
 }
 
 ///|
@@ -72,29 +72,29 @@ fn SecurityScheme::to_openapi_3x(self : SecurityScheme) -> Json {
   match self {
     OAuth2Password(token_url~, scopes~) => {
       let flow : Map[String, Json] = Map([
-        ("tokenUrl", token_url.to_json()),
+        ("tokenUrl", Json(token_url)),
         ("scopes", scopes_object(scopes)),
       ])
       oauth2_json("password", flow)
     }
     OAuth2Code(authorization_url~, token_url~, refresh_url~, scopes~) => {
       let flow : Map[String, Json] = Map([
-        ("authorizationUrl", authorization_url.to_json()),
-        ("tokenUrl", token_url.to_json()),
+        ("authorizationUrl", Json(authorization_url)),
+        ("tokenUrl", Json(token_url)),
       ])
       if refresh_url != "" {
-        flow["refreshUrl"] = refresh_url.to_json()
+        flow["refreshUrl"] = Json(refresh_url)
       }
       flow["scopes"] = scopes_object(scopes)
       oauth2_json("authorizationCode", flow)
     }
     HttpBearer(bearer_format~) => {
       let m : Map[String, Json] = Map([
-        ("type", "http".to_json()),
-        ("scheme", "bearer".to_json()),
-        ("bearerFormat", bearer_format.to_json()),
+        ("type", Json("http")),
+        ("scheme", Json("bearer")),
+        ("bearerFormat", Json(bearer_format)),
       ])
-      m.to_json()
+      Json(m)
     }
     ApiKeyHeader(name~) => api_key_json("header", name)
     ApiKeyQuery(name~) => api_key_json("query", name)
@@ -103,10 +103,10 @@ fn SecurityScheme::to_openapi_3x(self : SecurityScheme) -> Json {
     HttpDigest => http_scheme_json("digest")
     OpenIdConnect(url~) => {
       let m : Map[String, Json] = Map([
-        ("type", "openIdConnect".to_json()),
-        ("openIdConnectUrl", url.to_json()),
+        ("type", Json("openIdConnect")),
+        ("openIdConnectUrl", Json(url)),
       ])
-      m.to_json()
+      Json(m)
     }
   }
 }
@@ -114,33 +114,33 @@ fn SecurityScheme::to_openapi_3x(self : SecurityScheme) -> Json {
 ///|
 /// An `oauth2` scheme object carrying one named 3.x flow.
 fn oauth2_json(flow_name : String, flow : Map[String, Json]) -> Json {
-  let flows : Map[String, Json] = Map([(flow_name, flow.to_json())])
+  let flows : Map[String, Json] = Map([(flow_name, Json(flow))])
   let m : Map[String, Json] = Map([
-    ("type", "oauth2".to_json()),
-    ("flows", flows.to_json()),
+    ("type", Json("oauth2")),
+    ("flows", Json(flows)),
   ])
-  m.to_json()
+  Json(m)
 }
 
 ///|
 /// An `{"type":"http","scheme":...}` object for the HTTP authentication schemes.
 fn http_scheme_json(scheme : String) -> Json {
   let m : Map[String, Json] = Map([
-    ("type", "http".to_json()),
-    ("scheme", scheme.to_json()),
+    ("type", Json("http")),
+    ("scheme", Json(scheme)),
   ])
-  m.to_json()
+  Json(m)
 }
 
 ///|
 /// An `apiKey` scheme object for `in`/`name`.
 fn api_key_json(in_ : String, name : String) -> Json {
   let m : Map[String, Json] = Map([
-    ("type", "apiKey".to_json()),
-    ("in", in_.to_json()),
-    ("name", name.to_json()),
+    ("type", Json("apiKey")),
+    ("in", Json(in_)),
+    ("name", Json(name)),
   ])
-  m.to_json()
+  Json(m)
 }
 
 ///|
@@ -157,22 +157,22 @@ fn SecurityScheme::to_openapi_20(self : SecurityScheme) -> Json? {
   match self {
     OAuth2Password(token_url~, scopes~) => {
       let m : Map[String, Json] = Map([
-        ("type", "oauth2".to_json()),
-        ("flow", "password".to_json()),
-        ("tokenUrl", token_url.to_json()),
+        ("type", Json("oauth2")),
+        ("flow", Json("password")),
+        ("tokenUrl", Json(token_url)),
         ("scopes", scopes_object(scopes)),
       ])
-      Some(m.to_json())
+      Some(Json(m))
     }
     OAuth2Code(authorization_url~, token_url~, scopes~, ..) => {
       let m : Map[String, Json] = Map([
-        ("type", "oauth2".to_json()),
-        ("flow", "accessCode".to_json()),
-        ("authorizationUrl", authorization_url.to_json()),
-        ("tokenUrl", token_url.to_json()),
+        ("type", Json("oauth2")),
+        ("flow", Json("accessCode")),
+        ("authorizationUrl", Json(authorization_url)),
+        ("tokenUrl", Json(token_url)),
         ("scopes", scopes_object(scopes)),
       ])
-      Some(m.to_json())
+      Some(Json(m))
     }
     HttpBearer(_) => Some(api_key_json("header", "Authorization"))
     HttpDigest => Some(api_key_json("header", "Authorization"))
@@ -180,8 +180,8 @@ fn SecurityScheme::to_openapi_20(self : SecurityScheme) -> Json? {
     ApiKeyQuery(name~) => Some(api_key_json("query", name))
     ApiKeyCookie(name~) => Some(api_key_json("header", name))
     HttpBasic => {
-      let m : Map[String, Json] = Map([("type", "basic".to_json())])
-      Some(m.to_json())
+      let m : Map[String, Json] = Map([("type", Json("basic"))])
+      Some(Json(m))
     }
     OpenIdConnect(_) => None
   }
