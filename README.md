@@ -24,22 +24,44 @@ flowchart LR
 
 ## Quickstart
 
+Routing and the OpenAPI document run on every backend. Serving needs a socket,
+so the entry point is `async fn main` and the target is `--target native`:
+
 ```moonbit
-let app = @moonapi.App::new()
-app.get("/", _ctx => @moonapi.text(200, "Hello from moonapi!"))
-app.get("/users/:id", ctx => @moonapi.text(200, "user " + ctx.param("id").unwrap()),
-        summary="fetch a user")
-app.post("/users", _ctx => @moonapi.text(201, "created"))
+async fn main {
+  let app = @moonapi.App::new()
+  app.get("/", _ctx => @moonapi.text(200, "Hello from moonapi!"))
+  app.get("/users/:id", ctx => @moonapi.text(
+    200,
+    "user " + ctx.param("id").unwrap(),
+  ), summary="fetch a user")
+  app.post("/users", _ctx => @moonapi.text(201, "created"))
 
-// One set of routes → every mainstream spec version:
-let v31 = app.openapi_json(version=@moonapi.OpenApi31)   // OpenAPI 3.1.0
-let v30 = app.openapi_json(version=@moonapi.OpenApi30)   // OpenAPI 3.0.3
-let v20 = app.openapi_json(version=@moonapi.Swagger20)   // Swagger 2.0
-let docs_page = @moonapi.swagger_ui()           // a Swagger UI page
+  // One set of routes, every mainstream spec version.
+  println(app.openapi_json(version=@moonapi.OpenApi31)) // OpenAPI 3.1.0
+  println(app.openapi_json(version=@moonapi.OpenApi30)) // OpenAPI 3.0.3
+  println(app.openapi_json(version=@moonapi.Swagger20)) // Swagger 2.0
 
-// Serve it (native, via mooncat):
-@mooncat.serve(app.to_asgi(), port=8000)
+  @mooncat.serve(app.to_asgi(), port=12000) catch {
+    err => println("stopped: \{err}")
+  }
+}
 ```
+
+```
+moon run src/main --target native
+curl http://127.0.0.1:12000/users/233
+```
+
+`moon.mod` needs `moonbitstack/moonapi`, and — for the serving half —
+`moonbitstack/mooncat` plus `moonbitlang/async`, which `async fn main`
+requires by name. The package importing them needs the same three in its
+`moon.pkg`. Drop the last two and the routes and the document still build on
+wasm, wasm-gc and js.
+
+`App::enable_docs()` mounts `/openapi.json`, `/docs` and `/redoc` instead of
+printing the document; `swagger_ui()` and `redoc_ui()` return those pages on
+their own.
 
 For a runnable integration of the root API, two routers, authentication,
 validation, middleware, background work, streaming and docs, see the
