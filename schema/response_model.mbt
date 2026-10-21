@@ -67,7 +67,7 @@ pub fn json_model(
   value : Json,
 ) -> @moonasgi.Response {
   match filter_response(model, value) {
-    Ok(filtered) => json(status, filtered)
-    Err(errs) => json(500, validation_error_body(errs))
+    Ok(filtered) => @status.json(status, filtered)
+    Err(errs) => @status.json(500, validation_error_body(errs))
   }
 }

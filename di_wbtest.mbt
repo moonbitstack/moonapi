@@ -1,6 +1,6 @@
 ///|
 /// A Context wrapping a POST body, no params — test helper.
-fn body_ctx(payload : String) -> Context {
+fn body_ctx(payload : String) -> @ctx.Context {
   {
     request: mkreq_full("POST", "/greet", body=@utf8.encode(payload)),
     params: Map([]),
@@ -47,7 +47,7 @@ test "typed body: wrong field type -> located 422 before deserialisation" {
 
 ///|
 test "typed body: empty body -> missing, invalid JSON -> json_invalid" {
-  let empty : Context = {
+  let empty : @ctx.Context = {
     request: mkreq_full("POST", "/greet"),
     params: Map([]),
   }
@@ -72,7 +72,7 @@ test "typed body: unchecked extractor is total, None on bad shape" {
 
 ///|
 test "DI: container provides a request-scoped value, None when unregistered" {
-  let c : Container[Dep] = Container::new()
+  let c : @di.Container[Dep] = @di.Container::new()
   c.provide("greeting", () => Greeting("Hi")) |> ignore
   let scope = c.open_scope()
   assert_eq(scope.get("greeting") == Some(Greeting("Hi")), true)
@@ -83,7 +83,7 @@ test "DI: container provides a request-scoped value, None when unregistered" {
 ///|
 test "DI: a dependency is built once per request scope (cached)" {
   let log : Array[String] = []
-  let c : Container[Dep] = Container::new()
+  let c : @di.Container[Dep] = @di.Container::new()
   c.provide("greeting", () => {
     log.push("built")
     Greeting("x")
@@ -100,7 +100,7 @@ test "DI: a dependency is built once per request scope (cached)" {
 ///|
 test "DI: a dependency resolves a sub-dependency through the scope, LIFO teardown" {
   let log : Array[String] = []
-  let c : Container[Dep] = Container::new()
+  let c : @di.Container[Dep] = @di.Container::new()
   c.provide(
     "prefix",
     () => {
@@ -135,7 +135,7 @@ test "DI: a dependency resolves a sub-dependency through the scope, LIFO teardow
 
 ///|
 test "DI: a circular sub-dependency breaks with None instead of looping" {
-  let c : Container[Dep] = Container::new()
+  let c : @di.Container[Dep] = @di.Container::new()
   c.provide_using("a", scope => {
     let _ = scope.get("b")
     Greeting("a")
@@ -156,7 +156,7 @@ test "DI: a circular sub-dependency breaks with None instead of looping" {
 
 ///|
 test "DI: dependency_overrides shadow the base provider, then restore" {
-  let c : Container[Dep] = Container::new()
+  let c : @di.Container[Dep] = @di.Container::new()
   c.provide("greeting", () => Greeting("Hello")) |> ignore
   let s1 = c.open_scope()
   assert_eq(s1.get("greeting") == Some(Greeting("Hello")), true)
@@ -174,7 +174,7 @@ test "DI: dependency_overrides shadow the base provider, then restore" {
 ///|
 test "DI: yield-style teardown runs after the handler, LIFO" {
   let log : Array[String] = []
-  let c : Container[Dep] = Container::new()
+  let c : @di.Container[Dep] = @di.Container::new()
   c.provide(
     "a",
     () => {
@@ -196,7 +196,7 @@ test "DI: yield-style teardown runs after the handler, LIFO" {
   let resp = c.run(scope => {
     let _ = scope.get("a")
     let _ = scope.get("b")
-    text(200, "ok")
+    @status.text(200, "ok")
   })
   assert_eq(resp.status, 200)
   // Setups in resolution order; teardowns strictly after, in reverse (LIFO).
@@ -205,7 +205,7 @@ test "DI: yield-style teardown runs after the handler, LIFO" {
 
 ///|
 test "greet route: dependency + validated body end to end, with override" {
-  let c : Container[Dep] = Container::new()
+  let c : @di.Container[Dep] = @di.Container::new()
   c.provide("greeting", () => Greeting("Hello")) |> ignore
   let app = greet_app(c)
   let ok = app.handle(
@@ -240,7 +240,7 @@ fn outcome_word(failure : Error?) -> String {
 ///|
 test "DI: run hands the handler's error to the teardowns, then re-raises" {
   let log : Array[String] = []
-  let c : Container[Dep] = Container::new()
+  let c : @di.Container[Dep] = @di.Container::new()
   c.provide("tx", () => Greeting("tx"), teardown=(_v, e) => {
     log.push(outcome_word(e))
   })
@@ -248,7 +248,7 @@ test "DI: run hands the handler's error to the teardowns, then re-raises" {
   let outcome : Result[@moonasgi.Response, Error] = Ok(
     c.run(scope => {
       let _ = scope.get("tx")
-      raise http_error(500, "boom")
+      raise @mid.http_error(500, "boom")
     }),
   ) catch {
     e => Err(e)
@@ -262,7 +262,7 @@ test "DI: run hands the handler's error to the teardowns, then re-raises" {
 ///|
 test "route deps: a declared dependency is resolved before the handler and torn down after" {
   let log : Array[String] = []
-  let c : Container[Dep] = Container::new()
+  let c : @di.Container[Dep] = @di.Container::new()
   c.provide(
     "conn",
     () => {
@@ -278,7 +278,7 @@ test "route deps: a declared dependency is resolved before the handler and torn 
     "/items",
     _ctx => {
       log.push("handler")
-      text(200, "items")
+      @status.text(200, "items")
     },
     dependencies=["conn"],
   )
@@ -289,15 +289,17 @@ test "route deps: a declared dependency is resolved before the handler and torn 
 ///|
 test "route deps: teardown runs when the handler raises, and sees the failure" {
   let log : Array[String] = []
-  let c : Container[Dep] = Container::new()
+  let c : @di.Container[Dep] = @di.Container::new()
   c.provide("tx", () => Greeting("tx"), teardown=(_v, e) => {
     log.push(outcome_word(e))
   })
   |> ignore
   let app = App::new()
   app.depends(c.erase())
-  app.get("/boom", _ctx => raise http_error(418, "no tea"), dependencies=["tx"])
-  app.get("/fine", _ctx => text(200, "ok"), dependencies=["tx"])
+  app.get("/boom", _ctx => raise @mid.http_error(418, "no tea"), dependencies=[
+    "tx",
+  ])
+  app.get("/fine", _ctx => @status.text(200, "ok"), dependencies=["tx"])
   // The raised error still becomes its mapped response...
   assert_eq(app.handle(mkreq("GET", "/boom")).status, 418)
   assert_eq(app.handle(mkreq("GET", "/fine")).status, 200)
@@ -309,14 +311,14 @@ test "route deps: teardown runs when the handler raises, and sees the failure" {
 ///|
 test "route deps: dependencies are LIFO within one request, and per request" {
   let log : Array[String] = []
-  let c : Container[Dep] = Container::new()
+  let c : @di.Container[Dep] = @di.Container::new()
   c.provide("a", () => Greeting("a"), teardown=(_v, _e) => log.push("td a"))
   |> ignore
   c.provide("b", () => Greeting("b"), teardown=(_v, _e) => log.push("td b"))
   |> ignore
   let app = App::new()
   app.depends(c.erase())
-  app.get("/x", _ctx => text(200, "x"), dependencies=["a", "b"])
+  app.get("/x", _ctx => @status.text(200, "x"), dependencies=["a", "b"])
   let _ = app.handle(mkreq("GET", "/x"))
   let _ = app.handle(mkreq("GET", "/x"))
   // Each request opened its own scope: two full setup/teardown cycles, the
@@ -327,7 +329,7 @@ test "route deps: dependencies are LIFO within one request, and per request" {
 ///|
 test "route deps: an unprovidable key is a 500 and still releases what was built" {
   let log : Array[String] = []
-  let c : Container[Dep] = Container::new()
+  let c : @di.Container[Dep] = @di.Container::new()
   c.provide("conn", () => Greeting("db"), teardown=(_v, _e) => log.push("close"))
   |> ignore
   let app = App::new()
@@ -336,7 +338,7 @@ test "route deps: an unprovidable key is a 500 and still releases what was built
     "/items",
     _ctx => {
       log.push("handler")
-      text(200, "items")
+      @status.text(200, "items")
     },
     dependencies=["conn", "nope"],
   )
@@ -348,17 +350,17 @@ test "route deps: an unprovidable key is a 500 and still releases what was built
 ///|
 test "route deps: a route that declares one with no container at all is a 500" {
   let app = App::new()
-  app.get("/items", _ctx => text(200, "items"), dependencies=["conn"])
+  app.get("/items", _ctx => @status.text(200, "items"), dependencies=["conn"])
   assert_eq(app.handle(mkreq("GET", "/items")).status, 500)
   // A route declaring none is unaffected — no container, no scope, no error.
-  app.get("/free", _ctx => text(200, "free"))
+  app.get("/free", _ctx => @status.text(200, "free"))
   assert_eq(app.handle(mkreq("GET", "/free")).status, 200)
 }
 
 ///|
 test "route deps: a router's group dependencies reach every route it carries" {
   let log : Array[String] = []
-  let c : Container[Dep] = Container::new()
+  let c : @di.Container[Dep] = @di.Container::new()
   c.provide("audit", () => {
     log.push("audit")
     Greeting("audit")
@@ -366,9 +368,9 @@ test "route deps: a router's group dependencies reach every route it carries" {
   |> ignore
   let app = App::new()
   app.depends(c.erase())
-  let r = Router::new()
-  r.get("/one", _ctx => text(200, "one"))
-  r.get("/two", _ctx => text(200, "two"), dependencies=["own"])
+  let r = @route.Router::new()
+  r.get("/one", _ctx => @status.text(200, "one"))
+  r.get("/two", _ctx => @status.text(200, "two"), dependencies=["own"])
   app.include_router(r, prefix="/g", dependencies=["audit"])
   assert_eq(app.handle(mkreq("GET", "/g/one")).status, 200)
   // The route's own key is unprovided, but the group's ran first — a group-wide

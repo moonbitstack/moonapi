@@ -1,0 +1,36 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonapi/mid"
+
+import {
+  "moonbitstack/moonapi/ctx",
+  "moonbitstack/moonasgi/http",
+}
+
+// Values
+pub fn cors(allow_origins? : Array[String], allow_all_origins? : Bool, allow_methods? : Array[String], allow_headers? : Array[String], allow_all_headers? : Bool, allow_credentials? : Bool, expose_headers? : Array[String], max_age? : Int32) -> ((@http.Request) -> @http.Response) -> (@http.Request) -> @http.Response
+
+pub fn gzip(min_size? : Int32) -> ((@http.Request) -> @http.Response) -> (@http.Request) -> @http.Response
+
+pub fn http_error(Int32, String, headers? : Array[(String, String)]) -> HttpException
+
+// Errors
+pub(all) suberror HttpException {
+  HttpException(status~ : Int32, detail~ : Json, headers~ : Array[(String, String)])
+}
+
+// Types and methods
+pub(all) struct CorsConfig {
+  allow_origins : Array[String]
+  allow_all_origins : Bool
+  allow_methods : Array[String]
+  allow_headers : Array[String]
+  allow_all_headers : Bool
+  allow_credentials : Bool
+  expose_headers : Array[String]
+  max_age : Int32
+}
+
+// Type aliases
+pub type ExceptionHandler = (@ctx.Context, Error) -> @http.Response?
+
+// Traits

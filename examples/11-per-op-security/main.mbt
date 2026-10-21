@@ -51,5 +51,5 @@ fn main {
   hit("(items:read)", [("authorization", "Bearer " + good)])
   hit("(profile only)", [("authorization", "Bearer " + weak)])
   println("--- OpenAPI 3.1.0 (operation security + securitySchemes) ---")
-  println(app.openapi_json(version=@moonapi.OpenApi31))
+  println(app.openapi_json(version=OpenApi31))
 }

@@ -67,7 +67,7 @@ test "only the last body event of a stream clears more_body" {
 /// feature.
 test "a buffered route is still a single body event" {
   let app = App::new()
-  app.get("/plain", _ctx => text(200, "hello"))
+  app.get("/plain", _ctx => @status.text(200, "hello"))
   let events = body_events(app, mkreq("GET", "/plain"))
   assert_eq(events.length(), 1)
   assert_eq(
@@ -87,7 +87,7 @@ test "a streaming route's status and headers survive to the response start" {
   let app = App::new()
   app.stream("/feed", _ctx => {
     @moonasgi.StreamingResponse::new(
-      status=HTTP_201_CREATED,
+      status=@status.HTTP_201_CREATED,
       headers=[("x-trace", "heke1228")],
       chunks=[b"qwq"],
     )
@@ -169,7 +169,7 @@ test "HEAD drops a stream even when its chunks join to nothing" {
 /// instead — the documented cost of putting `gzip` in front of a stream.
 test "a body-rewriting middleware collapses a stream to one chunk" {
   let app = App::new()
-  app.middleware(gzip(min_size=1))
+  app.middleware(@mid.gzip(min_size=1))
   app.stream("/feed", _ctx => {
     @moonasgi.StreamingResponse::new(headers=[("content-type", "text/plain")], chunks=[
       b"one", b"two", b"three",
@@ -218,7 +218,7 @@ test "a header-only middleware leaves the chunk boundaries intact" {
 /// A streaming route registered on a `Router` streams once it is included, and
 /// under the prefix it was included at.
 test "a router's streaming route still streams after include_router" {
-  let feed = Router::new()
+  let feed = @route.Router::new()
   feed.stream("/events", _ctx => {
     sse_response([@sse.Event::of("one"), @sse.Event::of("two")])
   })

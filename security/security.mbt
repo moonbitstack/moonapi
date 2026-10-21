@@ -8,74 +8,6 @@
 // same shape as axum extractors or Go middleware that stashes the claims.
 
 ///|
-/// The parsed OAuth2 password-grant form (← FastAPI's `OAuth2PasswordRequestForm`).
-/// The token endpoint reads `username` / `password` to authenticate and `scopes`
-/// (the space-delimited `scope` field, split into a list) to stamp into the
-/// issued token. `grant_type` is `"password"` for this flow; `client_id` /
-/// `client_secret` are optional confidential-client credentials.
-pub(all) struct OAuth2PasswordRequestForm {
-  grant_type : String
-  username : String
-  password : String
-  scopes : Array[String]
-  client_id : String?
-  client_secret : String?
-} derive(Eq)
-
-///|
-/// Split a space-delimited scope string into its scopes, dropping empty runs —
-/// the OAuth2 `scope` form field is one string like `"read write"`.
-fn split_scopes(s : String) -> Array[String] {
-  let out : Array[String] = []
-  let sb = StringBuilder()
-  for i = 0; i < s.length(); i = i + 1 {
-    if s[i].to_int() == 0x20 {
-      if sb.to_string() != "" {
-        out.push(sb.to_string())
-      }
-      sb.reset()
-    } else {
-      sb.write_char(s[i].unsafe_to_char())
-    }
-  }
-  if sb.to_string() != "" {
-    out.push(sb.to_string())
-  }
-  out
-}
-
-///|
-/// Read an `OAuth2PasswordRequestForm` off the request's urlencoded (or
-/// multipart) body. `None` when neither `username` nor `password` is present —
-/// the body isn't a password-grant form at all — and equally when the body is
-/// too large to be one, since a grant carries six fields and nothing that big
-/// is a login.
-pub fn Context::oauth2_password_form(
-  self : Context,
-) -> OAuth2PasswordRequestForm? {
-  let form = match self.form() {
-    Some(f) => f
-    None => return None
-  }
-  let username = form.field("username")
-  let password = form.field("password")
-  match (username, password) {
-    (None, None) => None
-    _ => {
-      let scope = form.field("scope").unwrap_or("")
-      Some({
-        grant_type: form.field("grant_type").unwrap_or(""),
-        username: username.unwrap_or(""),
-        password: password.unwrap_or(""),
-        scopes: split_scopes(scope),
-        client_id: form.field("client_id"),
-        client_secret: form.field("client_secret"),
-      })
-    }
-  }
-}
-
-///|
 /// The identity a verified token carries, injected into a protected handler
 /// (← the object FastAPI's `get_current_user` returns). `subject` is the `sub`
 /// claim, `scopes` the granted scopes, and `claims` the whole verified payload
@@ -110,7 +42,7 @@ fn scopes_from_claims(claims : Map[String, Json]) -> Array[String] {
       }
       out
     }
-    Some(String(s)) => split_scopes(s)
+    Some(String(s)) => @ctx.split_scopes(s)
     _ => []
   }
 }
@@ -144,33 +76,11 @@ pub fn OAuth2PasswordBearer::new(
 }
 
 ///|
-/// Pull the bearer token out of the `Authorization: Bearer <token>` header,
-/// `None` if the header is absent or isn't a bearer credential. The scheme name
-/// is matched case-insensitively, as RFC 6750 requires.
-pub fn Context::bearer_token(self : Context) -> String? {
-  match self.request.header("authorization") {
-    None => None
-    Some(h) => {
-      let trimmed = trim_spaces(h)
-      let prefix = "bearer "
-      if trimmed.length() < prefix.length() {
-        return None
-      }
-      let scheme = trimmed[0:prefix.length()].to_owned().to_lower()
-      if scheme != prefix {
-        return None
-      }
-      Some(trim_spaces(trimmed[prefix.length():].to_owned()))
-    }
-  }
-}
-
-///|
 /// A `401 Unauthorized` with a `WWW-Authenticate` challenge and a
 /// `{"detail": ...}` body — FastAPI's response for a missing or invalid
 /// credential. RFC 9110 §15.5.2 requires the challenge, so it is a parameter:
 /// `Basic realm="…"` for Basic, `Bearer scope="…"` for a scoped bearer route.
-fn unauthorized(
+pub fn unauthorized(
   detail : String,
   challenge~ : String = "Bearer",
 ) -> @moonasgi.Response {
@@ -186,7 +96,7 @@ fn unauthorized(
 /// A `403 Forbidden` with a `{"detail": ...}` body — returned when the token is
 /// valid but lacks a required scope. The token authenticated the caller, so this
 /// is authorization, not authentication: 403, not 401.
-fn forbidden(detail : String) -> @moonasgi.Response {
+pub fn forbidden(detail : String) -> @moonasgi.Response {
   let body : Map[String, Json] = Map([("detail", Json(detail))])
   @moonasgi.Response::new(
     403,
@@ -213,7 +123,7 @@ fn forbidden(detail : String) -> @moonasgi.Response {
 /// stays pure and testable on every backend.
 pub fn OAuth2PasswordBearer::authenticate(
   self : OAuth2PasswordBearer,
-  ctx : Context,
+  ctx : @ctx.Context,
   now_secs : Int64,
   scopes~ : Array[String] = [],
 ) -> Result[AuthenticatedUser, @moonasgi.Response] {
@@ -293,8 +203,5 @@ pub fn token_response(access_token : String) -> @moonasgi.Response {
     ("access_token", Json(access_token)),
     ("token_type", Json("bearer")),
   ])
-  json(200, Json(body))
+  @status.json(200, Json(body))
 }
-
-///|
-pub extend OAuth2PasswordRequestForm with Eq::{not_equal, equal}

@@ -17,7 +17,7 @@ fn header_count(headers : Array[(String, String)], name : String) -> Int32 {
 /// The bound on a query string is the caller's to set, and the preset is the
 /// one Express carries: `qs` allows a thousand parameters by default.
 test "the query bound is public and reaches both extractors" {
-  inspect(query_limits.parts, content="1000")
+  inspect(@schema.query_limits.parts, content="1000")
   let many = StringBuilder()
   for i in 0..<40 {
     if i > 0 {
@@ -47,21 +47,21 @@ test "the query bound is public and reaches both extractors" {
 /// them being dropped in silence.
 test "extra adds claims and cannot quietly replace them" {
   let secret = "a-secret"
-  let plain = create_access_token("heke", secret, 1700000000L)
-  let with_extra = create_access_token("heke", secret, 1700000000L, extra={
+  let plain = @security.create_access_token("heke", secret, 1700000000L)
+  let with_extra = @security.create_access_token("heke", secret, 1700000000L, extra={
     "tenant": Json::string("acme"),
   })
   assert_not_eq(plain, with_extra)
   let claims = @jwt.verify(
     with_extra[:],
     HS256,
-    hs256(secret),
+    @security.hs256(secret),
     now=At(1700000100L),
   )
   assert_eq(claims.get("tenant"), Some(Json::string("acme")))
   assert_eq(claims.get("sub"), Some(Json::string("heke")))
   // Asked to let `extra` win, it does.
-  let overridden = create_access_token(
+  let overridden = @security.create_access_token(
     "heke",
     secret,
     1700000000L,
@@ -72,25 +72,30 @@ test "extra adds claims and cannot quietly replace them" {
   let claims = @jwt.verify(
     overridden[:],
     HS256,
-    hs256(secret),
+    @security.hs256(secret),
     now=At(1700000100L),
   )
   assert_eq(claims.get("sub"), Some(Json::string("somebody else")))
   // Silenced without flipping the direction, the argument still wins.
-  let kept = create_access_token(
+  let kept = @security.create_access_token(
     "heke",
     secret,
     1700000000L,
     extra={ "sub": Json::string("somebody else") },
     clash=Ignore,
   )
-  let claims = @jwt.verify(kept[:], HS256, hs256(secret), now=At(1700000100L))
+  let claims = @jwt.verify(
+    kept[:],
+    HS256,
+    @security.hs256(secret),
+    now=At(1700000100L),
+  )
   assert_eq(claims.get("sub"), Some(Json::string("heke")))
 }
 
 ///|
 test "panic a claim given twice is a mistake in the program" {
-  create_access_token("heke", "a-secret", 1700000000L, extra={
+  @security.create_access_token("heke", "a-secret", 1700000000L, extra={
     "sub": Json::string("somebody else"),
   })
   |> ignore

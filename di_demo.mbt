@@ -14,8 +14,8 @@ pub(all) struct GreetReq {
 
 ///|
 /// The `GreetReq` descriptor — one required string field.
-pub fn GreetReq::schema() -> Schema {
-  Schema::object("GreetReq", [Field::new("name", SStr)])
+pub fn GreetReq::schema() -> @schema.Schema {
+  @schema.Schema::object("GreetReq", [@schema.Field::new("name", SStr)])
 }
 
 ///|
@@ -33,11 +33,11 @@ pub(all) enum Dep {
 /// validated `GreetReq` body, and answers `{"message": "<greeting>, <name>"}`;
 /// a malformed body gets a FastAPI-shaped `422`. The dependency scope brackets
 /// each request, so any `yield` teardown runs once the handler returns.
-pub fn greet_app(container : Container[Dep]) -> App {
+pub fn greet_app(container : @di.Container[Dep]) -> App {
   let app = App::new()
-  let ep = Endpoint::new(request_body=GreetReq::schema(), responses=[
-    ResponseSpec::new(200, description="the greeting"),
-    ResponseSpec::new(422, description="Validation Error"),
+  let ep = @endpoint.Endpoint::new(request_body=GreetReq::schema(), responses=[
+    @endpoint.ResponseSpec::new(200, description="the greeting"),
+    @endpoint.ResponseSpec::new(422, description="Validation Error"),
   ])
   app.post(
     "/greet",
@@ -48,12 +48,12 @@ pub fn greet_app(container : Container[Dep]) -> App {
           None => "Hello"
         }
         match (ctx.body_validated(GreetReq::schema()) : Result[GreetReq, _]) {
-          Err(errs) => unprocessable(errs)
+          Err(errs) => @schema.unprocessable(errs)
           Ok(req) => {
             let m : Map[String, Json] = Map([
               ("message", Json("\{greeting}, \{req.name}")),
             ])
-            json(200, Json(m))
+            @status.json(200, Json(m))
           }
         }
       })

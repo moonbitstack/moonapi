@@ -19,21 +19,24 @@ fn authenticate_user(username : String, password : String) -> Bool {
 /// caller controls time in tests. Tokens live for one hour.
 pub fn oauth2_app(now : () -> Int64, secret~ : String = "demo-secret") -> App {
   let app = App::new()
-  let scheme = OAuth2PasswordBearer::new("/token", secret)
+  let scheme = @security.OAuth2PasswordBearer::new("/token", secret)
   app.post(
     "/token",
     ctx => {
       match ctx.oauth2_password_form() {
-        None => unprocessable([ValidationError::missing(["body", "username"])])
+        None =>
+          @schema.unprocessable([
+            @schema.ValidationError::missing(["body", "username"]),
+          ])
         Some(form) =>
           if authenticate_user(form.username, form.password) {
-            let token = create_access_token(
+            let token = @security.create_access_token(
               form.username,
               secret,
               now(),
               scopes=form.scopes,
             )
-            token_response(token)
+            @security.token_response(token)
           } else {
             let body : Map[String, Json] = Map([
               ("detail", Json("Incorrect username or password")),
@@ -65,7 +68,7 @@ pub fn oauth2_app(now : () -> Int64, secret~ : String = "demo-secret") -> App {
             ("username", Json(user.subject)),
             ("scopes", Json(scopes)),
           ])
-          json(200, Json(body))
+          @status.json(200, Json(body))
         }
       }
     },
@@ -81,7 +84,7 @@ pub fn oauth2_app(now : () -> Int64, secret~ : String = "demo-secret") -> App {
             ("owner", Json(user.subject)),
             ("items", Json(["hammer", "nail"])),
           ])
-          json(200, Json(body))
+          @status.json(200, Json(body))
         }
       }
     },

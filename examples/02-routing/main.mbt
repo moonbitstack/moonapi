@@ -16,8 +16,8 @@ fn main {
   app.put("/items/:id", _ctx => @moonapi.text(200, "replaced"))
   app.patch("/items/:id", _ctx => @moonapi.text(200, "patched"))
   app.delete("/items/:id", _ctx => @moonapi.text(200, "deleted"))
-  app.route(@moonapi.Head, "/items", _ctx => @moonapi.text(200, ""))
-  app.route(@moonapi.Options, "/items", _ctx => @moonapi.text(204, ""))
+  app.route(Head, "/items", _ctx => @moonapi.text(200, ""))
+  app.route(Options, "/items", _ctx => @moonapi.text(204, ""))
   let hit = (verb : String, path : String) => {
     let req : @moonasgi.Request = {
       http_method: verb,

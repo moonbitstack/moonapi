@@ -39,7 +39,7 @@ pub(all) enum SecurityScheme {
 /// A security scheme as an application declares it: the `name` routes refer to
 /// it by, the `kind` that shapes the emitted object, and the prose beside it
 /// (← the `description=` every FastAPI security class takes).
-struct DeclaredScheme {
+pub(all) struct DeclaredScheme {
   name : String
   kind : SecurityScheme
   description : String
@@ -68,7 +68,7 @@ fn scopes_object(scopes : Array[(String, String)]) -> Json {
 
 ///|
 /// This scheme as an OpenAPI 3.0 / 3.1 security scheme object.
-fn SecurityScheme::to_openapi_3x(self : SecurityScheme) -> Json {
+pub fn SecurityScheme::to_openapi_3x(self : SecurityScheme) -> Json {
   match self {
     OAuth2Password(token_url~, scopes~) => {
       let flow : Map[String, Json] = Map([
@@ -153,7 +153,7 @@ fn api_key_json(in_ : String, name : String) -> Json {
 /// so a cookie key maps to a header. OpenID Connect has no 2.0 equivalent at
 /// all, and inventing one would describe an API that does not exist — so it is
 /// left out of the 2.0 document.
-fn SecurityScheme::to_openapi_20(self : SecurityScheme) -> Json? {
+pub fn SecurityScheme::to_openapi_20(self : SecurityScheme) -> Json? {
   match self {
     OAuth2Password(token_url~, scopes~) => {
       let m : Map[String, Json] = Map([
@@ -185,31 +185,4 @@ fn SecurityScheme::to_openapi_20(self : SecurityScheme) -> Json? {
     }
     OpenIdConnect(_) => None
   }
-}
-
-///|
-/// The `{name: scheme, ...}` object for the app's declared schemes, rendered in
-/// the shape `version` uses, each carrying its `description` when it has one. A
-/// scheme the target version cannot express is omitted.
-fn security_schemes_json(
-  schemes : Array[DeclaredScheme],
-  version : OpenApiVersion,
-) -> Map[String, Json] {
-  let m : Map[String, Json] = Map([])
-  for d in schemes {
-    let body = match version {
-      Swagger20 => d.kind.to_openapi_20()
-      _ => Some(d.kind.to_openapi_3x())
-    }
-    match body {
-      Some(j) =>
-        m[d.name] = if d.description != "" {
-          with_description(j, d.description)
-        } else {
-          j
-        }
-      None => ()
-    }
-  }
-  m
 }

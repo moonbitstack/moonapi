@@ -1,0 +1,54 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonapi/di"
+
+import {
+  "moonbitstack/moonasgi/http",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub(all) struct Container[V] {
+  providers : Map[String, Provider[V]]
+  overrides : Map[String, Provider[V]]
+}
+pub fn[V] Container::clear_override(Self[V], String) -> Unit
+pub fn[V] Container::clear_overrides(Self[V]) -> Unit
+pub fn[V] Container::erase(Self[V]) -> Deps
+pub fn[V] Container::new() -> Self[V]
+pub fn[V] Container::open_scope(Self[V]) -> Scope[V]
+pub fn[V] Container::override_(Self[V], String, () -> V, teardown? : (V, Error?) -> Unit) -> Self[V]
+pub fn[V] Container::provide(Self[V], String, () -> V, teardown? : (V, Error?) -> Unit) -> Self[V]
+pub fn[V] Container::provide_using(Self[V], String, (Scope[V]) -> V, teardown? : (V, Error?) -> Unit) -> Self[V]
+pub fn[V] Container::run(Self[V], (Scope[V]) -> @http.Response raise) -> @http.Response raise
+
+pub struct Deps {
+  open : () -> DepsScope
+}
+
+pub struct DepsScope {
+  resolve : (String) -> Bool
+  close : (Error?) -> Unit
+}
+
+pub(all) struct Provider[V] {
+  factory : (Scope[V]) -> V
+  teardown : (V, Error?) -> Unit
+}
+pub fn[V] Provider::new(() -> V, teardown? : (V, Error?) -> Unit) -> Self[V]
+pub fn[V] Provider::scoped((Scope[V]) -> V, teardown? : (V, Error?) -> Unit) -> Self[V]
+
+pub struct Scope[V] {
+  container : Container[V]
+  cache : Map[String, V]
+  building : Map[String, Bool]
+  teardowns : Array[(Error?) -> Unit]
+}
+pub fn[V] Scope::close(Self[V], failure? : Error) -> Unit
+pub fn[V] Scope::get(Self[V], String) -> V?
+
+// Type aliases
+
+// Traits

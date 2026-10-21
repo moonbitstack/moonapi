@@ -36,34 +36,20 @@ pub fn SecurityRequirement::new(
 /// bare `add_security_scheme`) has none, so it is described in the spec but not
 /// enforced — exactly FastAPI's split between a declared scheme and a wired
 /// dependency.
-type SecurityEnforcer = (Context, SecurityScopes, Int64) -> Result[
+pub type SecurityEnforcer = (@ctx.Context, SecurityScopes, Int64) -> Result[
   AuthenticatedUser,
   @moonasgi.Response,
 ]
 
 ///|
 /// This requirement as its OpenAPI `security` entry: `{scheme: [scope, ...]}`.
-fn SecurityRequirement::to_json(self : SecurityRequirement) -> Json {
+pub fn SecurityRequirement::to_json(self : SecurityRequirement) -> Json {
   let arr : Array[Json] = []
   for s in self.scopes {
     arr.push(Json(s))
   }
   let m : Map[String, Json] = Map([(self.scheme, Json(arr))])
   Json(m)
-}
-
-///|
-/// The `security` array for a route's requirements, or `None` when the route
-/// declares none (so the key is omitted rather than emitted empty).
-fn security_json(reqs : Array[SecurityRequirement]) -> Json? {
-  if reqs.is_empty() {
-    return None
-  }
-  let arr : Array[Json] = []
-  for r in reqs {
-    arr.push(r.to_json())
-  }
-  Some(Json(arr))
 }
 
 ///|

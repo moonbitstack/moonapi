@@ -234,7 +234,7 @@ pub struct Deps {
 /// One request's resolution scope over an erased container: resolve a key
 /// (`false` when nothing provides it), then close, handing any failure to the
 /// teardowns.
-struct DepsScope {
+pub struct DepsScope {
   resolve : (String) -> Bool
   close : (Error?) -> Unit
 }

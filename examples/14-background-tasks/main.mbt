@@ -12,7 +12,7 @@
 fn main {
   let log : Array[String] = []
   let app = @moonapi.App::new()
-  app.route_bg(@moonapi.Post, "/notify", (ctx, bg) => {
+  app.route_bg(Post, "/notify", (ctx, bg) => {
     let who = ctx.query("to").unwrap_or("nobody")
     bg.add_task(() => log.push("email sent to \{who}"))
     bg.add_task(() => log.push("audit row written for \{who}"))

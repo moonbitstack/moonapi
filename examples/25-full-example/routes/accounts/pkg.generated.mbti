@@ -2,11 +2,12 @@
 package "moonbitstack/moonapi/examples/25-full-example/routes/accounts"
 
 import {
-  "moonbitstack/moonapi",
+  "moonbitstack/moonapi/route",
+  "moonbitstack/moonapi/schema",
 }
 
 // Values
-pub fn make_router(@moonapi.Schema) -> @moonapi.Router
+pub fn make_router(@schema.Schema) -> @route.Router
 
 // Errors
 

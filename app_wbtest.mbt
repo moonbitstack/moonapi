@@ -41,9 +41,11 @@ fn root_version(doc : Json, key : String) -> String {
 ///|
 test "routing: static, param, 404, 405" {
   let app = App::new()
-  app.get("/hello", _ctx => text(200, "hi"))
-  app.get("/users/:id", ctx => text(200, "user " + ctx.param("id").unwrap()))
-  app.post("/users", _ctx => text(201, "created"))
+  app.get("/hello", _ctx => @status.text(200, "hi"))
+  app.get("/users/:id", ctx => {
+    @status.text(200, "user " + ctx.param("id").unwrap())
+  })
+  app.post("/users", _ctx => @status.text(201, "created"))
   assert_eq(app.handle(mkreq("GET", "/hello")).status, 200)
   assert_eq(app.handle(mkreq("POST", "/users")).status, 201)
   let got = app.handle(mkreq("GET", "/users/42"))
@@ -59,7 +61,7 @@ test "path param extraction" {
   app.get("/a/:x/b/:y", ctx => {
     let x = ctx.param("x").unwrap()
     let y = ctx.param("y").unwrap()
-    text(200, x + "," + y)
+    @status.text(200, x + "," + y)
   })
   let got = app.handle(mkreq("GET", "/a/1/b/2"))
   assert_eq(got.body, @utf8.encode("1,2"))
@@ -71,8 +73,9 @@ test "query extraction" {
   let app = App::new()
   app.get("/search", ctx => {
     match ctx.query("q") {
-      Some(q) => text(200, "q=" + q)
-      None => unprocessable([ValidationError::missing(["query", "q"])])
+      Some(q) => @status.text(200, "q=" + q)
+      None =>
+        @schema.unprocessable([@schema.ValidationError::missing(["query", "q"])])
     }
   })
   // present: value returned
@@ -93,8 +96,11 @@ test "json body extraction and 422" {
   let app = App::new()
   app.post("/items", ctx => {
     match ctx.json_field("name") {
-      Some(String(name)) => text(201, "created " + name)
-      _ => unprocessable([ValidationError::missing(["body", "name"])])
+      Some(String(name)) => @status.text(201, "created " + name)
+      _ =>
+        @schema.unprocessable([
+          @schema.ValidationError::missing(["body", "name"]),
+        ])
     }
   })
   let ok = app.handle(
@@ -103,7 +109,7 @@ test "json body extraction and 422" {
   assert_eq(ok.status, 201)
   assert_eq(ok.body, @utf8.encode("created pen"))
   // whole body as Json
-  let ctx : Context = {
+  let ctx : @ctx.Context = {
     request: mkreq_full(
       "POST",
       "/items",
@@ -119,7 +125,7 @@ test "json body extraction and 422" {
   assert_eq(miss.status, 422)
   // malformed / empty body -> None, not a crash
   assert_eq(ctx.body_json() is Some(_), true)
-  let empty : Context = {
+  let empty : @ctx.Context = {
     request: mkreq_full("POST", "/items"),
     params: Map([]),
   }
@@ -128,7 +134,9 @@ test "json body extraction and 422" {
 
 ///|
 test "422 body shape mirrors FastAPI" {
-  let body = validation_error_body([ValidationError::missing(["query", "q"])])
+  let body = @schema.validation_error_body([
+    @schema.ValidationError::missing(["query", "q"]),
+  ])
   let detail = match body {
     Object(m) =>
       match m.get("detail") {
@@ -145,7 +153,7 @@ test "422 body shape mirrors FastAPI" {
 ///|
 test "openapi emits path parameters" {
   let app = App::new()
-  app.get("/users/:id", _ctx => text(200, "u"))
+  app.get("/users/:id", _ctx => @status.text(200, "u"))
   let doc = app.openapi(version=OpenApi31)
   let params = match doc {
     Object(m) =>
@@ -175,8 +183,8 @@ test "openapi emits path parameters" {
 ///|
 test "openapi multi-version output" {
   let app = App::new()
-  app.get("/ping", _ctx => text(200, "pong"), summary="health check")
-  app.post("/ping", _ctx => text(200, "pong"))
+  app.get("/ping", _ctx => @status.text(200, "pong"), summary="health check")
+  app.post("/ping", _ctx => @status.text(200, "pong"))
   assert_eq(root_version(app.openapi(version=OpenApi31), "openapi"), "3.1.0")
   assert_eq(root_version(app.openapi(version=OpenApi30), "openapi"), "3.0.3")
   assert_eq(root_version(app.openapi(version=Swagger20), "swagger"), "2.0")
@@ -232,8 +240,8 @@ fn resp_desc(responses : Map[String, Json], status : String) -> String {
 ///|
 test "openapi operation tags" {
   let app = App::new()
-  app.get("/nav", _ctx => text(200, "ok"), tags=["ai", "navigator"])
-  app.get("/plain", _ctx => text(200, "ok"))
+  app.get("/nav", _ctx => @status.text(200, "ok"), tags=["ai", "navigator"])
+  app.get("/plain", _ctx => @status.text(200, "ok"))
   let doc = app.openapi(version=OpenApi31)
   // The tagged operation carries its tags, in registration order.
   let tags = match op_of(doc, "/nav", "get") {
@@ -262,8 +270,8 @@ test "openapi operation tags" {
 ///|
 test "openapi operation deprecated flag" {
   let app = App::new()
-  app.get("/old", _ctx => text(200, "ok"), deprecated=true)
-  app.get("/new", _ctx => text(200, "ok"))
+  app.get("/old", _ctx => @status.text(200, "ok"), deprecated=true)
+  app.get("/new", _ctx => @status.text(200, "ok"))
   let doc = app.openapi(version=OpenApi31)
   // The deprecated operation carries `"deprecated": true`.
   let dep = match op_of(doc, "/old", "get") {
@@ -287,13 +295,13 @@ test "openapi operation description, operationId and status_code" {
   let app = App::new()
   app.post(
     "/items",
-    _ctx => text(201, "made"),
+    _ctx => @status.text(201, "made"),
     summary="create an item",
     description="Stores the item and answers with where it went.",
     operation_id="create_item",
     status_code=201,
   )
-  app.get("/plain", _ctx => text(200, "ok"))
+  app.get("/plain", _ctx => @status.text(200, "ok"))
   let doc = app.openapi()
   guard op_of(doc, "/items", "post") is Some(Object(op)) else {
     fail("the operation should be present")
@@ -321,15 +329,19 @@ test "openapi status_code keys a typed endpoint's default response" {
   let app = App::new()
   app.post(
     "/items",
-    _ctx => text(201, "made"),
+    _ctx => @status.text(201, "made"),
     status_code=201,
-    endpoint=Endpoint::new(params=[Param::new("q", InQuery, required=false)]),
+    endpoint=@endpoint.Endpoint::new(params=[
+      @endpoint.Param::new("q", InQuery, required=false),
+    ]),
   )
   app.post(
     "/declared",
-    _ctx => text(200, "ok"),
+    _ctx => @status.text(200, "ok"),
     status_code=201,
-    endpoint=Endpoint::new(responses=[ResponseSpec::new(200)]),
+    endpoint=@endpoint.Endpoint::new(responses=[
+      @endpoint.ResponseSpec::new(200),
+    ]),
   )
   let doc = app.openapi()
   assert_eq(op_responses(doc, "/items", "post").keys().collect(), ["201"])
@@ -341,8 +353,8 @@ test "openapi status_code keys a typed endpoint's default response" {
 /// response moonapi derives.
 test "openapi operation responses join the derived one" {
   let app = App::new()
-  app.get("/thing", _ctx => text(200, "x"), responses=[
-    ResponseSpec::new(404, description="no such thing"),
+  app.get("/thing", _ctx => @status.text(200, "x"), responses=[
+    @endpoint.ResponseSpec::new(404, description="no such thing"),
   ])
   let rs = op_responses(app.openapi(), "/thing", "get")
   assert_eq(resp_desc(rs, "200"), "OK")
@@ -355,7 +367,7 @@ test "openapi operation responses join the derived one" {
 /// got wrong for them.
 test "openapi_extra is merged last and overrides a generated field" {
   let app = App::new()
-  app.get("/thing", _ctx => text(200, "x"), summary="generated", openapi_extra={
+  app.get("/thing", _ctx => @status.text(200, "x"), summary="generated", openapi_extra={
     "summary": "hand-written",
     "x-internal": true,
   })
@@ -371,7 +383,7 @@ test "openapi_extra is merged last and overrides a generated field" {
 ///|
 test "openapi richer info: description/contact/license + servers" {
   let app = App::new()
-  app.get("/ping", _ctx => text(200, "ok"))
+  app.get("/ping", _ctx => @status.text(200, "ok"))
   let doc = app.openapi(
     version=OpenApi31,
     title="Greet",
@@ -480,7 +492,7 @@ test "a raising shutdown hook still lets the rest run" {
 /// does not change what a client reads.
 test "enable_docs serves the spec, Swagger UI and ReDoc without joining the spec" {
   let app = App::new()
-  app.get("/hello", _ctx => text(200, "hhh"), summary="greet")
+  app.get("/hello", _ctx => @status.text(200, "hhh"), summary="greet")
   app.describe(title="qwq api")
   app.enable_docs()
   let spec = app.handle(mkreq("GET", "/openapi.json"))
@@ -525,7 +537,7 @@ test "enable_docs leaves off whatever is passed None" {
 /// The router keeps its own `:id` syntax; only the emitted document is templated.
 test "openapi keys paths by their template form" {
   let app = App::new()
-  app.get("/users/:id/posts/:slug", _ctx => text(200, "hhh"))
+  app.get("/users/:id/posts/:slug", _ctx => @status.text(200, "hhh"))
   let doc = app.openapi()
   let keys = match doc {
     Object(m) =>
@@ -546,8 +558,8 @@ test "openapi keys paths by their template form" {
 /// headers and no body.
 test "method handling: unknown verbs, Allow on 405, and HEAD off GET" {
   let app = App::new()
-  app.get("/thing", _ctx => text(200, "hhh"))
-  app.post("/thing", _ctx => text(201, "made"))
+  app.get("/thing", _ctx => @status.text(200, "hhh"))
+  app.post("/thing", _ctx => @status.text(201, "made"))
   // An invented verb reaches no handler.
   let weird = app.handle(mkreq("TRACE", "/thing"))
   assert_eq(weird.status, 405)
@@ -573,15 +585,15 @@ test "method handling: unknown verbs, Allow on 405, and HEAD off GET" {
 test "a declared endpoint is enforced with a 422 before the handler" {
   let app = App::new()
   let reached : Array[String] = []
-  let ep = Endpoint::new(params=[
-    Param::new("id", InPath, schema=SInt),
-    Param::new("q", InQuery, required=false),
+  let ep = @endpoint.Endpoint::new(params=[
+    @endpoint.Param::new("id", InPath, schema=SInt),
+    @endpoint.Param::new("q", InQuery, required=false),
   ])
   app.get(
     "/items/:id",
     ctx => {
       reached.push(ctx.param("id").unwrap())
-      text(200, "ok")
+      @status.text(200, "ok")
     },
     endpoint=ep,
   )
@@ -600,10 +612,12 @@ test "a declared endpoint is enforced with a 422 before the handler" {
 /// A handler that would rather drive the descriptor itself can opt out.
 test "validate=false leaves the descriptor to the handler" {
   let app = App::new()
-  let ep = Endpoint::new(params=[Param::new("id", InPath, schema=SInt)])
+  let ep = @endpoint.Endpoint::new(params=[
+    @endpoint.Param::new("id", InPath, schema=SInt),
+  ])
   app.get(
     "/items/:id",
-    _ctx => text(200, "handler ran"),
+    _ctx => @status.text(200, "handler ran"),
     endpoint=ep,
     validate=false,
   )
@@ -616,7 +630,7 @@ test "validate=false leaves the descriptor to the handler" {
 /// `{"title":"moonapi","version":"0.1.0"}` no matter what the caller had configured.
 test "the served document carries the app's own metadata" {
   let app = App::new()
-  app.get("/hello", _ctx => text(200, "hhh"))
+  app.get("/hello", _ctx => @status.text(200, "hhh"))
   app.describe(
     title="greet api",
     api_version="2.3.0",

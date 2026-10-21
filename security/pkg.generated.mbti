@@ -1,0 +1,127 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonapi/security"
+
+import {
+  "moonbitstack/moonapi/ctx",
+  "moonbitstack/moonasgi/http",
+  "moonbitstack/mooncred/jwt",
+}
+
+// Values
+pub fn anonymous() -> AuthenticatedUser
+
+pub fn create_access_token(String, String, Int64, scopes? : Array[String], expires_in_secs? : Int64, extra? : Map[String, Json], wins? : @jwt.Wins, clash? : @jwt.OnClash[Map[String, Json]]) -> String
+
+pub fn forbidden(String) -> @http.Response
+
+pub fn hs256(String) -> @jwt.Keyed
+
+pub fn refuse(Bool, () -> @http.Response) -> Result[AuthenticatedUser, @http.Response]
+
+pub fn token_response(String) -> @http.Response
+
+pub fn unauthorized(String, challenge? : String) -> @http.Response
+
+pub fn verify_bearer(@ctx.Context, String, SecurityScopes, Int64, Bool) -> Result[AuthenticatedUser, @http.Response]
+
+// Errors
+
+// Types and methods
+pub struct ApiKey {
+  loc : ApiKeyIn
+  name : String
+  verify : (String) -> Bool
+}
+pub fn ApiKey::cookie(String, (String) -> Bool) -> Self
+pub fn ApiKey::header(String, (String) -> Bool) -> Self
+pub fn ApiKey::query(String, (String) -> Bool) -> Self
+pub fn ApiKey::read(Self, @ctx.Context) -> String?
+pub fn ApiKey::scheme(Self) -> SecurityScheme
+
+pub(all) enum ApiKeyIn {
+  KeyHeader
+  KeyQuery
+  KeyCookie
+} derive(Eq)
+pub fn ApiKeyIn::equal(Self, Self) -> Bool
+pub fn ApiKeyIn::not_equal(Self, Self) -> Bool
+
+pub(all) struct AuthenticatedUser {
+  subject : String
+  scopes : Array[String]
+  claims : Map[String, Json]
+}
+pub fn AuthenticatedUser::has_scope(Self, String) -> Bool
+
+pub struct BasicAuth {
+  realm : String
+  verify : (@ctx.HttpBasicCredentials) -> Bool
+}
+pub fn BasicAuth::challenge(Self) -> String
+pub fn BasicAuth::new((@ctx.HttpBasicCredentials) -> Bool, realm? : String) -> Self
+
+pub(all) struct DeclaredScheme {
+  name : String
+  kind : SecurityScheme
+  description : String
+}
+
+pub struct DigestAuth {
+  realm : String
+  verify : (String) -> Bool
+}
+pub fn DigestAuth::challenge(Self) -> String
+pub fn DigestAuth::new((String) -> Bool, realm? : String) -> Self
+
+pub struct OAuth2CodeBearer {
+  authorization_url : String
+  token_url : String
+  refresh_url : String
+  secret : String
+}
+pub fn OAuth2CodeBearer::new(String, String, String, refresh_url? : String) -> Self
+pub fn OAuth2CodeBearer::scheme(Self, scopes? : Array[(String, String)]) -> SecurityScheme
+
+pub(all) struct OAuth2PasswordBearer {
+  token_url : String
+  secret : String
+}
+pub fn OAuth2PasswordBearer::authenticate(Self, @ctx.Context, Int64, scopes? : Array[String]) -> Result[AuthenticatedUser, @http.Response]
+pub fn OAuth2PasswordBearer::new(String, String) -> Self
+pub fn OAuth2PasswordBearer::scheme(Self, scopes? : Array[(String, String)]) -> SecurityScheme
+
+pub(all) struct SecurityRequirement {
+  scheme : String
+  scopes : Array[String]
+} derive(Eq)
+pub fn SecurityRequirement::equal(Self, Self) -> Bool
+pub fn SecurityRequirement::new(String, scopes? : Array[String]) -> Self
+pub fn SecurityRequirement::not_equal(Self, Self) -> Bool
+pub fn SecurityRequirement::to_json(Self) -> Json
+
+pub(all) enum SecurityScheme {
+  OAuth2Password(token_url~ : String, scopes~ : Array[(String, String)])
+  OAuth2Code(authorization_url~ : String, token_url~ : String, refresh_url~ : String, scopes~ : Array[(String, String)])
+  HttpBearer(bearer_format~ : String)
+  ApiKeyHeader(name~ : String)
+  ApiKeyQuery(name~ : String)
+  ApiKeyCookie(name~ : String)
+  HttpBasic
+  HttpDigest
+  OpenIdConnect(url~ : String)
+}
+pub fn SecurityScheme::to_openapi_20(Self) -> Json?
+pub fn SecurityScheme::to_openapi_3x(Self) -> Json
+
+pub struct SecurityScopes {
+  scopes : Array[String]
+}
+pub fn SecurityScopes::challenge(Self) -> String
+pub fn SecurityScopes::list(Self) -> Array[String]
+pub fn SecurityScopes::new(scopes? : Array[String]) -> Self
+pub fn SecurityScopes::scope_str(Self) -> String
+
+// Type aliases
+pub type SecurityEnforcer = (@ctx.Context, SecurityScopes, Int64) -> Result[AuthenticatedUser, @http.Response]
+
+// Traits

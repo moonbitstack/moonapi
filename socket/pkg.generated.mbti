@@ -1,0 +1,50 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonapi/socket"
+
+import {
+  "moonbitstack/moonasgi/spec",
+}
+
+// Values
+pub fn drive_websocket((WebSocket) -> Unit, Array[WsMessage], params? : Map[String, String], subprotocols? : Array[String]) -> Array[@spec.Event]
+
+// Errors
+
+// Types and methods
+pub struct WebSocket {
+  inbox : Array[WsMessage]
+  mut cursor : Int32
+  params : Map[String, String]
+  subprotocols : Array[String]
+  mut accepted : Bool
+  mut closed : Bool
+  outbox : Array[@spec.Event]
+}
+pub fn WebSocket::accept(Self, subprotocol? : String, headers? : Array[(String, String)]) -> Unit
+pub fn WebSocket::close(Self, code? : Int32, reason? : String) -> Unit
+pub fn WebSocket::new(Array[WsMessage], Map[String, String], Array[String]) -> Self
+pub fn WebSocket::offered_subprotocols(Self) -> Array[String]
+pub fn WebSocket::param(Self, String) -> String?
+pub fn WebSocket::receive(Self) -> WsMessage?
+pub fn WebSocket::receive_bytes(Self) -> Bytes?
+pub fn WebSocket::receive_text(Self) -> String?
+pub fn WebSocket::send_bytes(Self, Bytes) -> Unit
+pub fn WebSocket::send_text(Self, String) -> Unit
+pub fn WebSocket::sent(Self) -> Array[@spec.Event]
+
+pub(all) enum WsMessage {
+  WsText(String)
+  WsBinary(Bytes)
+} derive(Eq)
+pub fn WsMessage::equal(Self, Self) -> Bool
+pub fn WsMessage::not_equal(Self, Self) -> Bool
+
+pub(all) struct WsRoute {
+  path : String
+  handler : (WebSocket) -> Unit
+}
+
+// Type aliases
+pub type WsHandler = (WebSocket) -> Unit
+
+// Traits

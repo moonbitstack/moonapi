@@ -31,5 +31,5 @@ fn main {
   // A typed integer path param returns the nested `User` (address + tags).
   hit("GET", "/users/233", "")
   println("--- OpenAPI 3.1.0 (note components/schemas + $ref) ---")
-  println(app.openapi_json(version=@moonapi.OpenApi31))
+  println(app.openapi_json(version=OpenApi31))
 }

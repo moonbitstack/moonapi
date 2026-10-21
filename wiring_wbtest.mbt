@@ -43,18 +43,22 @@ fn path_exists(doc : Json, path : String) -> Bool {
 test "per-op security: a scoped route accepts a scoped token, denies otherwise" {
   let app = App::new()
   app.set_clock(() => 1000L)
-  let bearer = OAuth2PasswordBearer::new("/token", "s3cret")
+  let bearer = @security.OAuth2PasswordBearer::new("/token", "s3cret")
   app.secure_oauth2("OAuth2", bearer, scopes=[("items", "manage items")])
-  app.get("/items", _ctx => text(200, "the items"), security=[
-    SecurityRequirement::new("OAuth2", scopes=["items"]),
+  app.get("/items", _ctx => @status.text(200, "the items"), security=[
+    @security.SecurityRequirement::new("OAuth2", scopes=["items"]),
   ])
   // A token carrying the `items` scope is admitted and the handler runs.
-  let good = create_access_token("alice", "s3cret", 1000L, scopes=["items"])
+  let good = @security.create_access_token("alice", "s3cret", 1000L, scopes=[
+    "items",
+  ])
   let ok = app.handle(mkreq_auth("GET", "/items", "Bearer " + good))
   assert_eq(ok.status, 200)
   assert_eq(ok.body, @utf8.encode("the items"))
   // A valid token lacking the scope is refused before the handler: 403.
-  let narrow = create_access_token("alice", "s3cret", 1000L, scopes=["me"])
+  let narrow = @security.create_access_token("alice", "s3cret", 1000L, scopes=[
+    "me",
+  ])
   assert_eq(
     app.handle(mkreq_auth("GET", "/items", "Bearer " + narrow)).status,
     403,
@@ -70,22 +74,22 @@ test "per-op security: a scoped route accepts a scoped token, denies otherwise" 
 test "per-op security: an expired token is refused by the app clock" {
   let app = App::new()
   app.set_clock(() => 9000L) // long after the token's one-hour life
-  let bearer = OAuth2PasswordBearer::new("/token", "s3cret")
+  let bearer = @security.OAuth2PasswordBearer::new("/token", "s3cret")
   app.secure_oauth2("OAuth2", bearer)
-  app.get("/me", _ctx => text(200, "me"), security=[
-    SecurityRequirement::new("OAuth2"),
+  app.get("/me", _ctx => @status.text(200, "me"), security=[
+    @security.SecurityRequirement::new("OAuth2"),
   ])
-  let token = create_access_token("alice", "s3cret", 1000L) // exp = 4600
+  let token = @security.create_access_token("alice", "s3cret", 1000L) // exp = 4600
   assert_eq(app.handle(mkreq_auth("GET", "/me", "Bearer " + token)).status, 401)
 }
 
 ///|
 test "per-op security: the requirement surfaces as the OpenAPI security array" {
   let app = App::new()
-  let bearer = OAuth2PasswordBearer::new("/token", "s3cret")
+  let bearer = @security.OAuth2PasswordBearer::new("/token", "s3cret")
   app.secure_oauth2("OAuth2", bearer, scopes=[("items", "manage items")])
-  app.get("/items", _ctx => text(200, "x"), security=[
-    SecurityRequirement::new("OAuth2", scopes=["items"]),
+  app.get("/items", _ctx => @status.text(200, "x"), security=[
+    @security.SecurityRequirement::new("OAuth2", scopes=["items"]),
   ])
   let doc = app.openapi(version=OpenApi31)
   let sec = nav_op_security(doc, "/items", "get")
@@ -111,8 +115,8 @@ test "per-op security: a documentation-only scheme is not enforced" {
   // it is documented but open — FastAPI's split between a scheme and a dependency.
   let app = App::new()
   app.add_security_scheme("ApiKey", ApiKeyHeader(name="X-API-Key"))
-  app.get("/open", _ctx => text(200, "open"), security=[
-    SecurityRequirement::new("ApiKey"),
+  app.get("/open", _ctx => @status.text(200, "open"), security=[
+    @security.SecurityRequirement::new("ApiKey"),
   ])
   assert_eq(app.handle(mkreq("GET", "/open")).status, 200)
   let sec = nav_op_security(app.openapi(version=OpenApi31), "/open", "get")
@@ -126,7 +130,7 @@ test "background task runs after the response is produced" {
   app.route_bg(Get, "/notify", (_ctx, bg) => {
     bg.add_task(() => log.push("task"))
     log.push("handler")
-    text(202, "accepted")
+    @status.text(202, "accepted")
   })
   let (resp, bg) = app.handle_with_background(mkreq("GET", "/notify"))
   // The response is built and the task is still queued, not run.
@@ -148,9 +152,9 @@ test "background tasks run in order and a plain route schedules none" {
   app.route_bg(Get, "/multi", (_ctx, bg) => {
     bg.add_task(() => log.push("a"))
     bg.add_task(() => log.push("b"))
-    text(200, "ok")
+    @status.text(200, "ok")
   })
-  app.get("/plain", _ctx => text(200, "ok"))
+  app.get("/plain", _ctx => @status.text(200, "ok"))
   let (_r1, bg1) = app.handle_with_background(mkreq("GET", "/multi"))
   bg1.run()
   assert_eq(log, ["a", "b"])
@@ -161,10 +165,10 @@ test "background tasks run in order and a plain route schedules none" {
 ///|
 test "mount: a sub-app answers under its prefix and its root" {
   let sub = App::new()
-  sub.get("/hello", _ctx => text(200, "sub-hello"))
-  sub.get("/", _ctx => text(200, "sub-root"))
+  sub.get("/hello", _ctx => @status.text(200, "sub-hello"))
+  sub.get("/", _ctx => @status.text(200, "sub-root"))
   let app = App::new()
-  app.get("/", _ctx => text(200, "root"))
+  app.get("/", _ctx => @status.text(200, "root"))
   app.mount("/sub", sub)
   assert_eq(
     app.handle(mkreq("GET", "/sub/hello")).body,
@@ -182,17 +186,19 @@ test "mount: a sub-app answers under its prefix and its root" {
 test "mount: the sub-app keeps its own middleware and security" {
   let sub = App::new()
   sub.set_clock(() => 1000L)
-  let bearer = OAuth2PasswordBearer::new("/token", "s3cret")
+  let bearer = @security.OAuth2PasswordBearer::new("/token", "s3cret")
   sub.secure_oauth2("OAuth2", bearer, scopes=[("admin", "")])
-  sub.get("/panel", _ctx => text(200, "panel"), security=[
-    SecurityRequirement::new("OAuth2", scopes=["admin"]),
+  sub.get("/panel", _ctx => @status.text(200, "panel"), security=[
+    @security.SecurityRequirement::new("OAuth2", scopes=["admin"]),
   ])
   let app = App::new()
   app.mount("/admin", sub)
   // Unauthenticated under the mount -> the sub-app's 401.
   assert_eq(app.handle(mkreq("GET", "/admin/panel")).status, 401)
   // With an admin token -> 200.
-  let tok = create_access_token("root", "s3cret", 1000L, scopes=["admin"])
+  let tok = @security.create_access_token("root", "s3cret", 1000L, scopes=[
+    "admin",
+  ])
   assert_eq(
     app.handle(mkreq_auth("GET", "/admin/panel", "Bearer " + tok)).status,
     200,
@@ -205,7 +211,7 @@ test "mount: a sub-app's background tasks bubble up to the request" {
   let sub = App::new()
   sub.route_bg(Get, "/work", (_ctx, bg) => {
     bg.add_task(() => log.push("sub-task"))
-    text(200, "queued")
+    @status.text(200, "queued")
   })
   let app = App::new()
   app.mount("/x", sub)
@@ -219,12 +225,12 @@ test "mount: a sub-app's background tasks bubble up to the request" {
 ///|
 test "mount: merged OpenAPI lists sub-app paths under the prefix" {
   let sub = App::new()
-  sub.get("/hello", _ctx => text(200, "x"), summary="sub hello")
+  sub.get("/hello", _ctx => @status.text(200, "x"), summary="sub hello")
   let inner = App::new()
-  inner.get("/ping", _ctx => text(200, "x"))
+  inner.get("/ping", _ctx => @status.text(200, "x"))
   sub.mount("/deep", inner)
   let app = App::new()
-  app.get("/top", _ctx => text(200, "x"))
+  app.get("/top", _ctx => @status.text(200, "x"))
   app.mount("/sub", sub)
   let doc = app.openapi(version=OpenApi31)
   assert_eq(path_exists(doc, "/top"), true)
@@ -237,7 +243,7 @@ test "mount: merged OpenAPI lists sub-app paths under the prefix" {
 test "mount: a sub-app's security scheme merges into the parent components" {
   let sub = App::new()
   sub.add_security_scheme("SubKey", ApiKeyHeader(name="X-Sub-Key"))
-  sub.get("/r", _ctx => text(200, "x"))
+  sub.get("/r", _ctx => @status.text(200, "x"))
   let app = App::new()
   app.mount("/s", sub)
   let doc = app.openapi(version=OpenApi31)
@@ -247,8 +253,8 @@ test "mount: a sub-app's security scheme merges into the parent components" {
 ///|
 test "status handler: a custom 404 replaces the default not-found" {
   let app = App::new()
-  app.add_status_handler(404, _ctx => text(404, "custom not found"))
-  app.get("/here", _ctx => text(200, "here"))
+  app.add_status_handler(404, _ctx => @status.text(404, "custom not found"))
+  app.get("/here", _ctx => @status.text(200, "here"))
   let resp = app.handle(mkreq("GET", "/nowhere"))
   assert_eq(resp.status, 404)
   assert_eq(resp.body, @utf8.encode("custom not found"))
@@ -259,8 +265,8 @@ test "status handler: a custom 404 replaces the default not-found" {
 ///|
 test "status handler: rewrites a raised HttpException's status response" {
   let app = App::new()
-  app.add_status_handler(418, _ctx => text(418, "custom teapot"))
-  app.get("/boom", _ctx => raise http_error(418, "teapot"))
+  app.add_status_handler(418, _ctx => @status.text(418, "custom teapot"))
+  app.get("/boom", _ctx => raise @mid.http_error(418, "teapot"))
   let resp = app.handle(mkreq("GET", "/boom"))
   assert_eq(resp.status, 418)
   assert_eq(resp.body, @utf8.encode("custom teapot"))
@@ -269,8 +275,8 @@ test "status handler: rewrites a raised HttpException's status response" {
 ///|
 test "status handler: a 405 method-mismatch can be customised too" {
   let app = App::new()
-  app.add_status_handler(405, _ctx => text(405, "no such method"))
-  app.get("/only-get", _ctx => text(200, "ok"))
+  app.add_status_handler(405, _ctx => @status.text(405, "no such method"))
+  app.get("/only-get", _ctx => @status.text(200, "ok"))
   let resp = app.handle(mkreq("POST", "/only-get"))
   assert_eq(resp.status, 405)
   assert_eq(resp.body, @utf8.encode("no such method"))

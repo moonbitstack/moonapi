@@ -1,6 +1,6 @@
 ///|
 /// An echo handler: accept, mirror each frame back, close on disconnect.
-fn echo_ws(ws : WebSocket) -> Unit {
+fn echo_ws(ws : @socket.WebSocket) -> Unit {
   ws.accept()
   for ;; {
     match ws.receive() {
@@ -14,7 +14,10 @@ fn echo_ws(ws : WebSocket) -> Unit {
 
 ///|
 test "ws: echo route mirrors text and binary frames" {
-  let events = drive_websocket(echo_ws, [WsText("hi"), WsBinary(b"\x01\x02")])
+  let events = @socket.drive_websocket(echo_ws, [
+    @socket.WsText("hi"),
+    @socket.WsBinary(b"\x01\x02"),
+  ])
   assert_eq(events.length(), 4)
   assert_eq(
     events[0] == @moonasgi.Event::WebSocketAccept(subprotocol=None, headers=[]),
@@ -30,12 +33,12 @@ test "ws: echo route mirrors text and binary frames" {
 
 ///|
 test "ws: accept is idempotent and records the chosen subprotocol" {
-  let handler : WsHandler = ws => {
+  let handler : @socket.WsHandler = ws => {
     ws.accept(subprotocol="chat")
     ws.accept()
     ws.close(code=1001, reason="bye")
   }
-  let events = drive_websocket(handler, [])
+  let events = @socket.drive_websocket(handler, [])
   assert_eq(events.length(), 2)
   assert_eq(
     events[0] ==
@@ -51,7 +54,7 @@ test "ws: accept is idempotent and records the chosen subprotocol" {
 ///|
 test "ws: receive_text and receive_bytes discriminate frame kinds" {
   let seen : Array[String] = []
-  let handler : WsHandler = ws => {
+  let handler : @socket.WsHandler = ws => {
     ws.accept()
     // first frame is text, second is binary.
     match ws.receive_text() {
@@ -63,7 +66,10 @@ test "ws: receive_text and receive_bytes discriminate frame kinds" {
       None => seen.push("not-bytes")
     }
   }
-  let _ = drive_websocket(handler, [WsText("a"), WsBinary(b"\xaa\xbb\xcc")])
+  let _ = @socket.drive_websocket(handler, [
+    @socket.WsText("a"),
+    @socket.WsBinary(b"\xaa\xbb\xcc"),
+  ])
   assert_eq(seen[0], "text:a")
   assert_eq(seen[1], "bytes:3")
 }
@@ -79,7 +85,7 @@ test "ws: matched path params reach the handler" {
   })
   match app.match_ws("/room/42") {
     Some((handler, params)) => {
-      let _ = drive_websocket(handler, [], params~)
+      let _ = @socket.drive_websocket(handler, [], params~)
       assert_eq(captured[0], "42")
     }
     None => fail("route should match")

@@ -3,24 +3,28 @@
 
 ///|
 /// An app whose `GET /items` declares exactly `p` — test helper.
-fn param_app(p : Param) -> App {
+fn param_app(p : @endpoint.Param) -> App {
   let app = App::new()
-  app.get("/items", _ctx => text(200, "ok"), endpoint=Endpoint::new(params=[p]))
+  app.get(
+    "/items",
+    _ctx => @status.text(200, "ok"),
+    endpoint=@endpoint.Endpoint::new(params=[p]),
+  )
   app
 }
 
 ///|
 /// The single declared parameter of `GET /items` in `version` — test helper.
-fn only_param(app : App, version : OpenApiVersion) -> Json {
+fn only_param(app : App, version : @schema.OpenApiVersion) -> Json {
   dig_arr(app.openapi(version~), ["paths", "/items", "get", "parameters"])[0]
 }
 
 ///|
 test "query param: a declared range is enforced with a 422 and documented" {
   let app = param_app(
-    Param::new("limit", InQuery, schema=SInt, required=false, constraints=[
-      Minimum(1.0),
-      Maximum(100.0),
+    @endpoint.Param::new("limit", InQuery, schema=SInt, required=false, constraints=[
+      @schema.Minimum(1.0),
+      @schema.Maximum(100.0),
     ]),
   )
   // Above the bound.
@@ -52,9 +56,9 @@ test "query param: a declared range is enforced with a 422 and documented" {
 ///|
 test "query param: a string parameter's length and pattern bounds are enforced" {
   let app = param_app(
-    Param::new("q", InQuery, required=false, constraints=[
-      MinLength(3),
-      Pattern("^[a-z]+$"),
+    @endpoint.Param::new("q", InQuery, required=false, constraints=[
+      @schema.MinLength(3),
+      @schema.Pattern("^[a-z]+$"),
     ]),
   )
   let short = app.handle(mkreq_full("GET", "/items", query=b"q=ab"))
@@ -75,7 +79,7 @@ test "query param: a string parameter's length and pattern bounds are enforced" 
 ///|
 test "query param: a default makes it optional and is emitted" {
   let app = param_app(
-    Param::new("limit", InQuery, schema=SInt, default=Json(10)),
+    @endpoint.Param::new("limit", InQuery, schema=SInt, default=Json(10)),
   )
   // `required=true` was left at its default, but a parameter with a default is
   // never missing — the request without it is accepted.
@@ -87,7 +91,7 @@ test "query param: a default makes it optional and is emitted" {
 
 ///|
 test "query param: without a default, a required one is still reported missing" {
-  let app = param_app(Param::new("limit", InQuery, schema=SInt))
+  let app = param_app(@endpoint.Param::new("limit", InQuery, schema=SInt))
   let miss = app.handle(mkreq("GET", "/items"))
   assert_eq(miss.status, 422)
   assert_eq(json_str(detail0(miss), "type"), "missing")
@@ -96,7 +100,9 @@ test "query param: without a default, a required one is still reported missing" 
 
 ///|
 test "query param: an alias is the name on the wire, in the document and in errors" {
-  let app = param_app(Param::new("item_query", InQuery, alias_="item-query"))
+  let app = param_app(
+    @endpoint.Param::new("item_query", InQuery, alias_="item-query"),
+  )
   // The document calls it by the alias, because that is what a client sends.
   assert_eq(json_str(only_param(app, OpenApi31), "name"), "item-query")
   // The value is read under the alias...
@@ -115,10 +121,14 @@ test "header and cookie params: bounds are enforced where the value lives" {
   let app = App::new()
   app.get(
     "/items",
-    _ctx => text(200, "ok"),
-    endpoint=Endpoint::new(params=[
-      Param::new("x-page", InHeader, schema=SInt, constraints=[Maximum(9.0)]),
-      Param::new("session", InCookie, constraints=[MinLength(4)]),
+    _ctx => @status.text(200, "ok"),
+    endpoint=@endpoint.Endpoint::new(params=[
+      @endpoint.Param::new("x-page", InHeader, schema=SInt, constraints=[
+        @schema.Maximum(9.0),
+      ]),
+      @endpoint.Param::new("session", InCookie, constraints=[
+        @schema.MinLength(4),
+      ]),
     ]),
   )
   let ok = app.handle(
@@ -138,12 +148,12 @@ test "header and cookie params: bounds are enforced where the value lives" {
 ///|
 test "query param: Swagger 2.0 carries the bounds on the parameter itself" {
   let app = param_app(
-    Param::new(
+    @endpoint.Param::new(
       "limit",
       InQuery,
       schema=SInt,
       required=false,
-      constraints=[Minimum(1.0), Maximum(100.0)],
+      constraints=[@schema.Minimum(1.0), @schema.Maximum(100.0)],
       default=Json(10),
     ),
   )
@@ -160,8 +170,8 @@ test "query param: Swagger 2.0 carries the bounds on the parameter itself" {
 ///|
 test "query param: an exclusive bound takes each dialect's form" {
   let app = param_app(
-    Param::new("limit", InQuery, schema=SInt, required=false, constraints=[
-      ExclusiveMinimum(0.0),
+    @endpoint.Param::new("limit", InQuery, schema=SInt, required=false, constraints=[
+      @schema.ExclusiveMinimum(0.0),
     ]),
   )
   // 3.1 (JSON-Schema 2020-12) makes it a number.

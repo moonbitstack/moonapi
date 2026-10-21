@@ -11,36 +11,31 @@
 ///     moon run examples/05-constraints
 #coverage.skip
 fn main {
-  let color = @moonapi.SEnum(@moonapi.SStr, [
+  let color : @moonapi.Schema = SEnum(SStr, [
     Json("red"),
     Json("green"),
     Json("blue"),
   ])
   let schema = @moonapi.Schema::object("Order", [
-    @moonapi.Field::new("qty", @moonapi.SInt, constraints=[
-      @moonapi.Minimum(1.0),
-      @moonapi.Maximum(99.0),
+    @moonapi.Field::new("qty", SInt, constraints=[Minimum(1.0), Maximum(99.0)]),
+    @moonapi.Field::new("step", SInt, constraints=[MultipleOf(5.0)]),
+    @moonapi.Field::new("ratio", SFloat, constraints=[
+      ExclusiveMinimum(0.0),
+      ExclusiveMaximum(1.0),
     ]),
-    @moonapi.Field::new("step", @moonapi.SInt, constraints=[
-      @moonapi.MultipleOf(5.0),
+    @moonapi.Field::new("code", SStr, constraints=[
+      MinLength(3),
+      MaxLength(8),
+      Pattern("^[a-z]+$"),
     ]),
-    @moonapi.Field::new("ratio", @moonapi.SFloat, constraints=[
-      @moonapi.ExclusiveMinimum(0.0),
-      @moonapi.ExclusiveMaximum(1.0),
+    @moonapi.Field::new("tags", @moonapi.Schema::array(SStr), constraints=[
+      MinItems(1),
+      MaxItems(3),
     ]),
-    @moonapi.Field::new("code", @moonapi.SStr, constraints=[
-      @moonapi.MinLength(3),
-      @moonapi.MaxLength(8),
-      @moonapi.Pattern("^[a-z]+$"),
-    ]),
-    @moonapi.Field::new("tags", @moonapi.Schema::array(@moonapi.SStr), constraints=[
-      @moonapi.MinItems(1),
-      @moonapi.MaxItems(3),
-    ]),
-    @moonapi.Field::new("active", @moonapi.SBool),
+    @moonapi.Field::new("active", SBool),
     @moonapi.Field::new("color", color),
     // A field whose value must be JSON null.
-    @moonapi.Field::new("note", @moonapi.SNull, required=false),
+    @moonapi.Field::new("note", SNull, required=false),
   ])
   let ep = @moonapi.Endpoint::new(request_body=schema)
   let app = @moonapi.App::new()
@@ -80,5 +75,5 @@ fn main {
     "high", "{\"qty\":100,\"step\":5,\"ratio\":0.0,\"code\":\"toolongcode\",\"tags\":[\"a\",\"b\",\"c\",\"d\"],\"active\":false,\"color\":\"green\"}",
   )
   println("--- OpenAPI 3.1.0 (constraints + enum in the schema) ---")
-  println(app.openapi_json(version=@moonapi.OpenApi31))
+  println(app.openapi_json(version=OpenApi31))
 }

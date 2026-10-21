@@ -1,0 +1,141 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonapi/schema"
+
+import {
+  "moonbitlang/core/debug",
+  "moonbitstack/moonasgi/http",
+  "moonbitstack/moonhttp/mime",
+  "moonbitstack/moonmodel",
+}
+
+// Values
+pub fn check_constraints(Json, Array[Constraint], Array[String], Array[ValidationError]) -> Unit
+
+pub fn emit_schema(Schema, Map[String, Json], OpenApiVersion) -> Json
+
+pub fn enum_expected(Array[Json]) -> String
+
+pub fn enum_member(Array[Json], Json) -> Bool
+
+pub fn filter_response(Schema, Json) -> Result[Json, Array[ValidationError]]
+
+pub fn json_model(Int32, Schema, Json) -> @http.Response
+
+pub fn parse_int(String) -> Int32?
+
+pub let query_limits : @mime.Limits
+
+pub fn[T : ToSchema] schema_of(T) -> Schema
+
+pub fn unprocessable(Array[ValidationError]) -> @http.Response
+
+pub fn validate_schema(Schema, Json, Array[String], Array[ValidationError]) -> Unit
+
+pub fn validation_error_body(Array[ValidationError]) -> Json
+
+pub fn with_constraints(Json, Array[Constraint], OpenApiVersion) -> Json
+
+pub fn with_description(Json, String) -> Json
+
+pub fn with_key(Json, String, Json) -> Json
+
+// Errors
+
+// Types and methods
+pub(all) enum Constraint {
+  Minimum(Double)
+  Maximum(Double)
+  ExclusiveMinimum(Double)
+  ExclusiveMaximum(Double)
+  MultipleOf(Double)
+  MinLength(Int32)
+  MaxLength(Int32)
+  Pattern(String)
+  MinItems(Int32)
+  MaxItems(Int32)
+} derive(Eq, @debug.Debug)
+pub fn Constraint::equal(Self, Self) -> Bool
+pub fn Constraint::not_equal(Self, Self) -> Bool
+pub fn Constraint::to_repr(Self) -> @debug.Repr
+
+pub(all) struct Field {
+  name : String
+  schema : Schema
+  required : Bool
+  description : String
+  constraints : Array[Constraint]
+  default : Json?
+} derive(Eq, @debug.Debug)
+pub fn Field::equal(Self, Self) -> Bool
+pub fn Field::is_required(Self) -> Bool
+pub fn Field::new(String, Schema, required? : Bool, description? : String, constraints? : Array[Constraint], default? : Json) -> Self
+pub fn Field::not_equal(Self, Self) -> Bool
+pub fn Field::to_repr(Self) -> @debug.Repr
+
+pub(all) struct ObjectSchema {
+  name : String
+  fields : Array[Field]
+  description : String
+} derive(Eq, @debug.Debug)
+pub fn ObjectSchema::equal(Self, Self) -> Bool
+pub fn ObjectSchema::not_equal(Self, Self) -> Bool
+pub fn ObjectSchema::to_repr(Self) -> @debug.Repr
+
+pub(all) enum OpenApiVersion {
+  Swagger20
+  OpenApi30
+  OpenApi31
+} derive(Eq)
+pub fn OpenApiVersion::equal(Self, Self) -> Bool
+pub fn OpenApiVersion::not_equal(Self, Self) -> Bool
+
+pub(all) enum Schema {
+  SStr
+  SInt
+  SFloat
+  SBool
+  SNull
+  SArray(Schema)
+  SObject(ObjectSchema)
+  SEnum(Schema, Array[Json])
+  SNullable(Schema)
+  SMap(Schema)
+  SAny
+  SFormat(Schema, String)
+  SJson(Json)
+} derive(Eq, @debug.Debug)
+pub fn Schema::array(Self) -> Self
+pub fn Schema::binary() -> Self
+pub fn Schema::equal(Self, Self) -> Bool
+pub fn Schema::format(Self, String) -> Self
+pub fn Schema::json(Json) -> Self
+pub fn Schema::map(Self) -> Self
+pub fn Schema::not_equal(Self, Self) -> Bool
+pub fn Schema::nullable(Self) -> Self
+pub fn Schema::object(String, Array[Field]) -> Self
+pub fn Schema::of_model(@moonmodel.Model, known? : Array[@moonmodel.Model]) -> (Self, Array[Unresolved])
+pub fn Schema::to_repr(Self) -> @debug.Repr
+
+pub(all) struct Unresolved {
+  field : String
+  model : String
+  why : String
+} derive(Eq)
+pub fn Unresolved::equal(Self, Self) -> Bool
+pub fn Unresolved::not_equal(Self, Self) -> Bool
+
+pub(all) struct ValidationError {
+  loc : Array[String]
+  msg : String
+  kind : String
+}
+pub fn ValidationError::missing(Array[String]) -> Self
+pub fn ValidationError::to_json(Self) -> Json
+pub fn ValidationError::type_error(Array[String], String, String) -> Self
+
+// Type aliases
+
+// Traits
+pub(open) trait ToSchema {
+  fn to_schema(Self) -> Schema
+}

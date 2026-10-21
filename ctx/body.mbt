@@ -28,24 +28,24 @@ pub fn[T : @json.FromJson] Context::body(self : Context) -> T? {
 /// residual cases a scalar schema cannot express (e.g. an out-of-range integer).
 pub fn[T : @json.FromJson] Context::body_validated(
   self : Context,
-  schema : Schema,
-) -> Result[T, Array[ValidationError]] {
+  schema : @schema.Schema,
+) -> Result[T, Array[@schema.ValidationError]] {
   let raw = decode_field(self.request.body)
   if raw == "" {
-    return Err([ValidationError::missing(["body"])])
+    return Err([@schema.ValidationError::missing(["body"])])
   }
   let j = @moonjson.loads(raw[:], @moonjson.strict) catch {
     _ =>
       return Err([
-        ValidationError::type_error(
+        @schema.ValidationError::type_error(
           ["body"],
           "json_invalid",
           "Input should be valid JSON",
         ),
       ])
   }
-  let errs : Array[ValidationError] = []
-  validate_schema(schema, j, ["body"], errs)
+  let errs : Array[@schema.ValidationError] = []
+  @schema.validate_schema(schema, j, ["body"], errs)
   if errs.length() > 0 {
     return Err(errs)
   }
@@ -54,7 +54,7 @@ pub fn[T : @json.FromJson] Context::body_validated(
     Some(v) => Ok(v)
     None =>
       Err([
-        ValidationError::type_error(
+        @schema.ValidationError::type_error(
           ["body"],
           "model_type",
           "Input should be a valid object",

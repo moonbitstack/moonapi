@@ -27,7 +27,7 @@ pub fn build() -> @moonapi.App {
   })
   app.on_startup(() => audit_log.push("startup"))
   app.on_shutdown(() => audit_log.push("shutdown"))
-  app.enable_docs(version=@moonapi.OpenApi30)
+  app.enable_docs(version=OpenApi30)
 
   let deps = @services.dependencies(audit_log)
   app.depends(deps.erase())
@@ -55,8 +55,8 @@ pub fn build() -> @moonapi.App {
   app.get("/reject", _ctx => raise DemoError::Rejected("example conflict"))
 
   let profile_schema = @moonapi.Schema::object("PublicProfile", [
-    @moonapi.Field::new("id", @moonapi.SInt),
-    @moonapi.Field::new("name", @moonapi.SStr),
+    @moonapi.Field::new("id", SInt),
+    @moonapi.Field::new("name", SStr),
   ])
   app.include_router(
     @accounts.make_router(profile_schema),

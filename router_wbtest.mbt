@@ -22,19 +22,23 @@ fn op_tags(doc : Json, path : String, verb : String) -> Array[String] {
 
 ///|
 test "include_router: the router's tags and security reach every route" {
-  let items = Router::new()
-  items.get("/", _ctx => text(200, "list"), tags=["listing"])
-  items.get("/:id", ctx => text(200, "item " + ctx.param("id").unwrap()))
+  let items = @route.Router::new()
+  items.get("/", _ctx => @status.text(200, "list"), tags=["listing"])
+  items.get("/:id", ctx => @status.text(200, "item " + ctx.param("id").unwrap()))
   let app = App::new()
   app.set_clock(() => 1000L)
-  app.secure_oauth2("OAuth2", OAuth2PasswordBearer::new("/token", "s3cret"), scopes=[
-    ("items", "manage items"),
-  ])
+  app.secure_oauth2(
+    "OAuth2",
+    @security.OAuth2PasswordBearer::new("/token", "s3cret"),
+    scopes=[("items", "manage items")],
+  )
   app.include_router(items, prefix="/items", tags=["items"], security=[
-    SecurityRequirement::new("OAuth2", scopes=["items"]),
+    @security.SecurityRequirement::new("OAuth2", scopes=["items"]),
   ])
   // Both routes answer under the prefix, as the app's own.
-  let tok = create_access_token("alice", "s3cret", 1000L, scopes=["items"])
+  let tok = @security.create_access_token("alice", "s3cret", 1000L, scopes=[
+    "items",
+  ])
   assert_eq(
     app.handle(mkreq_auth("GET", "/items", "Bearer " + tok)).body,
     @utf8.encode("list"),
@@ -59,9 +63,13 @@ test "include_router: the router's tags and security reach every route" {
 /// `deprecated` and `include_in_schema` are the two group attributes a route
 /// cannot undo, and a router is a value, so the same one can be included twice.
 test "include_router: deprecated marks the group, include_in_schema hides it" {
-  let admin = Router::new()
-  admin.get("/panel", _ctx => text(200, "panel"))
-  admin.get("/probe", _ctx => text(200, "probe"), include_in_schema=false)
+  let admin = @route.Router::new()
+  admin.get("/panel", _ctx => @status.text(200, "panel"))
+  admin.get(
+    "/probe",
+    _ctx => @status.text(200, "probe"),
+    include_in_schema=false,
+  )
   let app = App::new()
   app.include_router(admin, prefix="/admin", deprecated=true)
   let doc = app.openapi()
@@ -82,14 +90,14 @@ test "include_router: deprecated marks the group, include_in_schema hides it" {
 
 ///|
 test "include_router: group responses are documented under the route's own" {
-  let r = Router::new()
-  r.get("/a", _ctx => text(200, "a"), responses=[
-    ResponseSpec::new(404, description="the route says"),
+  let r = @route.Router::new()
+  r.get("/a", _ctx => @status.text(200, "a"), responses=[
+    @endpoint.ResponseSpec::new(404, description="the route says"),
   ])
   let app = App::new()
   app.include_router(r, responses=[
-    ResponseSpec::new(401, description="the group says"),
-    ResponseSpec::new(404, description="the group says"),
+    @endpoint.ResponseSpec::new(401, description="the group says"),
+    @endpoint.ResponseSpec::new(404, description="the group says"),
   ])
   let rs = op_responses(app.openapi(), "/a", "get")
   assert_eq(resp_desc(rs, "401"), "the group says")
@@ -102,7 +110,7 @@ test "include_router: group responses are documented under the route's own" {
 /// A router's WebSocket routes come along too, and take the prefix.
 test "include_router: a WebSocket route joins under the prefix" {
   let joined : Array[String] = []
-  let live = Router::new()
+  let live = @route.Router::new()
   live.websocket("/feed/:room", ws => {
     ws.accept()
     joined.push(ws.param("room").unwrap_or("?"))
@@ -112,7 +120,7 @@ test "include_router: a WebSocket route joins under the prefix" {
   app.include_router(live, prefix="/live")
   match app.match_ws("/live/feed/qwq") {
     Some((handler, params)) => {
-      let _ = drive_websocket(handler, [], params~)
+      let _ = @socket.drive_websocket(handler, [], params~)
       assert_eq(joined, ["qwq"])
     }
     None => fail("the included route should match under its prefix")
@@ -133,7 +141,7 @@ test "mount_handler: a foreign moonasgi handler answers under its prefix" {
     )
   }
   let app = App::new()
-  app.get("/", _ctx => text(200, "app root"))
+  app.get("/", _ctx => @status.text(200, "app root"))
   app.mount_handler("/static", files)
   let got = app.handle(mkreq("GET", "/static/site.css"))
   assert_eq(got.status, 200)
@@ -158,10 +166,10 @@ test "mount_handler: a foreign moonasgi handler answers under its prefix" {
 ///|
 test "url_for renders a named route's path, mount prefix included" {
   let blog = App::new()
-  blog.get("/posts/:slug", _ctx => text(200, "p"), name="post")
+  blog.get("/posts/:slug", _ctx => @status.text(200, "p"), name="post")
   let app = App::new()
-  app.get("/users/:id/cards/:card", _ctx => text(200, "c"), name="card")
-  app.get("/health", _ctx => text(200, "ok"))
+  app.get("/users/:id/cards/:card", _ctx => @status.text(200, "c"), name="card")
+  app.get("/health", _ctx => @status.text(200, "ok"))
   app.mount("/blog", blog)
   assert_eq(
     app.url_for("card", params=Map([("id", "233"), ("card", "qwq")])),
@@ -185,12 +193,12 @@ test "url_for renders a named route's path, mount prefix included" {
 /// not others.
 test "url_for finds a route registered through any verb helper" {
   let app = App::new()
-  app.get("/g", _ctx => text(200, "g"), name="g")
-  app.post("/p", _ctx => text(200, "p"), name="p")
-  app.put("/u", _ctx => text(200, "u"), name="u")
-  app.patch("/a", _ctx => text(200, "a"), name="a")
-  app.delete("/d", _ctx => text(200, "d"), name="d")
-  app.route_bg(Get, "/b", (_ctx, _bg) => text(200, "b"), name="b")
+  app.get("/g", _ctx => @status.text(200, "g"), name="g")
+  app.post("/p", _ctx => @status.text(200, "p"), name="p")
+  app.put("/u", _ctx => @status.text(200, "u"), name="u")
+  app.patch("/a", _ctx => @status.text(200, "a"), name="a")
+  app.delete("/d", _ctx => @status.text(200, "d"), name="d")
+  app.route_bg(Get, "/b", (_ctx, _bg) => @status.text(200, "b"), name="b")
   for
     want in [
       ("g", "/g"),
@@ -202,13 +210,13 @@ test "url_for finds a route registered through any verb helper" {
     ] {
     assert_eq(app.url_for(want.0), Some(want.1))
   }
-  let r = Router::new()
-  r.get("/g", _ctx => text(200, "g"), name="rg")
-  r.post("/p", _ctx => text(200, "p"), name="rp")
-  r.put("/u", _ctx => text(200, "u"), name="ru")
-  r.patch("/a", _ctx => text(200, "a"), name="ra")
-  r.delete("/d", _ctx => text(200, "d"), name="rd")
-  r.route_bg(Get, "/b", (_ctx, _bg) => text(200, "b"), name="rb")
+  let r = @route.Router::new()
+  r.get("/g", _ctx => @status.text(200, "g"), name="rg")
+  r.post("/p", _ctx => @status.text(200, "p"), name="rp")
+  r.put("/u", _ctx => @status.text(200, "u"), name="ru")
+  r.patch("/a", _ctx => @status.text(200, "a"), name="ra")
+  r.delete("/d", _ctx => @status.text(200, "d"), name="rd")
+  r.route_bg(Get, "/b", (_ctx, _bg) => @status.text(200, "b"), name="rb")
   let host = App::new()
   host.include_router(r, prefix="/r")
   for

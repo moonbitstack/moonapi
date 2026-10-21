@@ -2,75 +2,6 @@
 // a data URL, and a download that weighs the request first.
 
 ///|
-/// A redirect to `url` (← FastAPI's `RedirectResponse`).
-///
-/// `307` keeps the method and body, which `302` historically does not. Use `303`
-/// after a write, `301` / `308` for a permanent move.
-///
-/// The URL is escaped as a whole URI reference, so an encoded one is not encoded
-/// twice and a `\r\n` cannot open a header of its own.
-pub fn redirect(url : String, status~ : Int32 = 307) -> @moonasgi.Response {
-  @moonasgi.Response::new(
-    status,
-    [("location", @url.escape_text(url[:], kind=Whole))],
-    b"",
-  )
-}
-
-///|
-/// A download (← FastAPI's `FileResponse`): a media type from `filename`'s
-/// extension unless `media_type` names one, `Content-Length`, and a
-/// `Content-Disposition`. No `filename`, no disposition.
-///
-/// Bytes rather than a path: the same app runs on four backends and only the
-/// server can read a file on any of them.
-///
-/// Always the whole thing. [`Context::serve`] weighs the request first.
-pub fn file_response(
-  content : Bytes,
-  filename~ : String = "",
-  media_type~ : String = "",
-  status~ : Int32 = 200,
-  inline~ : Bool = false,
-) -> @moonasgi.Response {
-  @moonasgi.Response::new(
-    status,
-    envelope(content.length(), filename, media_type, inline),
-    content,
-  )
-}
-
-///|
-/// Serve what a `data:` URL carries (RFC 2397), under the media type it names —
-/// what `canvas.toDataURL()` and `FileReader.readAsDataURL()` hand back.
-///
-/// `None` when it is not a data URL, so a handler tells "no picture" from "not a
-/// picture" without touching base64.
-pub fn data_response(
-  url : String,
-  filename~ : String = "",
-  status~ : Int32 = 200,
-  inline~ : Bool = true,
-) -> @moonasgi.Response? {
-  try {
-    let url = @dataurl.Url::decode(url[:])
-    Some(
-      file_response(url.data, filename~, media_type=url.kind, status~, inline~),
-    )
-  } catch {
-    _ => None
-  }
-}
-
-///|
-/// The content as a `data:` URL, for embedding it instead of costing a second
-/// request.
-pub fn data_url(content : Bytes, media_type~ : String = "") -> String {
-  let kind = if media_type != "" { media_type } else { @dataurl.kind }
-  @dataurl.Url::new(content, kind~).encode()
-}
-
-///|
 /// [`file_response`] with the request weighed first (RFC 9110 §13, §14):
 ///
 /// * `304` — the client's copy is current.
@@ -112,7 +43,12 @@ pub fn Context::serve(
     Fresh => @moonasgi.Response::new(304, validators, b"")
     Failed => @moonasgi.Response::new(412, validators, b"")
     Go => {
-      let headers = envelope(content.length(), filename, media_type, inline)
+      let headers = @status.envelope(
+        content.length(),
+        filename,
+        media_type,
+        inline,
+      )
       for one in validators {
         headers.push(one)
       }
@@ -171,28 +107,15 @@ fn partial(
 }
 
 ///|
-/// What the body is, how long, and what to save it as.
-fn envelope(
-  length : Int32,
-  filename : String,
-  media_type : String,
-  inline : Bool,
-) -> Array[(String, String)] {
-  let kind = if media_type != "" {
-    media_type
-  } else {
-    @media.type_of(filename[:])
+/// A request header by name, ignoring case — the rule `Ask::read` uses, so
+/// `Range` and `If-Range` are not read by two different ones.
+fn asked(headers : Array[(String, String)], name : String) -> String? {
+  for pair in headers {
+    if pair.0.to_lower() == name {
+      return Some(pair.1)
+    }
   }
-  let headers : Array[(String, String)] = [
-    ("content-type", kind),
-    ("content-length", length.to_string()),
-  ]
-  if filename != "" {
-    headers.push(
-      ("content-disposition", @media.disposition(filename[:], inline~)),
-    )
-  }
-  headers
+  None
 }
 
 ///|
@@ -212,6 +135,16 @@ fn cut(content : Bytes, part : @range.Part) -> Bytes {
     out.push(content[i])
   }
   Bytes::from_array(out)
+}
+
+///|
+fn field_of(headers : Array[(String, String)], name : String) -> String {
+  for pair in headers {
+    if pair.0 == name {
+      return pair.1
+    }
+  }
+  ""
 }
 
 ///|
@@ -238,28 +171,6 @@ fn token(text : String) -> String {
   } else {
     text
   }
-}
-
-///|
-/// A request header by name, ignoring case — the rule `Ask::read` uses, so
-/// `Range` and `If-Range` are not read by two different ones.
-fn asked(headers : Array[(String, String)], name : String) -> String? {
-  for pair in headers {
-    if pair.0.to_lower() == name {
-      return Some(pair.1)
-    }
-  }
-  None
-}
-
-///|
-fn field_of(headers : Array[(String, String)], name : String) -> String {
-  for pair in headers {
-    if pair.0 == name {
-      return pair.1
-    }
-  }
-  ""
 }
 
 ///|

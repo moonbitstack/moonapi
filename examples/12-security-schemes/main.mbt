@@ -11,14 +11,11 @@
 #coverage.skip
 fn main {
   let app = @moonapi.App::new()
-  app.add_security_scheme("BearerJWT", @moonapi.HttpBearer(bearer_format="JWT"))
-  app.add_security_scheme(
-    "ApiKeyHeader",
-    @moonapi.ApiKeyHeader(name="X-API-Key"),
-  )
-  app.add_security_scheme("ApiKeyQuery", @moonapi.ApiKeyQuery(name="api_key"))
-  app.add_security_scheme("ApiKeyCookie", @moonapi.ApiKeyCookie(name="session"))
-  app.add_security_scheme("Basic", @moonapi.HttpBasic)
+  app.add_security_scheme("BearerJWT", HttpBearer(bearer_format="JWT"))
+  app.add_security_scheme("ApiKeyHeader", ApiKeyHeader(name="X-API-Key"))
+  app.add_security_scheme("ApiKeyQuery", ApiKeyQuery(name="api_key"))
+  app.add_security_scheme("ApiKeyCookie", ApiKeyCookie(name="session"))
+  app.add_security_scheme("Basic", HttpBasic)
   let bearer = @moonapi.OAuth2PasswordBearer::new("/token", "heke1228")
   app.add_security_scheme(
     "OAuth2",
@@ -61,7 +58,7 @@ fn main {
     None => println("parse_basic_auth -> none")
   }
   println("--- Swagger 2.0 (securityDefinitions) ---")
-  println(app.openapi_json(version=@moonapi.Swagger20))
+  println(app.openapi_json(version=Swagger20))
   println("--- OpenAPI 3.1.0 (securitySchemes) ---")
-  println(app.openapi_json(version=@moonapi.OpenApi31))
+  println(app.openapi_json(version=OpenApi31))
 }

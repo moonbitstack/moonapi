@@ -1,12 +1,4 @@
 ///|
-/// Decode a `Bytes` request field to text, replacing any malformed UTF-8 rather
-/// than raising — inbound bytes are attacker-controlled, so extraction stays
-/// total.
-fn decode_field(raw : Bytes) -> String {
-  @utf8.decode_lossy(raw[:])
-}
-
-///|
 /// How much of a query string is a query string.
 ///
 /// A thousand parameters is what `qs` allows Express by default, and far past
@@ -19,108 +11,12 @@ fn decode_field(raw : Bytes) -> String {
 pub let query_limits : @mime.Limits = { parts: 1000, part_size: 1 << 16, }
 
 ///|
-/// Split a query string into decoded key/value pairs.
-///
-/// A query string is `application/x-www-form-urlencoded`, so the decoding is
-/// `moonhttp/mime`'s: splitting on the raw bytes so a percent-escaped `&` or `=`
-/// inside a value cannot be mistaken for a separator, `+` as a space, and a pair
-/// with no `=` as a bare key.
-fn query_pairs(raw : Bytes, limits : @mime.Limits) -> Array[(String, String)] {
-  let out : Array[(String, String)] = []
-  let form = @mime.urlencoded(raw[:], limits~) catch { _ => return out }
-  for field in form.entries() {
-    out.push((field.name, field.value))
-  }
-  out
-}
-
-///|
-/// Look up a query-string parameter by name, e.g. `?limit=10&q=cat%20dog`. Keys and
-/// values are percent/plus-decoded, so `q` above reads back as `cat dog`. When a key
-/// repeats, the first occurrence wins; use `query_all` to read every one.
-pub fn Context::query(
-  self : Context,
-  name : String,
-  limits~ : @mime.Limits = query_limits,
-) -> String? {
-  for kv in query_pairs(self.request.query_string, limits) {
-    if kv.0 == name {
-      return Some(kv.1)
-    }
-  }
-  None
-}
-
-///|
-/// Every value given for `name`, in the order they appear — `?tag=a&tag=b` reads
-/// back as `["a", "b"]`. Empty when the key is absent.
-pub fn Context::query_all(
-  self : Context,
-  name : String,
-  limits~ : @mime.Limits = query_limits,
-) -> Array[String] {
-  let out : Array[String] = []
-  for kv in query_pairs(self.request.query_string, limits) {
-    if kv.0 == name {
-      out.push(kv.1)
-    }
-  }
-  out
-}
-
-///|
-/// Parse the request body as JSON, returning `None` for an empty body or one
-/// that does not parse — the total counterpart of FastAPI reading a JSON body.
-pub fn Context::body_json(self : Context) -> Json? {
-  let s = decode_field(self.request.body)
-  if s == "" {
-    return None
-  }
-  Some(@moonjson.loads(s[:], @moonjson.strict)) catch {
-    _ => None
-  }
-}
-
-///|
-/// Pull a single field out of a JSON object body by name, `None` if the body is
-/// absent, not an object, or lacks the field.
-pub fn Context::json_field(self : Context, name : String) -> Json? {
-  match self.body_json() {
-    Some(Object(m)) => m.get(name)
-    _ => None
-  }
-}
-
-///|
-/// Look up a cookie by name from the request `Cookie` header, which is a
-/// `; `-separated list of `key=value` pairs. Spaces around a name or a value are
-/// the separators'; `None` if there is no `Cookie` header or the name is absent.
-pub fn Context::cookie(self : Context, name : String) -> String? {
-  match self.request.header("cookie") {
-    None => None
-    Some(raw) => @cookie.get(raw[:], name[:])
-  }
-}
-
-///|
-/// Trim ASCII spaces and tabs from both ends of `s` (core has no `trim`).
-fn trim_spaces(s : String) -> String {
-  let n = s.length()
-  let mut a = 0
-  let mut b = n
-  while a < b && (s[a].to_int() == 0x20 || s[a].to_int() == 0x09) {
-    a = a + 1
-  }
-  while b > a && (s[b - 1].to_int() == 0x20 || s[b - 1].to_int() == 0x09) {
-    b = b - 1
-  }
-  s[a:b].to_owned()
-}
-
-///|
 /// Parse a base-10 integer, `None` if `s` is not a well-formed integer literal
 /// (optional leading `+`/`-`, then one or more ASCII digits, nothing else).
-fn parse_int(s : String) -> Int32? {
+///
+/// Not core's `@strconv.parse_int`: that one also takes `0x` prefixes and
+/// underscores, which a query or path parameter must not quietly accept.
+pub fn parse_int(s : String) -> Int32? {
   let n = s.length()
   if n == 0 {
     return None
@@ -210,7 +106,7 @@ fn loc_push(loc : Array[String], seg : String) -> Array[String] {
 
 ///|
 /// Render one validation error as its JSON object.
-fn ValidationError::to_json(self : ValidationError) -> Json {
+pub fn ValidationError::to_json(self : ValidationError) -> Json {
   let m : Map[String, Json] = Map([
     ("type", Json(self.kind)),
     ("loc", Json(self.loc)),
@@ -235,7 +131,7 @@ pub fn validation_error_body(errors : Array[ValidationError]) -> Json {
 /// A `422 Unprocessable Entity` response whose `application/json` body lists the
 /// validation `errors`, exactly as FastAPI reports a failed request.
 pub fn unprocessable(errors : Array[ValidationError]) -> @moonasgi.Response {
-  json(422, validation_error_body(errors))
+  @status.json(422, validation_error_body(errors))
 }
 
 ///|
@@ -382,85 +278,8 @@ pub fn validate_schema(
 }
 
 ///|
-/// Validate a raw string parameter `v` (query/path/header/cookie values always
-/// arrive as text) against the declared scalar `schema`, appending a parse error
-/// to `errs` when it cannot represent that scalar. Strings always pass; integers
-/// and booleans are checked; floats are accepted (no false negatives here).
-fn validate_scalar_str(
-  schema : Schema,
-  v : String,
-  loc : Array[String],
-  errs : Array[ValidationError],
-) -> Unit {
-  match schema {
-    SInt =>
-      match parse_int(v) {
-        Some(_) => ()
-        None =>
-          errs.push(
-            ValidationError::type_error(
-              loc, "int_parsing", "Input should be a valid integer, unable to parse string as an integer",
-            ),
-          )
-      }
-    SBool =>
-      if !(v == "true" ||
-        v == "false" ||
-        v == "1" ||
-        v == "0" ||
-        v == "True" ||
-        v == "False") {
-        errs.push(
-          ValidationError::type_error(
-            loc, "bool_parsing", "Input should be a valid boolean, unable to interpret input",
-          ),
-        )
-      }
-    SEnum(base, values) =>
-      if !enum_member(values, scalar_json(base, v)) {
-        errs.push(
-          ValidationError::type_error(
-            loc,
-            "enum",
-            "Input should be " + enum_expected(values),
-          ),
-        )
-      }
-    // A wrapper does not change what the text has to parse as: a supplied value
-    // for a nullable or formatted parameter is still checked against the base.
-    SNullable(inner) => validate_scalar_str(inner, v, loc, errs)
-    SFormat(base, _) => validate_scalar_str(base, v, loc, errs)
-    _ => ()
-  }
-}
-
-///|
-/// Coerce a raw string parameter to the `Json` shape its declared scalar `base`
-/// carries, so an enum-member comparison sees like-typed values (a `1` path
-/// segment against an integer-valued member). Unparseable input stays a string
-/// and simply fails membership, as any non-member does.
-fn scalar_json(base : Schema, v : String) -> Json {
-  match base {
-    SInt =>
-      match parse_int(v) {
-        Some(n) => Json(n)
-        None => Json(v)
-      }
-    SBool =>
-      match v {
-        "true" | "True" | "1" => Json(true)
-        "false" | "False" | "0" => Json(false)
-        _ => Json(v)
-      }
-    SNullable(inner) => scalar_json(inner, v)
-    SFormat(base, _) => scalar_json(base, v)
-    _ => Json(v)
-  }
-}
-
-///|
 /// Whether `v` is one of the allowed enum `values`.
-fn enum_member(values : Array[Json], v : Json) -> Bool {
+pub fn enum_member(values : Array[Json], v : Json) -> Bool {
   for allowed in values {
     if allowed == v {
       return true
@@ -472,7 +291,7 @@ fn enum_member(values : Array[Json], v : Json) -> Bool {
 ///|
 /// The Pydantic-style "expected one of" fragment for an `enum` error: string
 /// members quoted, comma-separated, with a final `or` before the last.
-fn enum_expected(values : Array[Json]) -> String {
+pub fn enum_expected(values : Array[Json]) -> String {
   let parts : Array[String] = []
   for v in values {
     parts.push(
@@ -493,53 +312,4 @@ fn enum_expected(values : Array[Json]) -> String {
     sb.write_string(parts[i])
   }
   sb.to_string()
-}
-
-///|
-/// Validate an inbound request `ctx` against this endpoint descriptor: every
-/// declared parameter (path / query / header / cookie) plus the JSON request
-/// body, all off the same descriptor tree that emits the OpenAPI operation.
-/// Returns the accumulated errors — an empty array means the request conforms,
-/// otherwise pass them to `unprocessable` for a FastAPI-shaped `422`.
-pub fn Endpoint::validate(
-  self : Endpoint,
-  ctx : Context,
-) -> Array[ValidationError] {
-  let errs : Array[ValidationError] = []
-  for p in self.params {
-    // The wire name, which is the alias when there is one — what the client
-    // sent, what the document promised, and what an error should point at.
-    let key = p.key()
-    let raw = match p.loc {
-      InPath => ctx.param(key)
-      InQuery => ctx.query(key)
-      InHeader => ctx.request.header(key)
-      InCookie => ctx.cookie(key)
-    }
-    match raw {
-      None =>
-        if p.is_required() {
-          errs.push(ValidationError::missing([loc_str(p.loc), key]))
-        }
-      Some(v) => {
-        let loc = [loc_str(p.loc), key]
-        validate_scalar_str(p.schema, v, loc, errs)
-        // Constraints see the value as its declared scalar, so a `ge` on an
-        // integer parameter compares numbers rather than text.
-        check_constraints(scalar_json(p.schema, v), p.constraints, loc, errs)
-      }
-    }
-  }
-  match self.request_body {
-    Some(body) =>
-      match ctx.body_json() {
-        None =>
-          if self.request_required {
-            errs.push(ValidationError::missing(["body"]))
-          }
-        Some(j) => validate_schema(body, j, ["body"], errs)
-      }
-    None => ()
-  }
-  errs
 }

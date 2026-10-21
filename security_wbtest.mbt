@@ -39,7 +39,7 @@ fn fixed(t : Int64) -> () -> Int64 {
 
 ///|
 test "bearer_token: parses Bearer, case-insensitive scheme, rejects others" {
-  fn ctx_with(auth : String) -> Context {
+  fn ctx_with(auth : String) -> @ctx.Context {
     { request: mkreq_auth("GET", "/", auth), params: Map([]), }
   }
 
@@ -48,7 +48,7 @@ test "bearer_token: parses Bearer, case-insensitive scheme, rejects others" {
   assert_eq(ctx_with("BEARER tok").bearer_token(), Some("tok"))
   assert_eq(ctx_with("Basic dXNlcg==").bearer_token(), None)
   // Absent header entirely.
-  let bare : Context = {
+  let bare : @ctx.Context = {
     request: {
       http_method: "GET",
       path: "/",
@@ -63,14 +63,14 @@ test "bearer_token: parses Bearer, case-insensitive scheme, rejects others" {
 
 ///|
 test "create_access_token stamps sub / iat / exp / scopes and verifies" {
-  let token = create_access_token(
+  let token = @security.create_access_token(
     "alice",
     "secret",
     1000L,
     scopes=["me", "items"],
     expires_in_secs=60L,
   )
-  let c = @jwt.verify(token[:], HS256, hs256("secret"), now=At(1000L))
+  let c = @jwt.verify(token[:], HS256, @security.hs256("secret"), now=At(1000L))
   assert_eq(c.get("sub"), Some(Json("alice")))
   // iat / exp are JSON numbers (NumericDate), not strings.
   assert_eq(c.get("iat"), Some(Json(1000.0)))
@@ -130,7 +130,7 @@ test "protected route: missing token -> 401 Not authenticated" {
 ///|
 test "protected route: a tampered token -> 401 Could not validate credentials" {
   let app = oauth2_app(fixed(1000L))
-  let good = create_access_token("alice", "demo-secret", 1000L)
+  let good = @security.create_access_token("alice", "demo-secret", 1000L)
   // Corrupt the last character of the signature segment.
   let parts = split_char(good, '.')
   let sig = parts[2]
@@ -209,7 +209,7 @@ test "scopes: a token with the scope passes, one without gets 403" {
 
 ///|
 test "oauth2_password_form: parses username / password / scope list" {
-  let ctx : Context = {
+  let ctx : @ctx.Context = {
     request: mkreq_ct(
       "POST",
       "application/x-www-form-urlencoded",
@@ -238,7 +238,7 @@ test "oauth2_password_form: an oversized body is not a password grant" {
     sb.write_string(i.to_string())
     sb.write_string("=1")
   }
-  let ctx : Context = {
+  let ctx : @ctx.Context = {
     request: mkreq_ct(
       "POST",
       "application/x-www-form-urlencoded",

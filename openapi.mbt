@@ -1,137 +1,4 @@
 ///|
-/// Target OpenAPI / Swagger document version. moonapi emits every mainstream
-/// version from the same route descriptors — a "good FastAPI" is not pinned to
-/// one spec version.
-pub(all) enum OpenApiVersion {
-  Swagger20
-  OpenApi30
-  OpenApi31
-} derive(Eq)
-
-///|
-/// (root document key, version string) for each spec version.
-fn version_field(v : OpenApiVersion) -> (String, String) {
-  match v {
-    Swagger20 => ("swagger", "2.0")
-    OpenApi30 => ("openapi", "3.0.3")
-    OpenApi31 => ("openapi", "3.1.0")
-  }
-}
-
-///|
-/// A `:name` path parameter as an OpenAPI parameter object for `version`. In
-/// Swagger 2.0 the type sits inline; in OpenAPI 3.x it lives under `schema`,
-/// which is the one structural difference between the two shapes.
-fn path_parameter(name : String, version : OpenApiVersion) -> Json {
-  let param : Map[String, Json] = Map([
-    ("name", Json(name)),
-    ("in", Json("path")),
-    ("required", Json(true)),
-  ])
-  match version {
-    Swagger20 => param["type"] = Json("string")
-    _ => {
-      let schema : Map[String, Json] = Map([("type", Json("string"))])
-      param["schema"] = Json(schema)
-    }
-  }
-  Json(param)
-}
-
-///|
-/// Rewrite a route's `:name` segments into OpenAPI's `{name}` template expressions.
-/// The spec requires a path parameter's `name` to correspond to a template
-/// expression in the path itself, so emitting the route string as written produces a
-/// document validators reject and Swagger UI cannot substitute values into.
-fn path_template(path : String) -> String {
-  let out = StringBuilder()
-  for seg in segments(path) {
-    out.write_char('/')
-    if seg.length() > 0 && seg[0] == ':' {
-      out.write_char('{')
-      out.write_string(seg[1:].to_owned())
-      out.write_char('}')
-    } else {
-      out.write_string(seg)
-    }
-  }
-  let rendered = out.to_string()
-  if rendered == "" {
-    "/"
-  } else {
-    rendered
-  }
-}
-
-///|
-/// The `:name` parameters of a route path, in order, as OpenAPI parameter
-/// objects — the faithful equivalent of FastAPI reading them off the signature.
-fn path_parameters(path : String, version : OpenApiVersion) -> Array[Json] {
-  let out : Array[Json] = []
-  for seg in segments(path) {
-    if seg.length() > 0 && seg[0] == ':' {
-      out.push(path_parameter(seg[1:].to_owned(), version))
-    }
-  }
-  out
-}
-
-///|
-/// Build the OpenAPI / Swagger document for the app as a `Json` value, walking
-/// the registered routes once into paths → methods → operations.
-/// OpenAPI `contact` info (← FastAPI's `contact`): every field optional, emitted
-/// only when non-empty.
-pub(all) struct Contact {
-  name : String
-  url : String
-  email : String
-}
-
-///|
-/// OpenAPI `license` info (← FastAPI's `license_info`): `name` required, `url`
-/// optional.
-pub(all) struct License {
-  name : String
-  url : String
-}
-
-///|
-/// A `servers` entry (← FastAPI's `servers`): a base URL and an optional
-/// description.
-pub(all) struct Server {
-  url : String
-  description : String
-}
-
-///|
-/// What the document says about the API itself — FastAPI's `info` block plus
-/// `servers`. An app carries one (`App::describe` sets it) so that every emission
-/// of the document, including the route `enable_docs` registers, agrees.
-pub(all) struct ApiInfo {
-  title : String
-  api_version : String
-  description : String
-  terms_of_service : String
-  contact : Contact?
-  license : License?
-  servers : Array[Server]
-}
-
-///|
-/// The defaults an app starts with.
-pub fn ApiInfo::new() -> ApiInfo {
-  {
-    title: "moonapi",
-    api_version: "0.1.0",
-    description: "",
-    terms_of_service: "",
-    contact: None,
-    license: None,
-    servers: [],
-  }
-}
-
-///|
 /// Build the app's OpenAPI document as a `Json` value, walking the registered
 /// routes — this app's and every mounted sub-app's, each under its prefix — into
 /// paths, methods and operations. `version` picks the dialect: Swagger 2.0,
@@ -139,14 +6,14 @@ pub fn ApiInfo::new() -> ApiInfo {
 /// `include_in_schema=false` are left out.
 pub fn App::openapi(
   self : App,
-  version~ : OpenApiVersion = OpenApi31,
+  version~ : @schema.OpenApiVersion = OpenApi31,
   title? : String,
   api_version? : String,
   description? : String,
   terms_of_service? : String,
-  contact? : Contact?,
-  license? : License?,
-  servers? : Array[Server],
+  contact? : @openapi.Contact?,
+  license? : @openapi.License?,
+  servers? : Array[@openapi.Server],
 ) -> Json {
   // An explicit argument wins; otherwise the app's own metadata, so the served
   // document and a hand-built one agree.
@@ -160,7 +27,7 @@ pub fn App::openapi(
   let paths : Map[String, Json] = Map([])
   let defs : Map[String, Json] = Map([])
   // Own routes plus every mounted sub-app's routes, each under its prefix.
-  let all_routes : Array[(String, Route)] = []
+  let all_routes : Array[(String, @route.Route)] = []
   self.collect_routes("", all_routes)
   for entry in all_routes {
     let (full_path, route) = entry
@@ -301,7 +168,7 @@ pub fn App::openapi(
   // own plus every mounted sub-app's): under `components` (`schemas` /
   // `securitySchemes`) in 3.x, or the top-level `definitions` /
   // `securityDefinitions` in Swagger 2.0.
-  let schemes : Array[DeclaredScheme] = []
+  let schemes : Array[@security.DeclaredScheme] = []
   let seen : Map[String, Bool] = Map([])
   self.collect_security_schemes(schemes, seen)
   // Rendered before the emptiness test, since a scheme the target version cannot
@@ -339,7 +206,7 @@ pub fn App::openapi(
 fn App::collect_routes(
   self : App,
   prefix : String,
-  out : Array[(String, Route)],
+  out : Array[(String, @route.Route)],
 ) -> Unit {
   for route in self.routes {
     out.push((join_prefix(prefix, route.path), route))
@@ -358,7 +225,7 @@ fn App::collect_routes(
 /// names already taken.
 fn App::collect_security_schemes(
   self : App,
-  out : Array[DeclaredScheme],
+  out : Array[@security.DeclaredScheme],
   seen : Map[String, Bool],
 ) -> Unit {
   for d in self.security_schemes {
@@ -375,12 +242,312 @@ fn App::collect_security_schemes(
 }
 
 ///|
+/// The app's OpenAPI / Swagger document for `version`, stringified.
+pub fn App::openapi_json(
+  self : App,
+  version~ : @schema.OpenApiVersion = OpenApi31,
+) -> String {
+  self.openapi(version~).stringify(indent=2)
+}
+
+///|
+/// Fill the operation object `op` from an endpoint descriptor for `version`,
+/// hoisting named schemas into `defs`. Emits `parameters`, `requestBody` (or a
+/// body parameter in 2.0), and `responses`; an endpoint with no declared
+/// responses gets a default `OK` under `ok_status`, which is the route's
+/// `status_code` or `200`.
+fn emit_endpoint(
+  op : Map[String, Json],
+  ep : @endpoint.Endpoint,
+  defs : Map[String, Json],
+  version : @schema.OpenApiVersion,
+  ok_status : Int32,
+) -> Unit {
+  let params : Array[Json] = []
+  for p in ep.params {
+    params.push(param_json(p, defs, version))
+  }
+  if params.length() > 0 {
+    op["parameters"] = Json(params)
+  }
+  match ep.request_body {
+    Some(body) =>
+      attach_request_body(op, body, ep.request_required, defs, version)
+    None => ()
+  }
+  let specs = if ep.responses.length() > 0 {
+    ep.responses
+  } else {
+    [@endpoint.ResponseSpec::new(ok_status)]
+  }
+  let responses : Map[String, Json] = Map([])
+  for rs in specs {
+    responses[rs.status.to_string()] = response_json(rs, defs, version)
+  }
+  op["responses"] = Json(responses)
+}
+
+///|
+/// One parameter as its OpenAPI parameter object for `version`. In Swagger 2.0 a
+/// scalar type sits inline; in OpenAPI 3.x it lives under `schema`.
+fn param_json(
+  p : @endpoint.Param,
+  defs : Map[String, Json],
+  version : @schema.OpenApiVersion,
+) -> Json {
+  let m : Map[String, Json] = Map([
+    ("name", Json(p.key())),
+    ("in", Json(@endpoint.loc_str(p.loc))),
+    ("required", Json(p.is_required())),
+  ])
+  if p.description != "" {
+    m["description"] = Json(p.description)
+  }
+  match version {
+    // Swagger 2.0 puts a scalar's type and its constraint keywords on the
+    // parameter object itself — there is no `schema` to hang them off.
+    Swagger20 =>
+      match scalar_name(p.schema) {
+        Some(t) => {
+          m["type"] = Json(t)
+          merge_into(m, param_facets(p, version))
+        }
+        None =>
+          m["schema"] = param_facets_on(
+            @schema.emit_schema(p.schema, defs, version),
+            p,
+            version,
+          )
+      }
+    _ =>
+      m["schema"] = param_facets_on(
+        @schema.emit_schema(p.schema, defs, version),
+        p,
+        version,
+      )
+  }
+  Json(m)
+}
+
+///|
+/// Attach the request body of an endpoint to an operation object `op`. OpenAPI
+/// 3.x uses a `requestBody` with a media-type map; Swagger 2.0 uses an
+/// `in: body` parameter, so it is appended to `op`'s `parameters`.
+fn attach_request_body(
+  op : Map[String, Json],
+  body : @schema.Schema,
+  required : Bool,
+  defs : Map[String, Json],
+  version : @schema.OpenApiVersion,
+) -> Unit {
+  match version {
+    Swagger20 => {
+      let bp : Map[String, Json] = Map([
+        ("name", Json("body")),
+        ("in", Json("body")),
+        ("required", Json(required)),
+        ("schema", @schema.emit_schema(body, defs, version)),
+      ])
+      let existing : Array[Json] = match op.get("parameters") {
+        Some(Array(a)) => a
+        _ => []
+      }
+      existing.push(Json(bp))
+      op["parameters"] = Json(existing)
+    }
+    _ => {
+      let media : Map[String, Json] = Map([
+        ("schema", @schema.emit_schema(body, defs, version)),
+      ])
+      let content : Map[String, Json] = Map([("application/json", Json(media))])
+      let rb : Map[String, Json] = Map([
+        ("required", Json(required)),
+        ("content", Json(content)),
+      ])
+      op["requestBody"] = Json(rb)
+    }
+  }
+}
+
+///|
+/// One response as its OpenAPI response object. OpenAPI 3.x nests the body schema
+/// under `content."application/json".schema`; Swagger 2.0 puts it directly under
+/// `schema`.
+fn response_json(
+  rs : @endpoint.ResponseSpec,
+  defs : Map[String, Json],
+  version : @schema.OpenApiVersion,
+) -> Json {
+  let m : Map[String, Json] = Map([("description", Json(rs.description))])
+  match rs.body {
+    Some(body) =>
+      match version {
+        Swagger20 => m["schema"] = @schema.emit_schema(body, defs, version)
+        _ => {
+          let media : Map[String, Json] = Map([
+            ("schema", @schema.emit_schema(body, defs, version)),
+          ])
+          let content : Map[String, Json] = Map([
+            ("application/json", Json(media)),
+          ])
+          m["content"] = Json(content)
+        }
+      }
+    None => ()
+  }
+  Json(m)
+}
+
+///|
+/// Just the keywords a parameter's constraints and default contribute, as a bare
+/// object — for the Swagger 2.0 shape, which merges them into the parameter.
+fn param_facets(p : @endpoint.Param, version : @schema.OpenApiVersion) -> Json {
+  let empty : Map[String, Json] = Map([])
+  param_facets_on(Json(empty), p, version)
+}
+
+///|
+/// The scalar OpenAPI type name of a schema, `None` for composite schemas. A
+/// format or a nullable wrapper does not change what the underlying value is, so
+/// both report their base — which is what lets a Swagger 2.0 parameter, whose
+/// type sits on the parameter object itself, carry them at all.
+fn scalar_name(s : @schema.Schema) -> String? {
+  match s {
+    SStr => Some("string")
+    SInt => Some("integer")
+    SFloat => Some("number")
+    SBool => Some("boolean")
+    SNull => Some("null")
+    SFormat(base, _) => scalar_name(base)
+    SNullable(inner) => scalar_name(inner)
+    _ => None
+  }
+}
+
+///|
+/// Copy every key of the JSON object `src` into `dst`, leaving `dst`'s other
+/// keys alone. A non-object `src` contributes nothing.
+fn merge_into(dst : Map[String, Json], src : Json) -> Unit {
+  if src is Object(o) {
+    for k, v in o {
+      dst[k] = v
+    }
+  }
+}
+
+///|
+/// The `{name: scheme, ...}` object for the app's declared schemes, rendered in
+/// the shape `version` uses, each carrying its `description` when it has one. A
+/// scheme the target version cannot express is omitted.
+fn security_schemes_json(
+  schemes : Array[@security.DeclaredScheme],
+  version : @schema.OpenApiVersion,
+) -> Map[String, Json] {
+  let m : Map[String, Json] = Map([])
+  for d in schemes {
+    let body = match version {
+      Swagger20 => d.kind.to_openapi_20()
+      _ => Some(d.kind.to_openapi_3x())
+    }
+    match body {
+      Some(j) =>
+        m[d.name] = if d.description != "" {
+          @schema.with_description(j, d.description)
+        } else {
+          j
+        }
+      None => ()
+    }
+  }
+  m
+}
+
+///|
+/// The `security` array for a route's requirements, or `None` when the route
+/// declares none (so the key is omitted rather than emitted empty).
+fn security_json(reqs : Array[@security.SecurityRequirement]) -> Json? {
+  if reqs.is_empty() {
+    return None
+  }
+  let arr : Array[Json] = []
+  for r in reqs {
+    arr.push(r.to_json())
+  }
+  Some(Json(arr))
+}
+
+///|
+/// `j` with the parameter's constraints and default written into it.
+fn param_facets_on(
+  j : Json,
+  p : @endpoint.Param,
+  version : @schema.OpenApiVersion,
+) -> Json {
+  let with_c = @schema.with_constraints(j, p.constraints, version)
+  match p.default {
+    Some(d) => @schema.with_key(with_c, "default", d)
+    None => with_c
+  }
+}
+
+///|
+/// (root document key, version string) for each spec version.
+fn version_field(v : @schema.OpenApiVersion) -> (String, String) {
+  match v {
+    Swagger20 => ("swagger", "2.0")
+    OpenApi30 => ("openapi", "3.0.3")
+    OpenApi31 => ("openapi", "3.1.0")
+  }
+}
+
+///|
+/// Rewrite a route's `:name` segments into OpenAPI's `{name}` template expressions.
+/// The spec requires a path parameter's `name` to correspond to a template
+/// expression in the path itself, so emitting the route string as written produces a
+/// document validators reject and Swagger UI cannot substitute values into.
+fn path_template(path : String) -> String {
+  let out = StringBuilder()
+  for seg in @route.segments(path) {
+    out.write_char('/')
+    if seg.length() > 0 && seg[0] == ':' {
+      out.write_char('{')
+      out.write_string(seg[1:].to_owned())
+      out.write_char('}')
+    } else {
+      out.write_string(seg)
+    }
+  }
+  let rendered = out.to_string()
+  if rendered == "" {
+    "/"
+  } else {
+    rendered
+  }
+}
+
+///|
+/// The `:name` parameters of a route path, in order, as OpenAPI parameter
+/// objects — the faithful equivalent of FastAPI reading them off the signature.
+fn path_parameters(
+  path : String,
+  version : @schema.OpenApiVersion,
+) -> Array[Json] {
+  let out : Array[Json] = []
+  for seg in @route.segments(path) {
+    if seg.length() > 0 && seg[0] == ':' {
+      out.push(path_parameter(seg[1:].to_owned(), version))
+    }
+  }
+  out
+}
+
+///|
 /// Join a mount `prefix` and a route `path` into one path by concatenating their
 /// segments, so `("/sub", "/items")` becomes `/sub/items` and a root path stays
 /// under the prefix. An all-empty result is the root `"/"`.
 fn join_prefix(prefix : String, path : String) -> String {
-  let segs = segments(prefix)
-  for s in segments(path) {
+  let segs = @route.segments(prefix)
+  for s in @route.segments(path) {
     segs.push(s)
   }
   if segs.is_empty() {
@@ -395,33 +562,21 @@ fn join_prefix(prefix : String, path : String) -> String {
 }
 
 ///|
-/// The app's OpenAPI / Swagger document for `version`, stringified.
-pub fn App::openapi_json(
-  self : App,
-  version~ : OpenApiVersion = OpenApi31,
-) -> String {
-  self.openapi(version~).stringify(indent=2)
+/// A `:name` path parameter as an OpenAPI parameter object for `version`. In
+/// Swagger 2.0 the type sits inline; in OpenAPI 3.x it lives under `schema`,
+/// which is the one structural difference between the two shapes.
+fn path_parameter(name : String, version : @schema.OpenApiVersion) -> Json {
+  let param : Map[String, Json] = Map([
+    ("name", Json(name)),
+    ("in", Json("path")),
+    ("required", Json(true)),
+  ])
+  match version {
+    Swagger20 => param["type"] = Json("string")
+    _ => {
+      let schema : Map[String, Json] = Map([("type", Json("string"))])
+      param["schema"] = Json(schema)
+    }
+  }
+  Json(param)
 }
-
-///|
-/// A self-contained ReDoc page rendering the document served at `spec_url` — the
-/// second reading of the same spec FastAPI serves at `/redoc`, three-panel and
-/// built for reading rather than for trying calls out.
-pub fn redoc_ui(
-  spec_url~ : String = "/openapi.json",
-  title~ : String = "moonapi",
-) -> String {
-  "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>\{title}</title>\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<style>body { margin: 0; }</style>\n</head>\n<body>\n<redoc spec-url=\"\{spec_url}\"></redoc>\n<script src=\"https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js\"></script>\n</body>\n</html>\n"
-}
-
-///|
-/// A self-contained Swagger UI page rendering the document served at `spec_url`.
-pub fn swagger_ui(
-  spec_url~ : String = "/openapi.json",
-  title~ : String = "moonapi",
-) -> String {
-  "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>\{title}</title>\n<link rel=\"stylesheet\" href=\"https://unpkg.com/swagger-ui-dist/swagger-ui.css\">\n</head>\n<body>\n<div id=\"swagger-ui\"></div>\n<script src=\"https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js\"></script>\n<script>\nwindow.onload = () => { window.ui = SwaggerUIBundle({ url: \"\{spec_url}\", dom_id: \"#swagger-ui\" }); };\n</script>\n</body>\n</html>\n"
-}
-
-///|
-pub extend OpenApiVersion with Eq::{not_equal, equal}

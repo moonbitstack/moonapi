@@ -5,11 +5,13 @@
 
 ///|
 /// A field constrained by a pattern, which the descriptor enum cannot express.
-fn slug_body() -> Schema {
-  Schema::object("Post", [
-    Field::new(
+fn slug_body() -> @schema.Schema {
+  @schema.Schema::object("Post", [
+    @schema.Field::new(
       "slug",
-      Schema::json(({ "type": "string", "pattern": "^[a-z0-9-]+$" } : Json)),
+      @schema.Schema::json(
+        ({ "type": "string", "pattern": "^[a-z0-9-]+$" } : Json),
+      ),
       required=true,
     ),
   ])
@@ -17,10 +19,10 @@ fn slug_body() -> Schema {
 
 ///|
 test "SJson validates through moonschema" {
-  let errs : Array[ValidationError] = []
-  validate_schema(slug_body(), { "slug": "hello-world" }, [], errs)
+  let errs : Array[@schema.ValidationError] = []
+  @schema.validate_schema(slug_body(), { "slug": "hello-world" }, [], errs)
   assert_eq(errs.length(), 0)
-  validate_schema(slug_body(), { "slug": "Hello World" }, [], errs)
+  @schema.validate_schema(slug_body(), { "slug": "Hello World" }, [], errs)
   assert_eq(errs.length(), 1)
   assert_eq(errs[0].loc, ["slug"])
   assert_eq(errs[0].kind, "pattern")
@@ -31,8 +33,8 @@ test "SJson is emitted into the document as it stands" {
   let app = App::new()
   app.post(
     "/posts",
-    _ctx => text(200, "ok"),
-    endpoint=Endpoint::new(request_body=slug_body()),
+    _ctx => @status.text(200, "ok"),
+    endpoint=@endpoint.Endpoint::new(request_body=slug_body()),
   )
   let doc = app.openapi()
   let schema = json_at(doc, [
@@ -43,9 +45,9 @@ test "SJson is emitted into the document as it stands" {
 
 ///|
 test "a JSON Schema this cannot read is a schema error, not a bad request" {
-  let errs : Array[ValidationError] = []
-  validate_schema(
-    Schema::json({ "$schema": "https://example.test/nope" }),
+  let errs : Array[@schema.ValidationError] = []
+  @schema.validate_schema(
+    @schema.Schema::json({ "$schema": "https://example.test/nope" }),
     Json::null(),
     [],
     errs,

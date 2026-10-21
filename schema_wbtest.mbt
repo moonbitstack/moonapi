@@ -226,7 +226,7 @@ test "cookie extraction off the Cookie header" {
     headers: [("cookie", "session=abc123; theme=dark")],
     body: b"",
   }
-  let ctx : Context = { request: req, params: Map([]), }
+  let ctx : @ctx.Context = { request: req, params: Map([]), }
   assert_eq(ctx.cookie("session"), Some("abc123"))
   assert_eq(ctx.cookie("theme"), Some("dark"))
   assert_eq(ctx.cookie("absent"), None)
@@ -234,14 +234,14 @@ test "cookie extraction off the Cookie header" {
 
 ///|
 test "schema descriptor validates a nested tree directly" {
-  let errs : Array[ValidationError] = []
+  let errs : Array[@schema.ValidationError] = []
   // A User body with a wrong-typed nested field and a bad array element.
   let bad = @json.parse(
     "{\"id\":1,\"name\":\"x\",\"address\":{\"city\":\"c\",\"zip\":5},\"tags\":[\"ok\",9]}",
   ) catch {
     _ => Json::null()
   }
-  validate_schema(User::schema(), bad, ["body"], errs)
+  @schema.validate_schema(User::schema(), bad, ["body"], errs)
   // zip should be a string, tags[1] should be a string -> two errors located.
   assert_eq(errs.length(), 2)
 }
@@ -251,11 +251,14 @@ test "schema descriptor validates a nested tree directly" {
 /// `typing.Literal`): its OpenAPI schema advertises the closed value set and its
 /// validation enforces membership.
 fn enum_app() -> App {
-  let body = Schema::object("Order", [
-    Field::new("status", SEnum(SStr, [Json("qwq"), Json("hhh")])),
+  let body = @schema.Schema::object("Order", [
+    @schema.Field::new(
+      "status",
+      SEnum(@schema.SStr, [Json("qwq"), Json("hhh")]),
+    ),
   ])
-  let ep = Endpoint::new(request_body=body, responses=[
-    ResponseSpec::new(200, body~),
+  let ep = @endpoint.Endpoint::new(request_body=body, responses=[
+    @endpoint.ResponseSpec::new(200, body~),
   ])
   let app = App::new()
   app.post(
@@ -263,9 +266,9 @@ fn enum_app() -> App {
     ctx => {
       let errs = ep.validate(ctx)
       if errs.length() > 0 {
-        unprocessable(errs)
+        @schema.unprocessable(errs)
       } else {
-        json(200, ctx.body_json().unwrap_or(Json::null()))
+        @status.json(200, ctx.body_json().unwrap_or(Json::null()))
       }
     },
     endpoint=ep,
@@ -311,5 +314,5 @@ test "ToSchema trait bridges to the associated schema function" {
     tags: [],
   }
   // Generic entry point returns the same descriptor as the associated fn.
-  assert_eq(schema_of(u) == User::schema(), true)
+  assert_eq(@schema.schema_of(u) == User::schema(), true)
 }

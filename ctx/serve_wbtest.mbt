@@ -194,7 +194,10 @@ test "serve can be told not to offer ranges, and answers HEAD without a body" {
 ///|
 /// What `canvas.toDataURL()` hands a client, served back as what it says it is.
 test "a data URL becomes a response, and bytes become a data URL" {
-  let resp = data_response("data:image/png;base64,AAEC", filename="x.png")
+  let resp = @status.data_response(
+    "data:image/png;base64,AAEC",
+    filename="x.png",
+  )
   guard resp is Some(resp) else { fail("a data URL did not become a response") }
   assert_eq(resp.status, 200)
   assert_eq(resp.body, b"\x00\x01\x02")
@@ -205,12 +208,12 @@ test "a data URL becomes a response, and bytes become a data URL" {
     value.has_prefix("inline"),
   )
   // Not a data URL is not a response.
-  assert_true(data_response("https://example.test/x.png") is None)
-  assert_true(data_response("") is None)
+  assert_true(@status.data_response("https://example.test/x.png") is None)
+  assert_true(@status.data_response("") is None)
   // And back the other way.
   assert_eq(
-    data_url(b"\x00\x01\x02", media_type="image/png"),
+    @status.data_url(b"\x00\x01\x02", media_type="image/png"),
     "data:image/png;base64,AAEC",
   )
-  assert_eq(data_url(b"hi"), "data:;base64,aGk=")
+  assert_eq(@status.data_url(b"hi"), "data:;base64,aGk=")
 }

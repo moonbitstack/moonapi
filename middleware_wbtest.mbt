@@ -18,13 +18,13 @@ fn hdr(resp : @moonasgi.Response, name : String) -> String {
 test "cors: preflight from an allowed origin gets the negotiated headers" {
   let app = App::new()
   app.middleware(
-    cors(
+    @mid.cors(
       allow_origins=["https://app.example"],
       allow_headers=["x-token"],
       max_age=100,
     ),
   )
-  app.get("/data", _ctx => text(200, "ok"))
+  app.get("/data", _ctx => @status.text(200, "ok"))
   let pre = app.handle(
     req_h("OPTIONS", "/data", [
       ("origin", "https://app.example"),
@@ -41,8 +41,8 @@ test "cors: preflight from an allowed origin gets the negotiated headers" {
 ///|
 test "cors: preflight from a disallowed origin gets no allow-origin" {
   let app = App::new()
-  app.middleware(cors(allow_origins=["https://app.example"]))
-  app.get("/data", _ctx => text(200, "ok"))
+  app.middleware(@mid.cors(allow_origins=["https://app.example"]))
+  app.get("/data", _ctx => @status.text(200, "ok"))
   let pre = app.handle(
     req_h("OPTIONS", "/data", [
       ("origin", "https://evil.example"),
@@ -59,9 +59,9 @@ test "cors: preflight from a disallowed origin gets no allow-origin" {
 test "cors: actual request from an allowed origin is decorated" {
   let app = App::new()
   app.middleware(
-    cors(allow_origins=["https://app.example"], expose_headers=["x-total"]),
+    @mid.cors(allow_origins=["https://app.example"], expose_headers=["x-total"]),
   )
-  app.get("/data", _ctx => text(200, "ok"))
+  app.get("/data", _ctx => @status.text(200, "ok"))
   let resp = app.handle(
     req_h("GET", "/data", [("origin", "https://app.example")]),
   )
@@ -75,8 +75,8 @@ test "cors: actual request from an allowed origin is decorated" {
 ///|
 test "cors: a request without Origin is untouched" {
   let app = App::new()
-  app.middleware(cors(allow_all_origins=true))
-  app.get("/data", _ctx => text(200, "ok"))
+  app.middleware(@mid.cors(allow_all_origins=true))
+  app.get("/data", _ctx => @status.text(200, "ok"))
   let resp = app.handle(req_h("GET", "/data", []))
   assert_eq(resp.header("access-control-allow-origin"), None)
 }
@@ -84,8 +84,8 @@ test "cors: a request without Origin is untouched" {
 ///|
 test "cors: credentials echo the origin rather than the wildcard" {
   let app = App::new()
-  app.middleware(cors(allow_all_origins=true, allow_credentials=true))
-  app.get("/data", _ctx => text(200, "ok"))
+  app.middleware(@mid.cors(allow_all_origins=true, allow_credentials=true))
+  app.get("/data", _ctx => @status.text(200, "ok"))
   let resp = app.handle(
     req_h("GET", "/data", [("origin", "https://app.example")]),
   )
@@ -110,7 +110,7 @@ fn repeat_bytes(unit : String, n : Int32) -> Bytes {
 test "gzip: the middleware body inflates back to the response and is smaller" {
   let body = repeat_bytes("moonapi gzip middleware payload ", 60)
   let app = App::new()
-  app.middleware(gzip(min_size=100))
+  app.middleware(@mid.gzip(min_size=100))
   app.get("/j", _ctx => @moonasgi.Response::new(200, [], body))
   let z = app.handle(req_h("GET", "/j", [("accept-encoding", "gzip")]))
   assert_eq(hdr(z, "content-encoding"), "gzip")
@@ -124,9 +124,9 @@ test "gzip: the middleware body inflates back to the response and is smaller" {
 test "gzip: middleware encodes a large response and skips a small one" {
   let big = xbytes(1000)
   let app = App::new()
-  app.middleware(gzip(min_size=500))
+  app.middleware(@mid.gzip(min_size=500))
   app.get("/big", _ctx => @moonasgi.Response::new(200, [], big))
-  app.get("/small", _ctx => text(200, "tiny"))
+  app.get("/small", _ctx => @status.text(200, "tiny"))
   let z = app.handle(req_h("GET", "/big", [("accept-encoding", "gzip")]))
   assert_eq(hdr(z, "content-encoding"), "gzip")
   assert_eq(hdr(z, "vary"), "Accept-Encoding")
@@ -142,7 +142,7 @@ test "gzip: middleware encodes a large response and skips a small one" {
 test "gzip: no Accept-Encoding leaves the response uncompressed" {
   let big = xbytes(1000)
   let app = App::new()
-  app.middleware(gzip(min_size=10))
+  app.middleware(@mid.gzip(min_size=10))
   app.get("/big", _ctx => @moonasgi.Response::new(200, [], big))
   let resp = app.handle(req_h("GET", "/big", []))
   assert_eq(resp.header("content-encoding"), None)
@@ -152,7 +152,7 @@ test "gzip: no Accept-Encoding leaves the response uncompressed" {
 ///|
 test "exception: a raised HttpException maps to its status and detail" {
   let app = App::new()
-  app.get("/boom", _ctx => raise http_error(418, "teapot"))
+  app.get("/boom", _ctx => raise @mid.http_error(418, "teapot"))
   let resp = app.handle(req_h("GET", "/boom", []))
   assert_eq(resp.status, 418)
   assert_eq(hdr(resp, "content-type"), "application/json")
@@ -163,7 +163,7 @@ test "exception: a raised HttpException maps to its status and detail" {
 test "exception: HttpException extra headers reach the response" {
   let app = App::new()
   app.get("/auth", _ctx => {
-    raise http_error(401, "nope", headers=[("www-authenticate", "Bearer")])
+    raise @mid.http_error(401, "nope", headers=[("www-authenticate", "Bearer")])
   })
   let resp = app.handle(req_h("GET", "/auth", []))
   assert_eq(resp.status, 401)
@@ -175,12 +175,12 @@ test "exception: a registered handler is tried before the default" {
   let app = App::new()
   app.exception_handler((_ctx, err) => {
     match err {
-      HttpException(status~, detail=_, headers=_) =>
-        Some(text(status, "custom"))
+      @mid.HttpException(status~, detail=_, headers=_) =>
+        Some(@status.text(status, "custom"))
       _ => None
     }
   })
-  app.get("/boom", _ctx => raise http_error(400, "x"))
+  app.get("/boom", _ctx => raise @mid.http_error(400, "x"))
   let resp = app.handle(req_h("GET", "/boom", []))
   assert_eq(resp.status, 400)
   assert_eq(resp.body, @utf8.encode("custom"))

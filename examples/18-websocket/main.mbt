@@ -8,8 +8,8 @@ fn echo(ws : @moonapi.WebSocket) -> Unit {
   let mut open = true
   while open {
     match ws.receive() {
-      Some(@moonapi.WsText(t)) => ws.send_text("echo: " + t)
-      Some(@moonapi.WsBinary(b)) => ws.send_bytes(b)
+      Some(WsText(t)) => ws.send_text("echo: " + t)
+      Some(WsBinary(b)) => ws.send_bytes(b)
       None => open = false
     }
   }
@@ -51,7 +51,7 @@ fn main {
   println("echo /ws/233 (text then binary):")
   let echoed = @moonapi.drive_websocket(
     echo,
-    [@moonapi.WsText("hi"), @moonapi.WsBinary(b"\x02\x33\x33")],
+    [WsText("hi"), WsBinary(b"\x02\x33\x33")],
     params=Map([("room", "233")]),
     subprotocols=["chat", "superchat"],
   )
@@ -59,8 +59,8 @@ fn main {
 
   println("request-reply /greet:")
   let replied = @moonapi.drive_websocket(req_reply, [
-    @moonapi.WsText("lfanke"),
-    @moonapi.WsBinary(b"\x66\x66"),
+    WsText("lfanke"),
+    WsBinary(b"\x66\x66"),
   ])
   show(replied)
 }

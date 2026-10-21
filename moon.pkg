@@ -6,25 +6,25 @@
 // format, the wire formats and the compression all belong to libraries of their
 // own, and the framework holds two lines of glue at each seam.
 import {
-  "moonbitstack/moonmodel",
+  "moonbitstack/moonapi/status",
+  "moonbitstack/moonapi/di",
+  "moonbitstack/moonapi/socket",
+  "moonbitstack/moonapi/schema",
+  "moonbitstack/moonapi/ctx",
+  "moonbitstack/moonapi/endpoint",
+  "moonbitstack/moonapi/mid",
+  "moonbitstack/moonapi/security",
+  "moonbitstack/moonapi/route",
+  "moonbitstack/moonapi/openapi",
   "moonbitstack/moonasgi",
-  "moonbitstack/moonbase/base64",
   "moonbitstack/moonjson",
-  "moonbitstack/mooncrypt/hash/sha2",
-  "moonbitstack/mooncrypt/mac/hmac",
   "moonbitstack/mooncred/jwt",
-  "moonbitstack/moonhttp/mime",
-  "moonbitstack/moonhttp/url",
-  "moonbitstack/moonhttp/dataurl",
-  "moonbitstack/moonhttp/conditional",
-  "moonbitstack/moonhttp/range",
-  "moonbitstack/moonhttp/media",
   "moonbitstack/moonhttp/sse",
-  "moonbitstack/moonhttp/cookie",
-  "moonbitstack/moondate",
-  "moonbitstack/moonschema",
-  "moonbitstack/moonzip/gzip",
   "moonbitlang/core/json",
-  "moonbitlang/core/string",
   "moonbitlang/core/encoding/utf8",
 }
+
+import {
+  "moonbitstack/moonhttp/mime",
+  "moonbitstack/moonzip/gzip",
+} for "wbtest"

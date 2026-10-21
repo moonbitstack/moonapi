@@ -11,10 +11,10 @@
 fn main {
   let app = @moonapi.App::new()
   let search = @moonapi.Endpoint::new(params=[
-    @moonapi.Param::new("cat", @moonapi.InPath),
-    @moonapi.Param::new("limit", @moonapi.InQuery, schema=@moonapi.SInt),
-    @moonapi.Param::new("x-trace", @moonapi.InHeader),
-    @moonapi.Param::new("session", @moonapi.InCookie),
+    @moonapi.Param::new("cat", InPath),
+    @moonapi.Param::new("limit", InQuery, schema=SInt),
+    @moonapi.Param::new("x-trace", InHeader),
+    @moonapi.Param::new("session", InCookie),
   ])
   app.get(
     "/search/:cat",

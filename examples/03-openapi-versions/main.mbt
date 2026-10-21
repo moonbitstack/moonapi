@@ -18,12 +18,12 @@ fn main {
     deprecated=true,
   )
   println("--- Swagger 2.0 (definitions) ---")
-  println(app.openapi_json(version=@moonapi.Swagger20))
+  println(app.openapi_json(version=Swagger20))
   println("--- OpenAPI 3.0.3 (components/schemas) ---")
-  println(app.openapi_json(version=@moonapi.OpenApi30))
+  println(app.openapi_json(version=OpenApi30))
   println("--- OpenAPI 3.1.0 with full info metadata ---")
   let doc = app.openapi(
-    version=@moonapi.OpenApi31,
+    version=OpenApi31,
     title="Widget API",
     api_version="2.3.0",
     description="a comprehensive moonapi example",

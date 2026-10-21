@@ -2,13 +2,13 @@
 package "moonbitstack/moonapi/examples/25-full-example/routes/catalog"
 
 import {
-  "moonbitstack/moonapi",
+  "moonbitstack/moonapi/route",
 }
 
 // Values
 pub fn exercise_websocket() -> Int32
 
-pub fn make_router(Array[String]) -> @moonapi.Router
+pub fn make_router(Array[String]) -> @route.Router
 
 // Errors
 

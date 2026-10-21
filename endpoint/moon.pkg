@@ -1,0 +1,6 @@
+// What an operation declares — its parameters, request body and responses — and
+// the validation of a request against that declaration.
+import {
+  "moonbitstack/moonapi/schema",
+  "moonbitstack/moonapi/ctx",
+}

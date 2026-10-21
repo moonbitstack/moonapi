@@ -34,7 +34,7 @@ fn read_cookie(header : String, name : String) -> String? {
 ///|
 /// The loop closes: set it, send it back, read the same value out.
 test "cookie round-trips from set_cookie through Set-Cookie to Context::cookie" {
-  let resp = set_cookie(text(200, "ok"), "session", "heke1228")
+  let resp = @status.set_cookie(@status.text(200, "ok"), "session", "heke1228")
   let header = resp.header("set-cookie").unwrap()
   assert_eq(header, "session=heke1228; Path=/; SameSite=Lax")
   assert_eq(read_cookie(echoed_pair(header), "session"), Some("heke1228"))
@@ -43,8 +43,8 @@ test "cookie round-trips from set_cookie through Set-Cookie to Context::cookie" 
 ///|
 /// Every attribute renders, in RFC 6265 §4.1.1's order.
 test "set_cookie renders its attributes in the canonical order" {
-  let resp = set_cookie(
-    text(200, "ok"),
+  let resp = @status.set_cookie(
+    @status.text(200, "ok"),
     "sid",
     "qwq",
     max_age=3600,
@@ -72,8 +72,8 @@ test "set_cookie renders its attributes in the canonical order" {
 /// entirely is a third thing again — no attribute at all.
 test "set_cookie SameSite: Unrestricted is None on the wire, and can be omitted" {
   assert_eq(
-    set_cookie(
-      text(200, "ok"),
+    @status.set_cookie(
+      @status.text(200, "ok"),
       "a",
       "1",
       same_site=Some(Unrestricted),
@@ -82,7 +82,9 @@ test "set_cookie SameSite: Unrestricted is None on the wire, and can be omitted"
     Some("a=1; Path=/; Secure; SameSite=None"),
   )
   assert_eq(
-    set_cookie(text(200, "ok"), "a", "1", same_site=None).header("set-cookie"),
+    @status.set_cookie(@status.text(200, "ok"), "a", "1", same_site=None).header(
+      "set-cookie",
+    ),
     Some("a=1; Path=/"),
   )
 }
@@ -92,7 +94,9 @@ test "set_cookie SameSite: Unrestricted is None on the wire, and can be omitted"
 /// request's own directory rather than the whole site.
 test "set_cookie with no path omits Path" {
   assert_eq(
-    set_cookie(text(200, "ok"), "a", "1", path=None).header("set-cookie"),
+    @status.set_cookie(@status.text(200, "ok"), "a", "1", path=None).header(
+      "set-cookie",
+    ),
     Some("a=1; SameSite=Lax"),
   )
 }
@@ -101,7 +105,11 @@ test "set_cookie with no path omits Path" {
 /// `Set-Cookie` is the one header a proxy may not fold on commas, so two cookies
 /// have to be two headers.
 test "two cookies are two Set-Cookie headers, not one merged field" {
-  let resp = set_cookie(set_cookie(text(200, "ok"), "a", "1"), "b", "2")
+  let resp = @status.set_cookie(
+    @status.set_cookie(@status.text(200, "ok"), "a", "1"),
+    "b",
+    "2",
+  )
   let cookies = resp.headers.filter(h => h.0 == "set-cookie")
   assert_eq(cookies.length(), 2)
   assert_eq(cookies[0].1, "a=1; Path=/; SameSite=Lax")
@@ -112,9 +120,9 @@ test "two cookies are two Set-Cookie headers, not one merged field" {
 /// Each call returns a new response, so a handler can hand the same base to two
 /// callers and give them different cookies.
 test "set_cookie leaves the response it was given alone" {
-  let base = text(200, "ok")
+  let base = @status.text(200, "ok")
   let before = base.headers.length()
-  let _ = set_cookie(base, "a", "1")
+  let _ = @status.set_cookie(base, "a", "1")
   assert_eq(base.headers.length(), before)
   assert_eq(base.header("set-cookie"), None)
 }
@@ -123,7 +131,7 @@ test "set_cookie leaves the response it was given alone" {
 /// Expiring a cookie is setting an empty one that is already stale, both ways a
 /// browser measures staleness.
 test "delete_cookie expires the cookie by Max-Age and by date" {
-  let resp = delete_cookie(text(200, "ok"), "session")
+  let resp = @status.delete_cookie(@status.text(200, "ok"), "session")
   assert_eq(
     resp.header("set-cookie"),
     Some(
@@ -137,8 +145,8 @@ test "delete_cookie expires the cookie by Max-Age and by date" {
 /// to repeat the scope that set it or it will miss.
 test "delete_cookie carries the scope it is given" {
   assert_eq(
-    delete_cookie(
-      text(200, "ok"),
+    @status.delete_cookie(
+      @status.text(200, "ok"),
       "sid",
       path=Some("/api"),
       domain="example.test",
@@ -155,13 +163,21 @@ test "delete_cookie carries the scope it is given" {
 test "a cookie value cannot forge an attribute or open a header" {
   // `;` and the space are dropped, so the smuggled `Domain` stays inside the
   // value instead of becoming an attribute of its own.
-  let forged = set_cookie(text(200, "ok"), "sid", "a; Domain=evil.test")
+  let forged = @status.set_cookie(
+    @status.text(200, "ok"),
+    "sid",
+    "a; Domain=evil.test",
+  )
   assert_eq(
     forged.header("set-cookie"),
     Some("sid=aDomain=evil.test; Path=/; SameSite=Lax"),
   )
   // CRLF cannot survive either, so there is no second header to open.
-  let split = set_cookie(text(200, "ok"), "sid", "a\r\nSet-Cookie: evil=1")
+  let split = @status.set_cookie(
+    @status.text(200, "ok"),
+    "sid",
+    "a\r\nSet-Cookie: evil=1",
+  )
   assert_eq(
     split.header("set-cookie"),
     Some("sid=aSet-Cookie:evil=1; Path=/; SameSite=Lax"),

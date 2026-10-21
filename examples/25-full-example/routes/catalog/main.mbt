@@ -12,7 +12,7 @@ pub fn make_router(log : Array[String]) -> @moonapi.Router {
     summary="Search the catalog",
   )
   router.route_bg(
-    @moonapi.Post,
+    Post,
     "/orders",
     (_ctx, background) => {
       background.add_task(() => log.push("order saved"))
@@ -50,7 +50,7 @@ fn echo_once(ws : @moonapi.WebSocket) -> Unit {
 pub fn exercise_websocket() -> Int32 {
   let events = @moonapi.drive_websocket(
     echo_once,
-    [@moonapi.WsText("hello")],
+    [WsText("hello")],
     params=Map([("room", "general")]),
   )
   events.length()

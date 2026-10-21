@@ -31,50 +31,11 @@ pub fn http_error(
 }
 
 ///|
-/// The response for an `HttpException`: `{"detail": <detail>}` as JSON, at the
-/// given status, with the exception's extra headers merged in after the
-/// content-type.
-fn http_exception_response(
-  status : Int32,
-  detail : Json,
-  headers : Array[(String, String)],
-) -> @moonasgi.Response {
-  let body : Map[String, Json] = Map([("detail", detail)])
-  let hs : Array[(String, String)] = [("content-type", "application/json")]
-  for h in headers {
-    hs.push(h)
-  }
-  @moonasgi.Response::new(status, hs, @moonjson.dump(Json(body)))
-}
-
-///|
-/// The built-in fallback when no registered handler claims a raised error: an
-/// `HttpException` becomes its own status and detail; anything else is a
-/// `500 {"detail": "Internal Server Error"}`. This is always in effect, so a
-/// handler that raises `HttpException` needs no explicit registration.
-fn default_exception_response(err : Error) -> @moonasgi.Response {
-  match err {
-    HttpException(status~, detail~, headers~) =>
-      http_exception_response(status, detail, headers)
-    _ => {
-      let body : Map[String, Json] = Map([
-        ("detail", Json("Internal Server Error")),
-      ])
-      @moonasgi.Response::new(
-        500,
-        [("content-type", "application/json")],
-        @moonjson.dump(Json(body)),
-      )
-    }
-  }
-}
-
-///|
 /// An exception handler: given the request context and the raised error, return
 /// `Some(response)` to handle it or `None` to defer to the next handler. The
 /// explicit MoonBit form of FastAPI's `@app.exception_handler(ExcType)` — the
 /// `None` case stands in for "this handler isn't registered for that type".
-pub type ExceptionHandler = (Context, Error) -> @moonasgi.Response?
+pub type ExceptionHandler = (@ctx.Context, Error) -> @moonasgi.Response?
 
 // -- CORS ---------------------------------------------------------------------
 

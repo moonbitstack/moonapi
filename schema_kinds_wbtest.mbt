@@ -4,12 +4,12 @@
 
 ///|
 /// An app whose `POST /thing` takes `body` as its request body — test helper.
-fn body_app(body : Schema) -> App {
+fn body_app(body : @schema.Schema) -> App {
   let app = App::new()
   app.post(
     "/thing",
-    _ctx => text(200, "ok"),
-    endpoint=Endpoint::new(request_body=body),
+    _ctx => @status.text(200, "ok"),
+    endpoint=@endpoint.Endpoint::new(request_body=body),
   )
   app
 }
@@ -22,7 +22,7 @@ fn post_body(app : App, payload : String) -> @moonasgi.Response {
 
 ///|
 /// The emitted request-body schema of `POST /thing` in `version` — test helper.
-fn body_schema(app : App, version : OpenApiVersion) -> Json {
+fn body_schema(app : App, version : @schema.OpenApiVersion) -> Json {
   let doc = app.openapi(version~)
   match version {
     Swagger20 => {
@@ -45,7 +45,9 @@ fn body_schema(app : App, version : OpenApiVersion) -> Json {
 ///|
 test "nullable: each dialect says it its own way" {
   let app = body_app(
-    Schema::object("Note", [Field::new("title", Schema::nullable(SStr))]),
+    @schema.Schema::object("Note", [
+      @schema.Field::new("title", @schema.Schema::nullable(SStr)),
+    ]),
   )
   // 3.1 is JSON-Schema 2020-12: the type itself becomes a list.
   let new = dig(app.openapi(version=OpenApi31), [
@@ -69,7 +71,9 @@ test "nullable: each dialect says it its own way" {
 ///|
 test "nullable: null is accepted, the wrapped type is still enforced" {
   let app = body_app(
-    Schema::object("Note", [Field::new("title", Schema::nullable(SStr))]),
+    @schema.Schema::object("Note", [
+      @schema.Field::new("title", @schema.Schema::nullable(SStr)),
+    ]),
   )
   assert_eq(post_body(app, "{\"title\":null}").status, 200)
   assert_eq(post_body(app, "{\"title\":\"hi\"}").status, 200)
@@ -86,9 +90,11 @@ test "nullable: null is accepted, the wrapped type is still enforced" {
 
 ///|
 test "nullable: a composite with no type to widen becomes an anyOf in 3.1" {
-  let inner = Schema::object("Addr", [Field::new("city", SStr)])
+  let inner = @schema.Schema::object("Addr", [@schema.Field::new("city", SStr)])
   let app = body_app(
-    Schema::object("Person", [Field::new("addr", Schema::nullable(inner))]),
+    @schema.Schema::object("Person", [
+      @schema.Field::new("addr", @schema.Schema::nullable(inner)),
+    ]),
   )
   let doc = app.openapi(version=OpenApi31)
   let f = dig(doc, ["components", "schemas", "Person", "properties", "addr"]).unwrap()
@@ -105,7 +111,7 @@ test "nullable: a composite with no type to widen becomes an anyOf in 3.1" {
 
 ///|
 test "map body: emitted as additionalProperties and validated per value" {
-  let app = body_app(Schema::map(SInt))
+  let app = body_app(@schema.Schema::map(SInt))
   let s = body_schema(app, OpenApi31)
   assert_eq(json_str(s, "type"), "object")
   assert_eq(
@@ -130,7 +136,9 @@ test "map body: emitted as additionalProperties and validated per value" {
 ///|
 test "map body: a map of objects hoists its value schema" {
   let app = body_app(
-    Schema::map(Schema::object("Addr", [Field::new("city", SStr)])),
+    @schema.Schema::map(
+      @schema.Schema::object("Addr", [@schema.Field::new("city", SStr)]),
+    ),
   )
   assert_eq(
     json_str(
@@ -147,7 +155,7 @@ test "map body: a map of objects hoists its value schema" {
 
 ///|
 test "map body: Swagger 2.0 says additionalProperties too" {
-  let app = body_app(Schema::map(SStr))
+  let app = body_app(@schema.Schema::map(SStr))
   assert_eq(
     json_str(
       dig(body_schema(app, Swagger20), ["additionalProperties"]).unwrap(),
@@ -159,7 +167,7 @@ test "map body: Swagger 2.0 says additionalProperties too" {
 
 ///|
 test "any: the empty schema, which constrains nothing" {
-  let app = body_app(Schema::map(SAny))
+  let app = body_app(@schema.Schema::map(SAny))
   let s = body_schema(app, OpenApi31)
   // A free-form object: the values may be anything, so their schema says
   // nothing at all.
@@ -170,9 +178,9 @@ test "any: the empty schema, which constrains nothing" {
 ///|
 test "format: a binary upload is a string that says what it holds" {
   let app = body_app(
-    Schema::object("Upload", [
-      Field::new("file", Schema::binary()),
-      Field::new("when", Schema::format(SStr, "date-time")),
+    @schema.Schema::object("Upload", [
+      @schema.Field::new("file", @schema.Schema::binary()),
+      @schema.Field::new("when", @schema.Schema::format(SStr, "date-time")),
     ]),
   )
   let props = dig(app.openapi(version=OpenApi31), [
@@ -195,9 +203,9 @@ test "format: a binary upload is a string that says what it holds" {
 ///|
 test "field default: emitted, and the field is no longer required" {
   let app = body_app(
-    Schema::object("Page", [
-      Field::new("size", SInt, default=Json(20)),
-      Field::new("q", SStr),
+    @schema.Schema::object("Page", [
+      @schema.Field::new("size", SInt, default=Json(20)),
+      @schema.Field::new("q", SStr),
     ]),
   )
   let model = dig(app.openapi(version=OpenApi31), [
@@ -222,12 +230,12 @@ test "field default: emitted, and the field is no longer required" {
 ///|
 test "nullable: a nullable scalar parameter still parses as its base" {
   let app = param_app(
-    Param::new(
+    @endpoint.Param::new(
       "limit",
       InQuery,
-      schema=Schema::nullable(SInt),
+      schema=@schema.Schema::nullable(SInt),
       required=false,
-      constraints=[Maximum(9.0)],
+      constraints=[@schema.Maximum(9.0)],
     ),
   )
   assert_eq(
@@ -249,12 +257,12 @@ test "nullable: a nullable scalar parameter still parses as its base" {
 ///|
 test "format: a formatted scalar parameter is documented and parsed as its base" {
   let app = param_app(
-    Param::new(
+    @endpoint.Param::new(
       "at",
       InQuery,
-      schema=Schema::format(SInt, "int64"),
+      schema=@schema.Schema::format(SInt, "int64"),
       required=false,
-      constraints=[Minimum(1.0)],
+      constraints=[@schema.Minimum(1.0)],
     ),
   )
   let schema = dig(only_param(app, OpenApi31), ["schema"]).unwrap()

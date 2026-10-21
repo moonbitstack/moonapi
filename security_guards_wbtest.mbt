@@ -24,8 +24,8 @@ fn detail_str(r : @moonasgi.Response) -> String {
 fn guarded(name : String) -> App {
   let app = App::new()
   app.set_clock(() => 1000L)
-  app.get("/vault", _ctx => text(200, "gold"), security=[
-    SecurityRequirement::new(name),
+  app.get("/vault", _ctx => @status.text(200, "gold"), security=[
+    @security.SecurityRequirement::new(name),
   ])
   app
 }
@@ -33,7 +33,10 @@ fn guarded(name : String) -> App {
 ///|
 test "api key: a header route refuses a missing key and admits a valid one" {
   let app = guarded("Key")
-  app.secure_api_key("Key", ApiKey::header("x-api-key", k => k == "s3cret"))
+  app.secure_api_key(
+    "Key",
+    @security.ApiKey::header("x-api-key", k => k == "s3cret"),
+  )
   // No key at all.
   let anon = app.handle(mkreq("GET", "/vault"))
   assert_eq(anon.status, 403)
@@ -51,7 +54,10 @@ test "api key: a header route refuses a missing key and admits a valid one" {
 ///|
 test "api key: the header name is matched case-insensitively" {
   let app = guarded("Key")
-  app.secure_api_key("Key", ApiKey::header("X-Api-Key", k => k == "s3cret"))
+  app.secure_api_key(
+    "Key",
+    @security.ApiKey::header("X-Api-Key", k => k == "s3cret"),
+  )
   assert_eq(
     app.handle(mkreq_hdrs("GET", "/vault", [("x-api-key", "s3cret")])).status,
     200,
@@ -61,14 +67,17 @@ test "api key: the header name is matched case-insensitively" {
 ///|
 test "api key: a query key and a cookie key are read from their own places" {
   let q = guarded("Key")
-  q.secure_api_key("Key", ApiKey::query("token", k => k == "s3cret"))
+  q.secure_api_key("Key", @security.ApiKey::query("token", k => k == "s3cret"))
   assert_eq(q.handle(mkreq("GET", "/vault")).status, 403)
   assert_eq(
     q.handle(mkreq_hdrs("GET", "/vault", [], query=b"token=s3cret")).status,
     200,
   )
   let c = guarded("Key")
-  c.secure_api_key("Key", ApiKey::cookie("session", k => k == "s3cret"))
+  c.secure_api_key(
+    "Key",
+    @security.ApiKey::cookie("session", k => k == "s3cret"),
+  )
   assert_eq(c.handle(mkreq("GET", "/vault")).status, 403)
   assert_eq(
     c.handle(mkreq_hdrs("GET", "/vault", [("cookie", "a=1; session=s3cret")])).status,
@@ -81,7 +90,7 @@ test "api key: auto_error=false lets the route decide instead of refusing" {
   let app = guarded("Key")
   app.secure_api_key(
     "Key",
-    ApiKey::header("x-api-key", k => k == "s3cret"),
+    @security.ApiKey::header("x-api-key", k => k == "s3cret"),
     auto_error=false,
   )
   // The guard admits the anonymous caller; the handler still runs.
@@ -93,7 +102,7 @@ test "api key: the scheme is documented in every dialect" {
   let app = guarded("Key")
   app.secure_api_key(
     "Key",
-    ApiKey::header("x-api-key", _k => true),
+    @security.ApiKey::header("x-api-key", _k => true),
     description="the key issued to you",
   )
   let doc = app.openapi(version=OpenApi31)
@@ -113,7 +122,7 @@ test "api key: the scheme is documented in every dialect" {
 ///|
 test "api key: a cookie key degrades to a header in Swagger 2.0" {
   let app = guarded("Key")
-  app.secure_api_key("Key", ApiKey::cookie("session", _k => true))
+  app.secure_api_key("Key", @security.ApiKey::cookie("session", _k => true))
   // 3.x can say `in: cookie`.
   assert_eq(
     json_str(
@@ -139,7 +148,7 @@ test "http basic: refused without credentials, admitted with the right pair" {
   let app = guarded("Basic")
   app.secure_basic(
     "Basic",
-    BasicAuth::new(
+    @security.BasicAuth::new(
       c => c.username == "ada" && c.password == "lovelace",
       realm="vault",
     ),
@@ -160,7 +169,7 @@ test "http basic: refused without credentials, admitted with the right pair" {
 ///|
 test "http basic: documented as http/basic in 3.x and type basic in 2.0" {
   let app = guarded("Basic")
-  app.secure_basic("Basic", BasicAuth::new(_c => true))
+  app.secure_basic("Basic", @security.BasicAuth::new(_c => true))
   let s = dig(app.openapi(version=OpenApi31), [
     "components", "securitySchemes", "Basic",
   ]).unwrap()
@@ -181,7 +190,7 @@ test "http digest: the credential parameters reach the app's own check" {
   let app = guarded("Digest")
   app.secure_digest(
     "Digest",
-    DigestAuth::new(
+    @security.DigestAuth::new(
       params => {
         seen.push(params)
         params.contains("response=\"deadbeef\"")
@@ -222,12 +231,12 @@ test "http digest: the credential parameters reach the app's own check" {
 
 ///|
 test "http digest: the scheme name is matched case-insensitively, others ignored" {
-  let ctx : Context = {
+  let ctx : @ctx.Context = {
     request: mkreq_hdrs("GET", "/x", [("authorization", "DIGEST nc=00000001")]),
     params: Map([]),
   }
   assert_eq(ctx.digest_credentials(), Some("nc=00000001"))
-  let bearer : Context = {
+  let bearer : @ctx.Context = {
     request: mkreq_hdrs("GET", "/x", [("authorization", "Bearer abc")]),
     params: Map([]),
   }
@@ -239,15 +248,19 @@ test "http bearer: a plain bearer scheme verifies the token and its scopes" {
   let app = App::new()
   app.set_clock(() => 1000L)
   app.secure_bearer("Bearer", "s3cret")
-  app.get("/vault", _ctx => text(200, "gold"), security=[
-    SecurityRequirement::new("Bearer", scopes=["read"]),
+  app.get("/vault", _ctx => @status.text(200, "gold"), security=[
+    @security.SecurityRequirement::new("Bearer", scopes=["read"]),
   ])
-  let good = create_access_token("ada", "s3cret", 1000L, scopes=["read"])
+  let good = @security.create_access_token("ada", "s3cret", 1000L, scopes=[
+    "read",
+  ])
   assert_eq(
     app.handle(mkreq_auth("GET", "/vault", "Bearer " + good)).status,
     200,
   )
-  let narrow = create_access_token("ada", "s3cret", 1000L, scopes=["write"])
+  let narrow = @security.create_access_token("ada", "s3cret", 1000L, scopes=[
+    "write",
+  ])
   assert_eq(
     app.handle(mkreq_auth("GET", "/vault", "Bearer " + narrow)).status,
     403,
@@ -273,7 +286,7 @@ test "http bearer: a plain bearer scheme verifies the token and its scopes" {
 ///|
 test "oauth2 code: the document describes the redirect, the guard checks the token" {
   let app = guarded("Code")
-  let code = OAuth2CodeBearer::new(
+  let code = @security.OAuth2CodeBearer::new(
     "https://id.example/authorize",
     "https://id.example/token",
     "s3cret",
@@ -293,7 +306,7 @@ test "oauth2 code: the document describes the redirect, the guard checks the tok
   assert_eq(json_str(old, "authorizationUrl"), "https://id.example/authorize")
   // And the credential it produces is checked like any other bearer token.
   assert_eq(app.handle(mkreq("GET", "/vault")).status, 401)
-  let token = create_access_token("ada", "s3cret", 1000L)
+  let token = @security.create_access_token("ada", "s3cret", 1000L)
   assert_eq(
     app.handle(mkreq_auth("GET", "/vault", "Bearer " + token)).status,
     200,
@@ -305,7 +318,7 @@ test "oauth2 code: an absent refresh endpoint is not described as existing" {
   let app = guarded("Code")
   app.secure_oauth2_code(
     "Code",
-    OAuth2CodeBearer::new("https://id/a", "https://id/t", "s3cret"),
+    @security.OAuth2CodeBearer::new("https://id/a", "https://id/t", "s3cret"),
   )
   let flow = dig(app.openapi(version=OpenApi31), [
     "components", "securitySchemes", "Code", "flows", "authorizationCode",
@@ -333,7 +346,7 @@ test "openid connect: described in 3.x, absent from a 2.0 document" {
   assert_eq(dig(old, ["securityDefinitions"]) is None, true)
   // The guard is wired all the same.
   assert_eq(app.handle(mkreq("GET", "/vault")).status, 401)
-  let token = create_access_token("ada", "s3cret", 1000L)
+  let token = @security.create_access_token("ada", "s3cret", 1000L)
   assert_eq(
     app.handle(mkreq_auth("GET", "/vault", "Bearer " + token)).status,
     200,
@@ -359,11 +372,11 @@ test "declared-only scheme: documented, and honestly unguarded" {
 
 ///|
 test "security scopes: what a guard is told the route required" {
-  let none = SecurityScopes::new()
+  let none = @security.SecurityScopes::new()
   assert_eq(none.list(), [])
   assert_eq(none.scope_str(), "")
   assert_eq(none.challenge(), "Bearer")
-  let some = SecurityScopes::new(scopes=["read", "write"])
+  let some = @security.SecurityScopes::new(scopes=["read", "write"])
   assert_eq(some.list(), ["read", "write"])
   assert_eq(some.scope_str(), "read write")
   assert_eq(some.challenge(), "Bearer scope=\"read write\"")

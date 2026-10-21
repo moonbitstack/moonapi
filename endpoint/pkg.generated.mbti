@@ -1,0 +1,62 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonapi/endpoint"
+
+import {
+  "moonbitstack/moonapi/ctx",
+  "moonbitstack/moonapi/schema",
+}
+
+// Values
+pub fn loc_str(ParamLoc) -> String
+
+// Errors
+
+// Types and methods
+pub(all) struct Endpoint {
+  params : Array[Param]
+  request_body : @schema.Schema?
+  request_required : Bool
+  responses : Array[ResponseSpec]
+} derive(Eq)
+pub fn Endpoint::equal(Self, Self) -> Bool
+pub fn Endpoint::new(params? : Array[Param], request_body? : @schema.Schema, request_required? : Bool, responses? : Array[ResponseSpec]) -> Self
+pub fn Endpoint::not_equal(Self, Self) -> Bool
+pub fn Endpoint::validate(Self, @ctx.Context) -> Array[@schema.ValidationError]
+
+pub(all) struct Param {
+  name : String
+  loc : ParamLoc
+  schema : @schema.Schema
+  required : Bool
+  description : String
+  constraints : Array[@schema.Constraint]
+  default : Json?
+  alias_ : String
+} derive(Eq)
+pub fn Param::equal(Self, Self) -> Bool
+pub fn Param::is_required(Self) -> Bool
+pub fn Param::key(Self) -> String
+pub fn Param::new(String, ParamLoc, schema? : @schema.Schema, required? : Bool, description? : String, constraints? : Array[@schema.Constraint], default? : Json, alias_? : String) -> Self
+pub fn Param::not_equal(Self, Self) -> Bool
+
+pub(all) enum ParamLoc {
+  InPath
+  InQuery
+  InHeader
+  InCookie
+} derive(Eq)
+pub fn ParamLoc::equal(Self, Self) -> Bool
+pub fn ParamLoc::not_equal(Self, Self) -> Bool
+
+pub(all) struct ResponseSpec {
+  status : Int32
+  description : String
+  body : @schema.Schema?
+} derive(Eq)
+pub fn ResponseSpec::equal(Self, Self) -> Bool
+pub fn ResponseSpec::new(Int32, description? : String, body? : @schema.Schema) -> Self
+pub fn ResponseSpec::not_equal(Self, Self) -> Bool
+
+// Type aliases
+
+// Traits

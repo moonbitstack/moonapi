@@ -57,5 +57,5 @@ fn main {
   let _asgi = app.to_asgi()
   println("to_asgi() built the AsgiApp mooncat serves")
   println("--- merged OpenAPI 3.1.0 (sub-app paths under their prefixes) ---")
-  println(app.openapi_json(version=@moonapi.OpenApi31))
+  println(app.openapi_json(version=OpenApi31))
 }

@@ -1,0 +1,41 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonapi/openapi"
+
+// Values
+pub fn redoc_ui(spec_url? : String, title? : String) -> String
+
+pub fn swagger_ui(spec_url? : String, title? : String) -> String
+
+// Errors
+
+// Types and methods
+pub(all) struct ApiInfo {
+  title : String
+  api_version : String
+  description : String
+  terms_of_service : String
+  contact : Contact?
+  license : License?
+  servers : Array[Server]
+}
+pub fn ApiInfo::new() -> Self
+
+pub(all) struct Contact {
+  name : String
+  url : String
+  email : String
+}
+
+pub(all) struct License {
+  name : String
+  url : String
+}
+
+pub(all) struct Server {
+  url : String
+  description : String
+}
+
+// Type aliases
+
+// Traits

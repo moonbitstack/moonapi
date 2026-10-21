@@ -11,8 +11,8 @@
 #coverage.skip
 fn main {
   let public_user = @moonapi.Schema::object("PublicUser", [
-    @moonapi.Field::new("id", @moonapi.SInt),
-    @moonapi.Field::new("name", @moonapi.SStr),
+    @moonapi.Field::new("id", SInt),
+    @moonapi.Field::new("name", SStr),
   ])
   let app = @moonapi.App::new()
   app.get("/me", _ctx => {

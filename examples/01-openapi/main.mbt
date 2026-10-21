@@ -29,5 +29,5 @@ fn main {
   println(
     "GET /users/233 -> \{resp.status} \{@utf8.decode_lossy(resp.body[:])}",
   )
-  println(app.openapi_json(version=@moonapi.OpenApi31))
+  println(app.openapi_json(version=OpenApi31))
 }

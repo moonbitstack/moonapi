@@ -50,7 +50,7 @@ pub fn BackgroundTasks::run(self : BackgroundTasks) -> Unit {
 ///|
 /// Move `other`'s queued tasks onto this queue (used when a mounted sub-app's
 /// tasks bubble up to the request that reached it), leaving `other` empty.
-fn BackgroundTasks::absorb(
+pub fn BackgroundTasks::absorb(
   self : BackgroundTasks,
   other : BackgroundTasks,
 ) -> Unit {

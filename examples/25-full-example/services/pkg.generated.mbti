@@ -3,11 +3,12 @@ package "moonbitstack/moonapi/examples/25-full-example/services"
 
 import {
   "moonbitstack/moonapi",
+  "moonbitstack/moonapi/di",
   "moonbitstack/moonasgi/http",
 }
 
 // Values
-pub fn dependencies(Array[String]) -> @moonapi.Container[String]
+pub fn dependencies(Array[String]) -> @di.Container[String]
 
 pub fn detail(String) -> Json
 

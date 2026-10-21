@@ -184,28 +184,10 @@ fn scalar_schema(t : String) -> Json {
 }
 
 ///|
-/// The scalar OpenAPI type name of a schema, `None` for composite schemas. A
-/// format or a nullable wrapper does not change what the underlying value is, so
-/// both report their base — which is what lets a Swagger 2.0 parameter, whose
-/// type sits on the parameter object itself, carry them at all.
-fn scalar_name(s : Schema) -> String? {
-  match s {
-    SStr => Some("string")
-    SInt => Some("integer")
-    SFloat => Some("number")
-    SBool => Some("boolean")
-    SNull => Some("null")
-    SFormat(base, _) => scalar_name(base)
-    SNullable(inner) => scalar_name(inner)
-    _ => None
-  }
-}
-
-///|
 /// Return `j` with `key` set to `value`. Builds a fresh object so nothing shared
 /// mutates; a non-object is returned untouched, since there is nothing to set on
 /// it.
-fn with_key(j : Json, key : String, value : Json) -> Json {
+pub fn with_key(j : Json, key : String, value : Json) -> Json {
   match j {
     Object(m) => {
       let out : Map[String, Json] = Map([])
@@ -222,19 +204,8 @@ fn with_key(j : Json, key : String, value : Json) -> Json {
 ///|
 /// Return `j` with a `description` sibling added (legal beside `$ref` in OpenAPI
 /// 3.1 / JSON-Schema 2020-12).
-fn with_description(j : Json, desc : String) -> Json {
+pub fn with_description(j : Json, desc : String) -> Json {
   with_key(j, "description", Json(desc))
-}
-
-///|
-/// Copy every key of the JSON object `src` into `dst`, leaving `dst`'s other
-/// keys alone. A non-object `src` contributes nothing.
-fn merge_into(dst : Map[String, Json], src : Json) -> Unit {
-  if src is Object(o) {
-    for k, v in o {
-      dst[k] = v
-    }
-  }
 }
 
 ///|
@@ -242,7 +213,7 @@ fn merge_into(dst : Map[String, Json], src : Json) -> Unit {
 /// `defs` (keyed by name) and referencing it by `$ref`. Recursion-safe: a name
 /// is reserved in `defs` before its body is built, so a self-referential schema
 /// terminates instead of looping.
-fn emit_schema(
+pub fn emit_schema(
   schema : Schema,
   defs : Map[String, Json],
   version : OpenApiVersion,

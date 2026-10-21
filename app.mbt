@@ -1,17 +1,5 @@
 ///|
-/// HTTP methods a moonapi route can bind to.
-pub(all) enum Method {
-  Get
-  Post
-  Put
-  Patch
-  Delete
-  Head
-  Options
-} derive(Eq)
-
-///|
-fn parse_method(s : String) -> Method? {
+fn parse_method(s : String) -> @route.Method? {
   match s {
     "GET" => Some(Get)
     "POST" => Some(Post)
@@ -28,7 +16,7 @@ fn parse_method(s : String) -> Method? {
 
 ///|
 /// A method's name as it appears in an `Allow` header.
-fn method_name(m : Method) -> String {
+fn method_name(m : @route.Method) -> String {
   match m {
     Get => "GET"
     Post => "POST"
@@ -41,7 +29,7 @@ fn method_name(m : Method) -> String {
 }
 
 ///|
-fn method_lower(m : Method) -> String {
+fn method_lower(m : @route.Method) -> String {
   match m {
     Get => "get"
     Post => "post"
@@ -51,93 +39,6 @@ fn method_lower(m : Method) -> String {
     Head => "head"
     Options => "options"
   }
-}
-
-///|
-/// The per-request context handed to a handler: the raw request plus the path
-/// parameters extracted from the matched route (`:name` segments).
-pub(all) struct Context {
-  request : @moonasgi.Request
-  params : Map[String, String]
-}
-
-///|
-/// Look up a path parameter by name.
-pub fn Context::param(self : Context, name : String) -> String? {
-  self.params.get(name)
-}
-
-///|
-/// A moonapi route handler: request context in, response out. It may `raise` an
-/// `HttpException` (or any error) instead of returning — the app catches it and
-/// maps it to a response through the registered exception handlers, so handlers
-/// read like FastAPI's `raise HTTPException(...)` rather than threading a
-/// `Result` back by hand. A plain non-raising closure is still a valid handler.
-pub type ApiHandler = (Context) -> @moonasgi.Response raise
-
-///|
-/// A background-aware handler: it additionally receives the request's
-/// `BackgroundTasks` queue, so it can schedule work to run after its response is
-/// sent (← declaring a `BackgroundTasks` parameter in FastAPI).
-pub type BackgroundHandler = (Context, BackgroundTasks) -> @moonasgi.Response raise
-
-///|
-/// A streaming route's handler: request context in, a chunked response out (←
-/// returning a `StreamingResponse` from a FastAPI path operation). Every chunk
-/// becomes one body event on the wire, so a client reads the first long before
-/// the last one exists — the point of streaming, and what a single buffered
-/// `Response` cannot express.
-pub type StreamHandler = (Context) -> @moonasgi.StreamingResponse raise
-
-///|
-/// What a route produced. Two kinds because moonasgi types a buffered response
-/// and a chunked one differently, and the difference has to survive as far as
-/// `to_asgi`, which is the only place that can put chunks on the wire.
-priv enum Reply {
-  Buffered(@moonasgi.Response)
-  Streamed(@moonasgi.StreamingResponse)
-}
-
-///|
-/// A route stores one background-aware handler; a plain `ApiHandler` is wrapped
-/// to ignore the queue. `security` is the per-operation requirements (emitted as
-/// OpenAPI `security` and enforced before the handler when their scheme has an
-/// enforcer).
-struct Route {
-  verb : Method
-  path : String
-  run : (Context, BackgroundTasks) -> Reply raise
-  summary : String
-  description : String
-  tags : Array[String]
-  deprecated : Bool
-  operation_id : String
-  // The status the success response is documented under. Documentation only: the
-  // handler builds its own response, and rewriting the status it chose would make
-  // the app disagree with itself rather than with the spec.
-  status_code : Int32?
-  // Documented alongside whatever the endpoint descriptor produced, and written
-  // after it, so the status a route names here is the one that stands.
-  responses : Array[ResponseSpec]
-  // The handle `App::url_for` looks the route up by. Empty means unnamed, and an
-  // unnamed route is not addressable.
-  name : String
-  // Merged into the operation object last, so it can override anything moonapi
-  // generated (← FastAPI's `openapi_extra`).
-  openapi_extra : Json?
-  endpoint : Endpoint?
-  security : Array[SecurityRequirement]
-  // Provider keys resolved through the app's container before the handler runs,
-  // and torn down after it (← FastAPI's `dependencies=[Depends(...)]`, whose
-  // values the handler never sees).
-  dependencies : Array[String]
-  // FastAPI's `include_in_schema`: a route that serves the documentation itself has
-  // no business appearing in the document it serves.
-  include_in_schema : Bool
-  // Whether the declared `endpoint` is checked before the handler runs. On by
-  // default: a route that advertises constraints in its documentation and does not
-  // apply them is worse than one that declares nothing.
-  validate : Bool
 }
 
 ///|
@@ -156,13 +57,13 @@ enum Mount {
 /// exception handlers, and the verification clock. Compiles to a moonasgi
 /// `AsgiApp` any server (mooncat) can run.
 pub struct App {
-  routes : Array[Route]
-  ws_routes : Array[WsRoute]
+  routes : Array[@route.Route]
+  ws_routes : Array[@socket.WsRoute]
   middlewares : Array[@moonasgi.Middleware]
-  exception_handlers : Array[ExceptionHandler]
-  security_schemes : Array[DeclaredScheme]
-  enforcers : Map[String, SecurityEnforcer]
-  status_handlers : Map[Int32, (Context) -> @moonasgi.Response]
+  exception_handlers : Array[@mid.ExceptionHandler]
+  security_schemes : Array[@security.DeclaredScheme]
+  enforcers : Map[String, @security.SecurityEnforcer]
+  status_handlers : Map[Int32, (@ctx.Context) -> @moonasgi.Response]
   mounts : Array[(String, Mount)]
   // Run in registration order when the server starts, and in reverse when it stops,
   // so a resource is torn down before whatever it was built on.
@@ -171,10 +72,10 @@ pub struct App {
   // What the emitted document says about itself. `enable_docs` serves the same
   // values, so the page a reader opens is not a different API from the one
   // `App::openapi` describes.
-  mut info : ApiInfo
+  mut info : @openapi.ApiInfo
   mut clock : () -> Int64
   // The container a route's declared `dependencies` are resolved through.
-  mut deps : Deps?
+  mut deps : @di.Deps?
 }
 
 ///|
@@ -193,7 +94,7 @@ pub fn App::new() -> App {
     mounts: [],
     startup_hooks: [],
     shutdown_hooks: [],
-    info: ApiInfo::new(),
+    info: @openapi.ApiInfo::new(),
     clock: () => 0L,
     deps: None,
   }
@@ -210,7 +111,7 @@ pub fn App::new() -> App {
 /// A route that declares a dependency the container does not provide is answered
 /// with a `500`: the setup the route promised did not happen, and running the
 /// handler as though it had is worse than saying so.
-pub fn App::depends(self : App, deps : Deps) -> Unit {
+pub fn App::depends(self : App, deps : @di.Deps) -> Unit {
   self.deps = Some(deps)
 }
 
@@ -225,9 +126,9 @@ pub fn App::describe(
   api_version? : String,
   description? : String,
   terms_of_service? : String,
-  contact? : Contact?,
-  license? : License?,
-  servers? : Array[Server],
+  contact? : @openapi.Contact?,
+  license? : @openapi.License?,
+  servers? : Array[@openapi.Server],
 ) -> Unit {
   let cur = self.info
   self.info = {
@@ -279,7 +180,7 @@ pub fn App::middleware(self : App, mw : @moonasgi.Middleware) -> Unit {
 /// registration order; the first to return `Some(response)` wins. An
 /// unhandled error falls through to the built-in mapping — an `HttpException`
 /// becomes its own `status` / `detail`, anything else a `500`.
-pub fn App::exception_handler(self : App, h : ExceptionHandler) -> Unit {
+pub fn App::exception_handler(self : App, h : @mid.ExceptionHandler) -> Unit {
   self.exception_handlers.push(h)
 }
 
@@ -296,7 +197,7 @@ pub fn App::exception_handler(self : App, h : ExceptionHandler) -> Unit {
 pub fn App::add_security_scheme(
   self : App,
   name : String,
-  scheme : SecurityScheme,
+  scheme : @security.SecurityScheme,
   description~ : String = "",
 ) -> Unit {
   self.security_schemes.push({ name, kind: scheme, description, })
@@ -319,19 +220,19 @@ pub fn App::add_security_scheme(
 /// object — the same keyword arguments FastAPI's path operations take.
 pub fn App::route(
   self : App,
-  verb : Method,
+  verb : @route.Method,
   path : String,
-  handler : ApiHandler,
+  handler : @route.ApiHandler,
   summary~ : String = "",
   description~ : String = "",
   tags~ : Array[String] = [],
   deprecated~ : Bool = false,
   operation_id~ : String = "",
   status_code? : Int32,
-  responses~ : Array[ResponseSpec] = [],
+  responses~ : Array[@endpoint.ResponseSpec] = [],
   name~ : String = "",
-  endpoint? : Endpoint,
-  security~ : Array[SecurityRequirement] = [],
+  endpoint? : @endpoint.Endpoint,
+  security~ : Array[@security.SecurityRequirement] = [],
   dependencies~ : Array[String] = [],
   include_in_schema~ : Bool = true,
   validate~ : Bool = true,
@@ -340,7 +241,7 @@ pub fn App::route(
   self.routes.push({
     verb,
     path,
-    run: (ctx, _bg) => Buffered(handler(ctx)),
+    run: (ctx, _bg) => @route.Buffered(handler(ctx)),
     summary,
     description,
     tags,
@@ -364,19 +265,19 @@ pub fn App::route(
 /// response is sent (← declaring a `BackgroundTasks` parameter in FastAPI).
 pub fn App::route_bg(
   self : App,
-  verb : Method,
+  verb : @route.Method,
   path : String,
-  handler : BackgroundHandler,
+  handler : @route.BackgroundHandler,
   summary~ : String = "",
   description~ : String = "",
   tags~ : Array[String] = [],
   deprecated~ : Bool = false,
   operation_id~ : String = "",
   status_code? : Int32,
-  responses~ : Array[ResponseSpec] = [],
+  responses~ : Array[@endpoint.ResponseSpec] = [],
   name~ : String = "",
-  endpoint? : Endpoint,
-  security~ : Array[SecurityRequirement] = [],
+  endpoint? : @endpoint.Endpoint,
+  security~ : Array[@security.SecurityRequirement] = [],
   dependencies~ : Array[String] = [],
   include_in_schema~ : Bool = true,
   validate~ : Bool = true,
@@ -385,7 +286,7 @@ pub fn App::route_bg(
   self.routes.push({
     verb,
     path,
-    run: (ctx, bg) => Buffered(handler(ctx, bg)),
+    run: (ctx, bg) => @route.Buffered(handler(ctx, bg)),
     summary,
     description,
     tags,
@@ -415,19 +316,19 @@ pub fn App::route_bg(
 /// validates and enforces security exactly as `route` does.
 pub fn App::route_stream(
   self : App,
-  verb : Method,
+  verb : @route.Method,
   path : String,
-  handler : StreamHandler,
+  handler : @route.StreamHandler,
   summary~ : String = "",
   description~ : String = "",
   tags~ : Array[String] = [],
   deprecated~ : Bool = false,
   operation_id~ : String = "",
   status_code? : Int32,
-  responses~ : Array[ResponseSpec] = [],
+  responses~ : Array[@endpoint.ResponseSpec] = [],
   name~ : String = "",
-  endpoint? : Endpoint,
-  security~ : Array[SecurityRequirement] = [],
+  endpoint? : @endpoint.Endpoint,
+  security~ : Array[@security.SecurityRequirement] = [],
   dependencies~ : Array[String] = [],
   include_in_schema~ : Bool = true,
   validate~ : Bool = true,
@@ -436,7 +337,7 @@ pub fn App::route_stream(
   self.routes.push({
     verb,
     path,
-    run: (ctx, _bg) => Streamed(handler(ctx)),
+    run: (ctx, _bg) => @route.Streamed(handler(ctx)),
     summary,
     description,
     tags,
@@ -460,17 +361,17 @@ pub fn App::route_stream(
 pub fn App::stream(
   self : App,
   path : String,
-  handler : StreamHandler,
+  handler : @route.StreamHandler,
   summary~ : String = "",
   description~ : String = "",
   tags~ : Array[String] = [],
   deprecated~ : Bool = false,
   operation_id~ : String = "",
   status_code? : Int32,
-  responses~ : Array[ResponseSpec] = [],
+  responses~ : Array[@endpoint.ResponseSpec] = [],
   name~ : String = "",
-  endpoint? : Endpoint,
-  security~ : Array[SecurityRequirement] = [],
+  endpoint? : @endpoint.Endpoint,
+  security~ : Array[@security.SecurityRequirement] = [],
   dependencies~ : Array[String] = [],
   include_in_schema~ : Bool = true,
   validate~ : Bool = true,
@@ -503,17 +404,17 @@ pub fn App::stream(
 pub fn App::get(
   self : App,
   path : String,
-  handler : ApiHandler,
+  handler : @route.ApiHandler,
   summary~ : String = "",
   description~ : String = "",
   tags~ : Array[String] = [],
   deprecated~ : Bool = false,
   operation_id~ : String = "",
   status_code? : Int32,
-  responses~ : Array[ResponseSpec] = [],
+  responses~ : Array[@endpoint.ResponseSpec] = [],
   name~ : String = "",
-  endpoint? : Endpoint,
-  security~ : Array[SecurityRequirement] = [],
+  endpoint? : @endpoint.Endpoint,
+  security~ : Array[@security.SecurityRequirement] = [],
   dependencies~ : Array[String] = [],
   include_in_schema~ : Bool = true,
   validate~ : Bool = true,
@@ -554,13 +455,13 @@ pub fn App::enable_docs(
   openapi_url~ : String? = Some("/openapi.json"),
   docs_url~ : String? = Some("/docs"),
   redoc_url~ : String? = Some("/redoc"),
-  version~ : OpenApiVersion = OpenApi31,
+  version~ : @schema.OpenApiVersion = OpenApi31,
 ) -> Unit {
   let title = self.info.title
   if openapi_url is Some(url) {
     self.get(
       url,
-      _ctx => json(200, self.openapi(version~)),
+      _ctx => @status.json(200, self.openapi(version~)),
       include_in_schema=false,
     )
   }
@@ -571,14 +472,14 @@ pub fn App::enable_docs(
   if docs_url is Some(url) {
     self.get(
       url,
-      _ctx => html(200, swagger_ui(spec_url~, title~)),
+      _ctx => @status.html(200, @openapi.swagger_ui(spec_url~, title~)),
       include_in_schema=false,
     )
   }
   if redoc_url is Some(url) {
     self.get(
       url,
-      _ctx => html(200, redoc_ui(spec_url~, title~)),
+      _ctx => @status.html(200, @openapi.redoc_ui(spec_url~, title~)),
       include_in_schema=false,
     )
   }
@@ -590,17 +491,17 @@ pub fn App::enable_docs(
 pub fn App::post(
   self : App,
   path : String,
-  handler : ApiHandler,
+  handler : @route.ApiHandler,
   summary~ : String = "",
   description~ : String = "",
   tags~ : Array[String] = [],
   deprecated~ : Bool = false,
   operation_id~ : String = "",
   status_code? : Int32,
-  responses~ : Array[ResponseSpec] = [],
+  responses~ : Array[@endpoint.ResponseSpec] = [],
   name~ : String = "",
-  endpoint? : Endpoint,
-  security~ : Array[SecurityRequirement] = [],
+  endpoint? : @endpoint.Endpoint,
+  security~ : Array[@security.SecurityRequirement] = [],
   dependencies~ : Array[String] = [],
   include_in_schema~ : Bool = true,
   validate~ : Bool = true,
@@ -632,17 +533,17 @@ pub fn App::post(
 pub fn App::put(
   self : App,
   path : String,
-  handler : ApiHandler,
+  handler : @route.ApiHandler,
   summary~ : String = "",
   description~ : String = "",
   tags~ : Array[String] = [],
   deprecated~ : Bool = false,
   operation_id~ : String = "",
   status_code? : Int32,
-  responses~ : Array[ResponseSpec] = [],
+  responses~ : Array[@endpoint.ResponseSpec] = [],
   name~ : String = "",
-  endpoint? : Endpoint,
-  security~ : Array[SecurityRequirement] = [],
+  endpoint? : @endpoint.Endpoint,
+  security~ : Array[@security.SecurityRequirement] = [],
   dependencies~ : Array[String] = [],
   include_in_schema~ : Bool = true,
   validate~ : Bool = true,
@@ -674,17 +575,17 @@ pub fn App::put(
 pub fn App::patch(
   self : App,
   path : String,
-  handler : ApiHandler,
+  handler : @route.ApiHandler,
   summary~ : String = "",
   description~ : String = "",
   tags~ : Array[String] = [],
   deprecated~ : Bool = false,
   operation_id~ : String = "",
   status_code? : Int32,
-  responses~ : Array[ResponseSpec] = [],
+  responses~ : Array[@endpoint.ResponseSpec] = [],
   name~ : String = "",
-  endpoint? : Endpoint,
-  security~ : Array[SecurityRequirement] = [],
+  endpoint? : @endpoint.Endpoint,
+  security~ : Array[@security.SecurityRequirement] = [],
   dependencies~ : Array[String] = [],
   include_in_schema~ : Bool = true,
   validate~ : Bool = true,
@@ -716,17 +617,17 @@ pub fn App::patch(
 pub fn App::delete(
   self : App,
   path : String,
-  handler : ApiHandler,
+  handler : @route.ApiHandler,
   summary~ : String = "",
   description~ : String = "",
   tags~ : Array[String] = [],
   deprecated~ : Bool = false,
   operation_id~ : String = "",
   status_code? : Int32,
-  responses~ : Array[ResponseSpec] = [],
+  responses~ : Array[@endpoint.ResponseSpec] = [],
   name~ : String = "",
-  endpoint? : Endpoint,
-  security~ : Array[SecurityRequirement] = [],
+  endpoint? : @endpoint.Endpoint,
+  security~ : Array[@security.SecurityRequirement] = [],
   dependencies~ : Array[String] = [],
   include_in_schema~ : Bool = true,
   validate~ : Bool = true,
@@ -768,7 +669,7 @@ pub fn App::delete(
 pub fn App::secure_oauth2(
   self : App,
   name : String,
-  bearer : OAuth2PasswordBearer,
+  bearer : @security.OAuth2PasswordBearer,
   scopes~ : Array[(String, String)] = [],
   description~ : String = "",
   auto_error~ : Bool = true,
@@ -779,7 +680,7 @@ pub fn App::secure_oauth2(
     description,
   })
   self.enforcers[name] = (ctx, required, now) => {
-    verify_bearer(ctx, bearer.secret, required, now, auto_error)
+    @security.verify_bearer(ctx, bearer.secret, required, now, auto_error)
   }
 }
 
@@ -792,7 +693,7 @@ pub fn App::secure_oauth2(
 pub fn App::add_status_handler(
   self : App,
   status : Int32,
-  handler : (Context) -> @moonasgi.Response,
+  handler : (@ctx.Context) -> @moonasgi.Response,
 ) -> Unit {
   self.status_handlers[status] = handler
 }
@@ -824,27 +725,10 @@ pub fn App::mount_handler(
 }
 
 ///|
-/// Split a path into its non-empty segments.
-fn segments(path : String) -> Array[String] {
-  let out : Array[String] = []
-  let n = path.length()
-  let mut start = 0
-  for i = 0; i <= n; i = i + 1 {
-    if i == n || path[i] == '/' {
-      if i > start {
-        out.push(path[start:i].to_owned())
-      }
-      start = i + 1
-    }
-  }
-  out
-}
-
-///|
 /// Match a route pattern against a request path, extracting `:name` params.
 fn match_path(pattern : String, path : String) -> Map[String, String]? {
-  let pp = segments(pattern)
-  let ph = segments(path)
+  let pp = @route.segments(pattern)
+  let ph = @route.segments(path)
   if pp.length() != ph.length() {
     return None
   }
@@ -866,7 +750,7 @@ fn match_path(pattern : String, path : String) -> Map[String, String]? {
 /// carry — half a URL is worse than none.
 fn render_path(pattern : String, params : Map[String, String]) -> String? {
   let sb = StringBuilder()
-  for seg in segments(pattern) {
+  for seg in @route.segments(pattern) {
     sb.write_string("/")
     if seg.length() > 0 && seg[0] == ':' {
       match params.get(seg[1:].to_owned()) {
@@ -900,7 +784,7 @@ pub fn App::url_for(
   if name == "" {
     return None
   }
-  let all : Array[(String, Route)] = []
+  let all : Array[(String, @route.Route)] = []
   self.collect_routes("", all)
   for entry in all {
     if entry.1.name == name {
@@ -911,41 +795,11 @@ pub fn App::url_for(
 }
 
 ///|
-/// A plain-text response.
-pub fn text(status : Int32, body : String) -> @moonasgi.Response {
-  @moonasgi.Response::new(
-    status,
-    [("content-type", "text/plain; charset=utf-8")],
-    @utf8.encode(body),
-  )
-}
-
-///|
-/// An HTML response — what the documentation pages are served as.
-pub fn html(status : Int32, body : String) -> @moonasgi.Response {
-  @moonasgi.Response::new(
-    status,
-    [("content-type", "text/html; charset=utf-8")],
-    @utf8.encode(body),
-  )
-}
-
-///|
-/// A JSON response serialised from a `Json` value.
-pub fn json(status : Int32, value : Json) -> @moonasgi.Response {
-  @moonasgi.Response::new(
-    status,
-    [("content-type", "application/json")],
-    @moonjson.dump(value),
-  )
-}
-
-///|
 /// Rewrite an error-path response through a registered per-status handler, if one
 /// is registered for its status; otherwise pass it through unchanged.
 fn App::apply_status(
   self : App,
-  ctx : Context,
+  ctx : @ctx.Context,
   resp : @moonasgi.Response,
 ) -> @moonasgi.Response {
   match self.status_handlers.get(resp.status) {
@@ -960,7 +814,7 @@ fn App::apply_status(
 /// per-status handler may still rewrite (a custom `500` page, say).
 fn App::dispatch_exception(
   self : App,
-  ctx : Context,
+  ctx : @ctx.Context,
   err : Error,
 ) -> @moonasgi.Response {
   for h in self.exception_handlers {
@@ -981,8 +835,8 @@ fn App::dispatch_exception(
 /// documentation-only scheme (no enforcer) grants nothing by itself.
 fn App::enforce_security(
   self : App,
-  ctx : Context,
-  reqs : Array[SecurityRequirement],
+  ctx : @ctx.Context,
+  reqs : Array[@security.SecurityRequirement],
 ) -> @moonasgi.Response? {
   if reqs.is_empty() {
     return None
@@ -994,7 +848,7 @@ fn App::enforce_security(
     match self.enforcers.get(r.scheme) {
       Some(enf) => {
         enforceable = true
-        match enf(ctx, SecurityScopes::new(scopes=r.scopes), now) {
+        match enf(ctx, @security.SecurityScopes::new(scopes=r.scopes), now) {
           Ok(_) => return None
           Err(resp) => last = Some(resp)
         }
@@ -1023,7 +877,7 @@ fn App::enforce_security(
 fn App::route_and_dispatch(
   self : App,
   request : @moonasgi.Request,
-  bg : BackgroundTasks,
+  bg : @ctx.BackgroundTasks,
   stream : Ref[@moonasgi.StreamingResponse?],
 ) -> @moonasgi.Response {
   let verb = parse_method(request.http_method)
@@ -1035,7 +889,7 @@ fn App::route_and_dispatch(
         // Starlette applies, and what a client probing a resource expects.
         if verb is Some(v) &&
           (route.verb == v || (v is Head && route.verb is Get)) {
-          let ctx : Context = { request, params, }
+          let ctx : @ctx.Context = { request, params, }
           match self.enforce_security(ctx, route.security) {
             Some(denied) => return self.apply_status(ctx, denied)
             None => ()
@@ -1043,7 +897,7 @@ fn App::route_and_dispatch(
           if route.validate && route.endpoint is Some(ep) {
             let errs = ep.validate(ctx)
             if errs.length() > 0 {
-              return self.apply_status(ctx, unprocessable(errs))
+              return self.apply_status(ctx, @schema.unprocessable(errs))
             }
           }
           let reply = self.run_with_deps(route.dependencies, () => {
@@ -1108,7 +962,7 @@ fn App::route_and_dispatch(
       None => ()
     }
   }
-  let ctx : Context = { request, params: Map([]), }
+  let ctx : @ctx.Context = { request, params: Map([]), }
   if allowed.length() > 0 {
     // RFC 9110 §15.5.6 requires the Allow header on a 405; a client that probes
     // a resource reads it rather than guessing.
@@ -1127,7 +981,7 @@ fn App::route_and_dispatch(
 /// The error a route's unprovidable dependency is answered with. It is a `500`
 /// because the fault is the app's wiring, not the request.
 fn unresolved_dep(key : String) -> Error {
-  http_error(500, "Unresolved dependency: " + key)
+  @mid.http_error(500, "Unresolved dependency: " + key)
 }
 
 ///|
@@ -1138,8 +992,8 @@ fn unresolved_dep(key : String) -> Error {
 fn App::run_with_deps(
   self : App,
   keys : Array[String],
-  body : () -> Reply raise,
-) -> Reply raise {
+  body : () -> @route.Reply raise,
+) -> @route.Reply raise {
   if keys.is_empty() {
     return body()
   }
@@ -1160,7 +1014,9 @@ fn App::run_with_deps(
     (scope.close)(Some(err))
     raise err
   }
-  let outcome : Result[Reply, Error] = Ok(body()) catch { err => Err(err) }
+  let outcome : Result[@route.Reply, Error] = Ok(body()) catch {
+    err => Err(err)
+  }
   match outcome {
     Ok(reply) => {
       (scope.close)(None)
@@ -1214,8 +1070,8 @@ fn join_chunks(chunks : Array[Bytes]) -> Bytes {
 pub fn App::handle_with_stream(
   self : App,
   request : @moonasgi.Request,
-) -> (@moonasgi.StreamingResponse, BackgroundTasks) {
-  let bg = BackgroundTasks::new()
+) -> (@moonasgi.StreamingResponse, @ctx.BackgroundTasks) {
+  let bg = @ctx.BackgroundTasks::new()
   let stream : Ref[@moonasgi.StreamingResponse?] = Ref(None)
   let base : @moonasgi.Handler = req => self.route_and_dispatch(req, bg, stream)
   let resp = @moonasgi.compose(self.middlewares, base)(request)
@@ -1246,7 +1102,7 @@ pub fn App::handle_with_stream(
 pub fn App::handle_with_background(
   self : App,
   request : @moonasgi.Request,
-) -> (@moonasgi.Response, BackgroundTasks) {
+) -> (@moonasgi.Response, @ctx.BackgroundTasks) {
   let (s, bg) = self.handle_with_stream(request)
   (@moonasgi.Response::new(s.status, s.headers, join_chunks(s.chunks)), bg)
 }
@@ -1270,8 +1126,8 @@ pub fn App::handle(
 /// lie under `prefix` — the comparison is segment-wise, so `/sub` does not match
 /// `/subway`.
 fn strip_prefix(prefix : String, path : String) -> String? {
-  let pp = segments(prefix)
-  let ph = segments(path)
+  let pp = @route.segments(prefix)
+  let ph = @route.segments(path)
   if pp.length() > ph.length() {
     return None
   }
@@ -1426,4 +1282,40 @@ pub fn App::to_asgi(self : App) -> @moonasgi.AsgiApp {
 }
 
 ///|
-pub extend Method with Eq::{not_equal, equal}
+/// The built-in fallback when no registered handler claims a raised error: an
+/// `HttpException` becomes its own status and detail; anything else is a
+/// `500 {"detail": "Internal Server Error"}`. This is always in effect, so a
+/// handler that raises `HttpException` needs no explicit registration.
+fn default_exception_response(err : Error) -> @moonasgi.Response {
+  match err {
+    @mid.HttpException(status~, detail~, headers~) =>
+      http_exception_response(status, detail, headers)
+    _ => {
+      let body : Map[String, Json] = Map([
+        ("detail", Json("Internal Server Error")),
+      ])
+      @moonasgi.Response::new(
+        500,
+        [("content-type", "application/json")],
+        @moonjson.dump(Json(body)),
+      )
+    }
+  }
+}
+
+///|
+/// The response for an `HttpException`: `{"detail": <detail>}` as JSON, at the
+/// given status, with the exception's extra headers merged in after the
+/// content-type.
+fn http_exception_response(
+  status : Int32,
+  detail : Json,
+  headers : Array[(String, String)],
+) -> @moonasgi.Response {
+  let body : Map[String, Json] = Map([("detail", detail)])
+  let hs : Array[(String, String)] = [("content-type", "application/json")]
+  for h in headers {
+    hs.push(h)
+  }
+  @moonasgi.Response::new(status, hs, @moonjson.dump(Json(body)))
+}

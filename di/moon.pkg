@@ -1,0 +1,4 @@
+// Dependency injection: providers, scopes and the container that resolves them.
+import {
+  "moonbitstack/moonasgi",
+}
