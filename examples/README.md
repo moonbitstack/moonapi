@@ -60,7 +60,7 @@ transport.
 | 01 | [`openapi`](01-openapi/) | A text `GET`, a `:param` `GET`, a `POST`; handle a request; emit the OpenAPI 3.1 document | `App::new/get/post`, `text`, `App::handle`, `App::openapi_json` |
 | 02 | [`routing`](02-routing/) | Every HTTP verb (`get/post/put/patch/delete` + `route` with `Head`/`Options`), `:param` extraction, 404-vs-405 | `App::route`, `Method`, `Context::param` |
 | 03 | [`openapi-versions`](03-openapi-versions/) | One set of routes → Swagger 2.0, OpenAPI 3.0.3, 3.1.0; full `info` metadata; a Swagger UI page | `App::openapi/openapi_json`, `OpenApiVersion`, `Contact`/`License`/`Server`, `swagger_ui` |
-| 04 | [`descriptors`](04-descriptors/) | The `Endpoint`/`Param`/`Schema`/`ResponseSpec` tree drives validation and OpenAPI `$ref`s from one source | `demo_app`, `Endpoint`, `Param`, `ResponseSpec`, `json_field` |
+| 04 | [`descriptors`](04-descriptors/) | The `Endpoint`/`Param`/`Schema`/`ResponseSpec` tree drives validation and OpenAPI `$ref`s from one source | `Endpoint`, `Param`, `ResponseSpec`, `Context::body_validated` |
 | 05 | [`constraints`](05-constraints/) | Every `Constraint` (`Minimum`…`MaxItems`) and scalar type (`SInt/SFloat/SStr/SBool/SNull/SArray/SEnum`) emitted and enforced | `Field::new` constraints, `SEnum`, `Endpoint::validate`, `unprocessable` |
 | 06 | [`typed-body`](06-typed-body/) | `body_validated[T]` (validate then deserialise, or `422`) vs the total `body[T]` | `Context::body`, `Context::body_validated`, `GreetReq` |
 | 07 | [`request-extractors`](07-request-extractors/) | `query`/`cookie`/`json_field`/`body_json`, params across every `ParamLoc`, hand-built errors | `Context::query/cookie/json_field/body_json`, `ParamLoc`, `ValidationError`, `validation_error_body` |

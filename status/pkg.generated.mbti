@@ -3,8 +3,10 @@ package "moonbitstack/moonapi/status"
 
 import {
   "moonbitstack/moonasgi/http",
+  "moonbitstack/mooncred/jwt",
   "moonbitstack/moondate",
   "moonbitstack/moonhttp/cookie",
+  "moonbitstack/moonhttp/sse",
 }
 
 // Values
@@ -182,6 +184,8 @@ pub fn redirect(String, status? : Int32) -> @http.Response
 
 pub fn set_cookie(@http.Response, String, String, max_age? : Int32, expires? : @moondate.Moment, path? : String?, domain? : String, secure? : Bool, http_only? : Bool, same_site? : @cookie.SameSite?) -> @http.Response
 
+pub fn sse_response(Array[@sse.Event], status? : Int32, headers? : Array[(String, String)], space? : Bool, wins? : @jwt.Wins, clash? : @jwt.OnClash[Array[(String, String)]]) -> @http.StreamingResponse
+
 pub fn text(Int32, String) -> @http.Response
 
 // Errors
@@ -190,6 +194,8 @@ pub fn text(Int32, String) -> @http.Response
 
 // Type aliases
 pub using @cookie {type Cookie}
+
+pub using @sse {type Event}
 
 pub using @cookie {type SameSite}
 

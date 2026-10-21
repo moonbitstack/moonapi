@@ -18,13 +18,13 @@ import {
   "moonbitstack/moonapi/openapi",
   "moonbitstack/moonasgi",
   "moonbitstack/moonjson",
-  "moonbitstack/mooncred/jwt",
-  "moonbitstack/moonhttp/sse",
-  "moonbitlang/core/json",
-  "moonbitlang/core/encoding/utf8",
 }
 
 import {
   "moonbitstack/moonhttp/mime",
   "moonbitstack/moonzip/gzip",
+  "moonbitlang/core/encoding/utf8",
+  "moonbitlang/core/json",
+  "moonbitstack/mooncred/jwt",
+  "moonbitstack/moonhttp/sse",
 } for "wbtest"

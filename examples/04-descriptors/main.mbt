@@ -1,6 +1,6 @@
 ///|
 /// The descriptor tree drives validation and OpenAPI from one source of truth.
-/// The `demo_app`'s `Endpoint` / `Param` / `Schema` / `ResponseSpec` descriptors
+/// The `users_app` in `models.mbt`: its `Endpoint` / `Param` / `Schema` / `ResponseSpec` descriptors
 /// validate an inbound `POST /users` body and a typed `:id` path param, and the
 /// same tree emits the request/response body schemas — objects, arrays, and a
 /// nested `Address` hoisted into `components/schemas` behind a `$ref`. A body
@@ -9,7 +9,7 @@
 ///     moon run examples/04-descriptors
 #coverage.skip
 fn main {
-  let app = @moonapi.demo_app()
+  let app = users_app()
   let json_headers = [("content-type", "application/json")]
   let hit = (verb : String, path : String, body : String) => {
     let req : @moonasgi.Request = {

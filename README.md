@@ -38,9 +38,9 @@ async fn main {
   app.post("/users", _ctx => @moonapi.text(201, "created"))
 
   // One set of routes, every mainstream spec version.
-  println(app.openapi_json(version=@moonapi.OpenApi31)) // OpenAPI 3.1.0
-  println(app.openapi_json(version=@moonapi.OpenApi30)) // OpenAPI 3.0.3
-  println(app.openapi_json(version=@moonapi.Swagger20)) // Swagger 2.0
+  println(app.openapi_json(version=OpenApi31)) // OpenAPI 3.1.0
+  println(app.openapi_json(version=OpenApi30)) // OpenAPI 3.0.3
+  println(app.openapi_json(version=Swagger20)) // Swagger 2.0
 
   @mooncat.serve(app.to_asgi(), port=12000) catch {
     err => println("stopped: \{err}")
@@ -71,6 +71,33 @@ the native server with `moon run examples/25-full-example --target native`. The 
 provides Swagger UI at `http://127.0.0.1:8000/docs`, ReDoc at
 `http://127.0.0.1:8000/redoc`, and OpenAPI 3.0.3 at
 `http://127.0.0.1:8000/openapi.json`.
+
+## Packages
+
+Each concern is its own subpackage, so a program links the parts it uses. The
+root re-exports all of them, so `@moonapi.App`, `@moonapi.text` and the rest work
+as they always did.
+
+|  Package  | What it holds | Depends on |
+|:--:|:--|:--|
+| `moonapi` | `App` and its methods, the façade | everything below |
+| `moonapi/route` | `Method`, `Route`, `Router`, path matching | `ctx`, `endpoint`, `security`, `socket` |
+| `moonapi/openapi` | the document's info block, routes as operations | `route`, `schema` |
+| `moonapi/security` | schemes, guards, per-operation requirements, tokens | `ctx`, `schema`, `status` |
+| `moonapi/mid` | CORS, gzip, exception handlers | `ctx` |
+| `moonapi/endpoint` | `Param`, `ResponseSpec`, `Endpoint` and its validation | `ctx`, `schema` |
+| `moonapi/ctx` | `Context` and every extractor, background tasks | `schema`, `status` |
+| `moonapi/schema` | `Schema`, constraints, `ValidationError`, `of_model` | `status` |
+| `moonapi/socket` | WebSocket connections and routes | nothing |
+| `moonapi/status` | response helpers, cookies, SSE, status constants | nothing |
+| `moonapi/di` | dependency injection | nothing |
+
+**Constructors are written without the package.** `pub using` re-exports types
+but not their constructors, so `@moonapi.OpenApi31` does not resolve. Wherever
+the expected type is known — an argument, a field, a match — the bare name does:
+`version=OpenApi31`, `Param::new("id", InPath, schema=SInt)`. The one place it
+is not known is a raised error, where the subpackage is named:
+`raise @mid.HttpException(...)`.
 
 ## What's here (`v0`)
 

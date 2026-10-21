@@ -1,7 +1,9 @@
 import {
+  "moonbitlang/core/json",
   "moonbitstack/moonapi",
   "moonbitstack/moonasgi",
   "moonbitlang/core/encoding/utf8",
+  "moonbitlang/core/string",
 }
 
 pkgtype(kind: "executable")

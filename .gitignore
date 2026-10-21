@@ -5,3 +5,4 @@ _build/
 target/
 
 examples/*/pkg.generated.mbti
+__pycache__/

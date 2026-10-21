@@ -25,10 +25,7 @@ pub fn make_router(profile_schema : @moonapi.Schema) -> @moonapi.Router {
   router.post(
     "/greet",
     ctx => {
-      match
-        (
-          ctx.body_validated(@moonapi.GreetReq::schema()) :
-          Result[@moonapi.GreetReq, _]) {
+      match (ctx.body_validated(GreetReq::schema()) : Result[GreetReq, _]) {
         Ok(greet) =>
           @moonapi.json(200, @services.detail("Hello, " + greet.name))
         Err(errors) => @moonapi.unprocessable(errors)

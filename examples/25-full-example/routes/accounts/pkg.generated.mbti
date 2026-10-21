@@ -2,6 +2,7 @@
 package "moonbitstack/moonapi/examples/25-full-example/routes/accounts"
 
 import {
+  "moonbitlang/core/json",
   "moonbitstack/moonapi/route",
   "moonbitstack/moonapi/schema",
 }
@@ -12,6 +13,8 @@ pub fn make_router(@schema.Schema) -> @route.Router
 // Errors
 
 // Types and methods
+type GreetReq derive(@json.FromJson)
+pub fn GreetReq::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
 
 // Type aliases
 

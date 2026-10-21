@@ -5,121 +5,53 @@ gh-pages from the package sources' `///` doc comments. Reproducible: reads the
 import re, html, pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
+# One section per package. Files are collected from the directory, so moving
+# code between files or packages cannot leave the reference behind.
 SECTIONS = [
-    ("app", "app.mbt", "Application & routing",
-     "The App, its route builders (get / post / ...), :param path matching, the "
-     "Context, and text / json response helpers - plus App::to_asgi to run anywhere."),
-    ("router", "router.mbt", "Routers & composition",
-     "APIRouter and include_router - routes collected away from any application "
-     "and folded into one later, under a prefix and with the tags, security and "
-     "responses the whole group shares. Plus mounting a foreign moonasgi handler."),
-    ("schema", "schema.mbt", "Descriptor tree",
-     "The runtime Schema descriptor - the first-class value that stands in for "
-     "FastAPI's from-signature reflection. Walked once to emit complete OpenAPI "
-     "body schemas (objects / arrays / scalars, required, $ref'd components) and "
-     "to drive validation. Includes the ToSchema trait and its builders."),
-    ("endpoint", "endpoint.mbt", "Endpoint descriptor",
-     "Param / ResponseSpec / Endpoint - the descriptor a typed route carries, "
-     "walked once into an OpenAPI operation (parameters + requestBody + responses, "
-     "with named schemas hoisted into components)."),
-    ("openapi", "openapi.mbt", "OpenAPI & Swagger",
-     "Multi-version OpenAPI / Swagger generation (2.0 / 3.0 / 3.1) from the same "
-     "routes and descriptors, and a ready-to-serve Swagger UI page."),
-    ("validation", "validation.mbt", "Extraction & validation",
-     "Typed extraction off the Context - query / cookie params, JSON body, single "
-     "JSON fields - plus descriptor-driven validation and FastAPI-shaped "
-     "ValidationError values and 422 responses."),
-    ("body", "body.mbt", "Typed body extractors",
-     "Context::body deserialises the JSON body into a derive(FromJson) struct, and "
-     "Context::body_validated checks it against the endpoint descriptor first - "
-     "yielding a FastAPI-shaped 422 error list on failure and the built value on "
-     "success, all off one source of truth."),
-    ("di", "di.mbt", "Dependency injection",
-     "A container (provider registry + dependency_overrides), request-scoped "
-     "one-shot resolution with per-request caching, and yield-style teardown run "
-     "LIFO around the handler - the explicit MoonBit equivalent of FastAPI's "
-     "Depends."),
-    ("security", "security.mbt", "OAuth2 & bearer security",
-     "OAuth2 password-bearer: create_access_token issues a scoped HS256 JWT, and "
-     "OAuth2PasswordBearer reads the Authorization header, verifies the token, and "
-     "enforces scopes - 401 on a missing / invalid / expired token, 403 on an "
-     "insufficient scope. The MoonBit equivalent of FastAPI's Security(...)."),
-    ("security_scheme", "security_scheme.mbt", "OpenAPI security schemes",
-     "SecurityScheme objects emitted into the generated spec - OAuth2 password "
-     "flow, HTTP bearer (JWT), API keys, and Basic - under components/"
-     "securitySchemes in 3.x and securityDefinitions in Swagger 2.0, so the OAuth2 "
-     "/ JWT layer is described to clients."),
-    ("security_wiring", "security_wiring.mbt", "Per-operation security",
-     "A SecurityRequirement attaches a declared scheme (and its scopes) to a "
-     "route: emitted as the operation's OpenAPI security array, and - when the "
-     "scheme was registered with an enforcer via App::secure_oauth2 - enforced "
-     "before the handler (401 unauthenticated, 403 on a missing scope)."),
-    ("background", "background.mbt", "Background tasks",
-     "BackgroundTasks queues thunks a background-aware route schedules; the app "
-     "runs them, in order, after the response is sent - FastAPI's BackgroundTasks."),
-    ("middleware", "middleware.mbt", "Middleware & exception handlers",
-     "The outer middleware chain: cors (preflight + actual-request headers, "
-     "configurable origins / methods / headers / credentials), gzip (a real "
-     "DEFLATE compressor, below), per-status handlers for custom error pages, and "
-     "exception handlers that map a raised HttpException to a response, with a "
-     "built-in 500 fallback."),
-    ("websocket", "websocket.mbt", "WebSocket routes",
-     "App::websocket over the moonasgi WS SEAM. The handler drives a WebSocket "
-     "(accept / receive / send / close) as a synchronous core, so drive_websocket "
-     "runs it against an in-memory frame queue in a test and the serving shell "
-     "runs it over the async transport."),
-    ("response_model", "response_model.mbt", "response_model",
-     "filter_response / json_model validate a handler's return value against a "
-     "declared Schema and project it down to exactly the model's fields, so a route "
-     "exposes only what it promised - FastAPI's response_model."),
-    ("response", "response.mbt", "Redirects, downloads & conditional serving",
-     "The response kinds that are an envelope rather than a body: redirect (the "
-     "status and an escaped Location), file_response (a media type from the "
-     "filename, Content-Length, and an RFC 6266 Content-Disposition), and "
-     "Context::serve, which is the same envelope with the request weighed - 304 "
-     "when the client's copy is current, 412 when a precondition fails, 206 for a "
-     "Range and 416 for one that cannot be met. Plus the data: URL both ways."),
-    ("cookie", "cookie.mbt", "Cookies",
-     "set_cookie and delete_cookie - one Set-Cookie header per cookie, attributes "
-     "in RFC 6265 order, values stripped of the octets that could forge an "
-     "attribute or open a header, and an expiry a browser honours either way."),
-    ("status", "status.mbt", "Status codes",
-     "The 63 HTTP_* and 15 WS_* constants FastAPI re-exports from Starlette, so a "
-     "route reads HTTP_404_NOT_FOUND rather than a bare number."),
-    ("demo", "demo.mbt", "Worked example",
-     "User structs that describe their own schema (derive(ToJson) + a T::schema() "
-     "associated function + a ToSchema bridge) and a demo app whose request and "
-     "response bodies surface fully-typed in openapi.json - the mctl-friendly shape."),
-    ("security_demo", "security_demo.mbt", "OAuth2 worked example",
-     "oauth2_app wires the security layer end to end: a /token endpoint that issues "
-     "a scoped JWT and two protected routes, one requiring the items scope - "
-     "FastAPI's security tutorial in explicit MoonBit form."),
-    ("constraints", "constraint.mbt", "Parameter constraints",
-     "The declared bounds a parameter carries — min/max, length, pattern, enum — "
-     "checked on the way in and emitted into the schema on the way out, so the "
-     "document and the enforcement cannot drift apart."),
-    ("security-extractors", "security_extractors.mbt", "Security extractors",
-     "Pulling the credential out of a request for each scheme: the Authorization "
-     "header, an API key in a header, query or cookie, and HTTP basic."),
-    ("form", "form.mbt", "Form & file extractors",
-     "Context::form reads both carriers a browser posts a form in - urlencoded "
-     "and multipart - into one shape, bounded by the limits the caller gives, so "
-     "a body over them is refused whole rather than truncated."),
-    ("events", "events.mbt", "Server-Sent Events",
-     "sse_response turns a stream of events into a text/event-stream response, one "
-     "chunk per event so each dispatches on arrival, with the three headers that "
-     "stop a proxy from buffering it into a file shaped like a stream."),
-    ("token", "token.mbt", "Access tokens",
-     "create_access_token names an algorithm and hands the signing to mooncred: "
-     "the claims, the expiry and the extra members a caller adds, with the "
-     "reserved ones it may not overwrite."),
-    ("security-guards", "security_guards.mbt", "Security guards",
-     "The check each scheme registers to run before the handler: the challenge a "
-     "401 owes, the 403 a missing scope earns, and the switch that lets an "
-     "anonymous caller through for a route that would rather decide for itself."),
-    ("di-demo", "di_demo.mbt", "Dependency injection worked example",
-     "A worked wiring of the container: providers, scopes and overrides, kept in "
-     "the package so it is compiled and tested rather than only described."),
+    ("app", ".", "Application",
+     "The App and everything it does: the route builders (get / post / ...), "
+     "include_router, mounting, the security wiring that enforces a scheme before "
+     "a handler, WebSocket routes, the OpenAPI document, lifespan, and to_asgi to "
+     "run anywhere."),
+    ("route", "route", "Routes & routers",
+     "Method, Route and Router: the record an app keeps per operation, routers "
+     "that collect routes away from any application and fold in under a prefix, "
+     "and how a path is cut into segments and matched."),
+    ("ctx", "ctx", "Request context & extractors",
+     "The Context and everything read from it: path, query, header and cookie "
+     "parameters, the JSON body (raw, typed with derive(FromJson), or validated), "
+     "forms and uploads, the credential each security scheme carries, conditional "
+     "and partial serving, and the background tasks run after the response."),
+    ("endpoint", "endpoint", "Endpoint descriptors",
+     "Param, ResponseSpec and Endpoint: what an operation declares, walked once "
+     "into an OpenAPI operation and once into the validation of a request against "
+     "the same declaration."),
+    ("schema", "schema", "Schemas & validation",
+     "The runtime Schema that stands in for FastAPI's reflection over signatures, "
+     "the constraints a value carries, ValidationError and the 422 it becomes, "
+     "response_model projection, and Schema::of_model for a moonmodel description."),
+    ("openapi", "openapi", "OpenAPI document",
+     "The document's info block and how routes become operations, in Swagger 2.0, "
+     "OpenAPI 3.0 and 3.1 from the same routes, plus Swagger UI and ReDoc pages."),
+    ("security", "security", "Security",
+     "OAuth2 password bearer and code flows, HTTP bearer, basic and digest, API "
+     "keys: the schemes emitted into the document, the guards that answer 401 and "
+     "403, per-operation requirements, and access tokens signed through mooncred."),
+    ("mid", "mid", "Middleware & errors",
+     "CORS, gzip, per-status pages, and exception handlers that turn a raised "
+     "HttpException into its response, with a 500 fallback."),
+    ("socket", "socket", "WebSocket",
+     "The connection a WebSocket route drives (accept, receive, send, close), its "
+     "messages, and drive_websocket, which runs a handler against an in-memory "
+     "frame queue so a test needs no socket."),
+    ("status", "status", "Responses & status codes",
+     "text, html, json, redirects, downloads, data: URLs, cookies and Server-Sent "
+     "Events, plus the 63 HTTP_* and 15 WS_* constants FastAPI re-exports from "
+     "Starlette."),
+    ("di", "di", "Dependency injection",
+     "Providers, scopes and dependency_overrides: request-scoped resolution with "
+     "per-request caching and teardown run in reverse around the handler, "
+     "FastAPI's Depends in explicit form."),
 ]
 KIND = {"struct": "struct", "enum": "enum", "fn": "fn", "type": "type", "let": "let"}
 
@@ -333,8 +265,9 @@ def main():
     for sid, rel, title, desc in SECTIONS:
         body.append('<section class="pkg" id="%s"><h2><span class="at">§</span>%s</h2>'
                     '<p class="pdesc">%s</p>' % (sid, title, esc(desc)))
-        files = rel if isinstance(rel, tuple) else (rel,)
-        for kind, sig, doc in [it for f in files for it in parse(ROOT / f)]:
+        files = sorted(f for f in (ROOT / rel).glob("*.mbt")
+                       if not f.name.endswith(("_wbtest.mbt", "_test.mbt")))
+        for kind, sig, doc in [it for f in files for it in parse(f)]:
             total += 1
             body.append('<div class="item" data-k="%s"><span class="kind">%s</span>'
                         '<pre class="sig">%s</pre>%s</div>'

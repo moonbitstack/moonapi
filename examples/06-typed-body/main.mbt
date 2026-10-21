@@ -12,17 +12,14 @@ fn main {
   let app = @moonapi.App::new()
   // Validated extraction: conform, or get located errors.
   app.post("/greet", ctx => {
-    match
-      (
-        ctx.body_validated(@moonapi.GreetReq::schema()) :
-        Result[@moonapi.GreetReq, _]) {
+    match (ctx.body_validated(GreetReq::schema()) : Result[GreetReq, _]) {
       Ok(g) => @moonapi.text(200, "Hello, " + g.name)
       Err(errs) => @moonapi.unprocessable(errs)
     }
   })
   // Unchecked extraction: a total `T?`, `None` when the body cannot shape-match.
   app.post("/echo", ctx => {
-    let parsed : @moonapi.GreetReq? = ctx.body()
+    let parsed : GreetReq? = ctx.body()
     match parsed {
       Some(g) => @moonapi.text(200, "parsed name=" + g.name)
       None => @moonapi.text(200, "unparseable")

@@ -2,7 +2,6 @@
 package "moonbitstack/moonapi"
 
 import {
-  "moonbitlang/core/json",
   "moonbitstack/moonapi/ctx",
   "moonbitstack/moonapi/di",
   "moonbitstack/moonapi/endpoint",
@@ -191,15 +190,11 @@ pub fn data_url(Bytes, media_type? : String) -> String
 
 pub fn delete_cookie(@http.Response, String, path? : String?, domain? : String, secure? : Bool, http_only? : Bool, same_site? : @cookie.SameSite?) -> @http.Response
 
-pub fn demo_app() -> App
-
 pub fn drive_websocket((@socket.WebSocket) -> Unit, Array[@socket.WsMessage], params? : Map[String, String], subprotocols? : Array[String]) -> Array[@spec.Event]
 
 pub fn file_response(Bytes, filename? : String, media_type? : String, status? : Int32, inline? : Bool) -> @http.Response
 
 pub fn filter_response(@schema.Schema, Json) -> Result[Json, Array[@schema.ValidationError]]
-
-pub fn greet_app(@di.Container[Dep]) -> App
 
 pub fn gzip(min_size? : Int32) -> ((@http.Request) -> @http.Response) -> (@http.Request) -> @http.Response
 
@@ -210,8 +205,6 @@ pub fn http_error(Int32, String, headers? : Array[(String, String)]) -> @mid.Htt
 pub fn json(Int32, Json) -> @http.Response
 
 pub fn json_model(Int32, @schema.Schema, Json) -> @http.Response
-
-pub fn oauth2_app(() -> Int64, secret? : String) -> App
 
 pub fn parse_basic_auth(String) -> @ctx.HttpBasicCredentials?
 
@@ -244,17 +237,6 @@ pub fn with_constraints(Json, Array[@schema.Constraint], @schema.OpenApiVersion)
 // Errors
 
 // Types and methods
-pub(all) struct Address {
-  city : String
-  zip : String
-} derive(Eq, ToJson)
-pub fn Address::equal(Self, Self) -> Bool
-pub fn Address::not_equal(Self, Self) -> Bool
-pub fn Address::schema() -> @schema.Schema
-pub fn Address::to_json(Self) -> Json
-pub fn Address::to_schema(Self) -> @schema.Schema
-pub impl @schema.ToSchema for Address
-
 pub struct App {
   routes : Array[@route.Route]
   ws_routes : Array[@socket.WsRoute]
@@ -310,47 +292,7 @@ pub fn App::to_asgi(Self) -> async (@spec.Scope, async () -> @spec.Event, async 
 pub fn App::url_for(Self, String, params? : Map[String, String]) -> String?
 pub fn App::websocket(Self, String, (@socket.WebSocket) -> Unit) -> Unit
 
-pub(all) enum Dep {
-  Greeting(String)
-} derive(Eq)
-pub fn Dep::equal(Self, Self) -> Bool
-pub fn Dep::not_equal(Self, Self) -> Bool
-
-pub(all) struct GreetReq {
-  name : String
-} derive(Eq, ToJson, @json.FromJson)
-pub fn GreetReq::equal(Self, Self) -> Bool
-pub fn GreetReq::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
-pub fn GreetReq::not_equal(Self, Self) -> Bool
-pub fn GreetReq::schema() -> @schema.Schema
-pub fn GreetReq::to_json(Self) -> Json
-
 type Mount
-
-pub(all) struct NewUser {
-  name : String
-  email : String
-  age : Int32
-} derive(Eq, ToJson)
-pub fn NewUser::equal(Self, Self) -> Bool
-pub fn NewUser::not_equal(Self, Self) -> Bool
-pub fn NewUser::schema() -> @schema.Schema
-pub fn NewUser::to_json(Self) -> Json
-pub fn NewUser::to_schema(Self) -> @schema.Schema
-pub impl @schema.ToSchema for NewUser
-
-pub(all) struct User {
-  id : Int32
-  name : String
-  address : Address
-  tags : Array[String]
-} derive(Eq, ToJson)
-pub fn User::equal(Self, Self) -> Bool
-pub fn User::not_equal(Self, Self) -> Bool
-pub fn User::schema() -> @schema.Schema
-pub fn User::to_json(Self) -> Json
-pub fn User::to_schema(Self) -> @schema.Schema
-pub impl @schema.ToSchema for User
 
 // Type aliases
 pub type ApiHandler = (@ctx.Context) -> @http.Response raise
@@ -384,8 +326,6 @@ pub using @di {type Deps}
 pub using @security {type DigestAuth}
 
 pub using @endpoint {type Endpoint}
-
-pub using @sse {type Event}
 
 pub type ExceptionHandler = (@ctx.Context, Error) -> @http.Response?
 

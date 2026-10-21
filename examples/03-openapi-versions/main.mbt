@@ -3,13 +3,13 @@
 /// emits Swagger 2.0, OpenAPI 3.0.3, and OpenAPI 3.1.0 off the same descriptors;
 /// `App::openapi` additionally takes the document metadata (title, description,
 /// contact, license, servers) and `swagger_ui` returns a ready docs page. The
-/// `demo_app` carries typed bodies, so the emitted specs show `components`
-/// (`definitions` in 2.0) with `$ref`s.
+/// widget app in `models.mbt` carries typed bodies, so the emitted specs show
+/// `components` (`definitions` in 2.0) with `$ref`s.
 ///
 ///     moon run examples/03-openapi-versions
 #coverage.skip
 fn main {
-  let app = @moonapi.demo_app()
+  let app = widget_app()
   app.get(
     "/legacy",
     _ctx => @moonapi.text(200, "old"),

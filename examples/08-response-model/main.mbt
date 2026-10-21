@@ -71,13 +71,13 @@ fn main {
 
   // schema_of reaches a struct's descriptor through the ToSchema bridge — the
   // same tree its associated `schema()` returns.
-  let user : @moonapi.User = {
+  let user : User = {
     id: 233,
     name: "lfanke",
     address: { city: "emm", zip: "23333", },
     tags: ["a", "b"],
   }
   println(
-    "schema_of(user) == User::schema(): \{@moonapi.schema_of(user) == @moonapi.User::schema()}",
+    "schema_of(user) == User::schema(): \{@moonapi.schema_of(user) == User::schema()}",
   )
 }

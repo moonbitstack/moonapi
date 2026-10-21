@@ -78,6 +78,7 @@ pub using @status {
   json,
   redirect,
   set_cookie,
+  sse_response,
   text,
   WS_1000_NORMAL_CLOSURE,
   WS_1001_GOING_AWAY,
