@@ -1,32 +1,62 @@
 ///|
-/// The value of `name`, or "<none>" when the key is absent — keeps the assertions
-/// on plain strings.
-fn q(c : @ctx.Context, name : String) -> String {
-  match c.query(name) {
-    Some(v) => v
-    None => "<none>"
+fn mkreq(m : String, path : String) -> @moonasgi.Request {
+  { http_method: m, path, query_string: b"", headers: [], body: b"", }
+}
+
+///|
+fn mkreq_full(
+  m : String,
+  path : String,
+  query~ : Bytes = b"",
+  body~ : Bytes = b"",
+) -> @moonasgi.Request {
+  { http_method: m, path, query_string: query, headers: [], body, }
+}
+
+///|
+/// Fetch a string field out of a JSON object, "" if absent — test helper.
+fn json_str(j : Json, key : String) -> String {
+  match j {
+    Object(m) =>
+      match m.get(key) {
+        Some(String(s)) => s
+        _ => ""
+      }
+    _ => ""
   }
 }
 
 ///|
-/// A `Context` carrying nothing but a query string — enough to exercise `query`.
-fn qctx(query : Bytes) -> @ctx.Context {
-  let req : @moonasgi.Request = {
-    http_method: "GET",
-    path: "/",
-    query_string: query,
-    headers: [],
-    body: b"",
-  }
-  { request: req, params: Map([]), }
+/// The `get`/`post`/… `verb` operation at `path` in an OpenAPI document.
+fn op_of(doc : Json, path : String, verb : String) -> Json? {
+  guard doc is Object(m) else { return None }
+  guard m.get("paths") is Some(Object(p)) else { return None }
+  guard p.get(path) is Some(Object(methods)) else { return None }
+  methods.get(verb)
 }
 
-// A worked example of the descriptor tree: user structs that describe their own
-// schema, an `impl ToSchema`, and a demo app whose request/response bodies show
-// up fully-typed in `openapi.json`. This is the mctl-friendly shape — mctl would
-// generate exactly this from a spec: `derive(ToJson)` for serialisation plus a
-// plain `T::schema()` associated function (no instance needed, mirroring FastAPI
-// referencing the model class) and its one-line `ToSchema` bridge.
+///|
+/// The `responses` object of an operation, empty if it has none — test helper.
+fn op_responses(doc : Json, path : String, verb : String) -> Map[String, Json] {
+  match op_of(doc, path, verb) {
+    Some(Object(op)) =>
+      match op.get("responses") {
+        Some(Object(m)) => m
+        _ => Map([])
+      }
+    _ => Map([])
+  }
+}
+
+///|
+/// The `description` of one response of an operation, "" if it declares no such
+/// response — test helper.
+fn resp_desc(responses : Map[String, Json], status : String) -> String {
+  match responses.get(status) {
+    Some(j) => json_str(j, "description")
+    None => ""
+  }
+}
 
 ///|
 /// A nested value type, to show a `$ref` chain: `User.address` references this
@@ -164,162 +194,6 @@ fn demo_app() -> App {
 // = Depends(...))` in explicit MoonBit form.
 
 ///|
-/// The request body of `POST /greet`. `derive(@json.FromJson)` lets
-/// `Context::body_validated` build it after the descriptor accepts the payload;
-/// its schema and struct fields agree (both require `name`), so a schema-valid
-/// body always deserialises.
-struct GreetReq {
-  name : String
-} derive(ToJson, FromJson, Eq)
-
-///|
-/// The `GreetReq` descriptor — one required string field.
-fn GreetReq::schema() -> @schema.Schema {
-  @schema.Schema::object("GreetReq", [@schema.Field::new("name", SStr)])
-}
-
-///|
-/// The dependency value type of the greet app. A sum type wrapping every
-/// dependency this app injects — the explicit, exhaustive stand-in for FastAPI
-/// resolving heterogeneous `Depends` values dynamically.
-enum Dep {
-  Greeting(String)
-} derive(Eq)
-
-///|
-/// Build the greet application over a caller-supplied dependency `container`, so
-/// a test can register `dependency_overrides` on the same container before or
-/// between requests. `POST /greet` resolves the `"greeting"` dependency, reads a
-/// validated `GreetReq` body, and answers `{"message": "<greeting>, <name>"}`;
-/// a malformed body gets a FastAPI-shaped `422`. The dependency scope brackets
-/// each request, so any `yield` teardown runs once the handler returns.
-fn greet_app(container : @di.Container[Dep]) -> App {
-  let app = App::new()
-  let ep = @endpoint.Endpoint::new(request_body=GreetReq::schema(), responses=[
-    @endpoint.ResponseSpec::new(200, description="the greeting"),
-    @endpoint.ResponseSpec::new(422, description="Validation Error"),
-  ])
-  app.post(
-    "/greet",
-    ctx => {
-      container.run(scope => {
-        let greeting = match scope.get("greeting") {
-          Some(Greeting(g)) => g
-          None => "Hello"
-        }
-        match (ctx.body_validated(GreetReq::schema()) : Result[GreetReq, _]) {
-          Err(errs) => @schema.unprocessable(errs)
-          Ok(req) => {
-            let m : Map[String, Json] = Map([
-              ("message", Json("\{greeting}, \{req.name}")),
-            ])
-            @status.json(200, Json(m))
-          }
-        }
-      })
-    },
-    summary="greet a user",
-    endpoint=ep,
-  )
-  app
-}
-
-// A worked OAuth2 password-bearer app — FastAPI's security tutorial in explicit
-// MoonBit form. `POST /token` reads the password form, checks the demo
-// credentials, and issues a scoped HS256 JWT; `GET /users/me` is protected by a
-// bearer `Security` with no scope requirement; `GET /users/me/items` additionally
-// requires the `items` scope. The verification clock is injected (`now`) so the
-// same app runs deterministically in a test and against the wall clock in
-// production.
-
-///|
-/// Check the demo credentials. A real app would look the user up and verify a
-/// password hash; here one hard-coded account keeps the example self-contained.
-fn authenticate_user(username : String, password : String) -> Bool {
-  username == "alice" && password == "wonderland"
-}
-
-///|
-/// Build the OAuth2 demo application. `secret` is the shared HS256 key; `now`
-/// supplies the current Unix time (seconds) for both issuing and verifying, so a
-/// caller controls time in tests. Tokens live for one hour.
-fn oauth2_app(now : () -> Int64, secret~ : String = "demo-secret") -> App {
-  let app = App::new()
-  let scheme = @security.OAuth2PasswordBearer::new("/token", secret)
-  app.post(
-    "/token",
-    ctx => {
-      match ctx.oauth2_password_form() {
-        None =>
-          @schema.unprocessable([
-            @schema.ValidationError::missing(["body", "username"]),
-          ])
-        Some(form) =>
-          if authenticate_user(form.username, form.password) {
-            let token = @security.create_access_token(
-              form.username,
-              secret,
-              now(),
-              scopes=form.scopes,
-            )
-            @security.token_response(token)
-          } else {
-            let body : Map[String, Json] = Map([
-              ("detail", Json("Incorrect username or password")),
-            ])
-            @moonasgi.Response::new(
-              401,
-              [
-                ("content-type", "application/json"),
-                ("www-authenticate", "Bearer"),
-              ],
-              @moonjson.dump(Json(body)),
-            )
-          }
-      }
-    },
-    summary="issue an access token",
-  )
-  app.get(
-    "/users/me",
-    ctx => {
-      match scheme.authenticate(ctx, now()) {
-        Err(resp) => resp
-        Ok(user) => {
-          let scopes : Array[Json] = []
-          for s in user.scopes {
-            scopes.push(Json(s))
-          }
-          let body : Map[String, Json] = Map([
-            ("username", Json(user.subject)),
-            ("scopes", Json(scopes)),
-          ])
-          @status.json(200, Json(body))
-        }
-      }
-    },
-    summary="the current user",
-  )
-  app.get(
-    "/users/me/items",
-    ctx => {
-      match scheme.authenticate(ctx, now(), scopes=["items"]) {
-        Err(resp) => resp
-        Ok(user) => {
-          let body : Map[String, Json] = Map([
-            ("owner", Json(user.subject)),
-            ("items", Json(["hammer", "nail"])),
-          ])
-          @status.json(200, Json(body))
-        }
-      }
-    },
-    summary="the current user's items (scope: items)",
-  )
-  app
-}
-
-///|
 pub extend Address with Eq::{not_equal, equal}
 
 ///|
@@ -338,13 +212,336 @@ pub extend User with ToJson::{to_json}
 pub extend User with @schema.ToSchema::{to_schema}
 
 ///|
-pub extend GreetReq with Eq::{not_equal, equal}
+/// An app whose `GET /items` declares exactly `p` — test helper.
+fn param_app(p : @endpoint.Param) -> App {
+  let app = App::new()
+  app.get(
+    "/items",
+    _ctx => @status.text(200, "ok"),
+    endpoint=@endpoint.Endpoint::new(params=[p]),
+  )
+  app
+}
 
 ///|
-pub extend GreetReq with FromJson::{from_json}
+/// The single declared parameter of `GET /items` in `version` — test helper.
+fn only_param(app : App, version : @schema.OpenApiVersion) -> Json {
+  dig_arr(app.openapi(version~), ["paths", "/items", "get", "parameters"])[0]
+}
 
 ///|
-pub extend GreetReq with ToJson::{to_json}
+/// An app whose `POST /thing` takes `body` as its request body — test helper.
+fn body_app(body : @schema.Schema) -> App {
+  let app = App::new()
+  app.post(
+    "/thing",
+    _ctx => @status.text(200, "ok"),
+    endpoint=@endpoint.Endpoint::new(request_body=body),
+  )
+  app
+}
 
 ///|
-pub extend Dep with Eq::{not_equal, equal}
+/// `POST /thing` with `payload` as its body — test helper.
+fn post_body(app : App, payload : String) -> @moonasgi.Response {
+  app.handle(mkreq_full("POST", "/thing", body=@utf8.encode(payload)))
+}
+
+///|
+/// The emitted request-body schema of `POST /thing` in `version` — test helper.
+fn body_schema(app : App, version : @schema.OpenApiVersion) -> Json {
+  let doc = app.openapi(version~)
+  match version {
+    Swagger20 => {
+      let mut found = Json::null()
+      for p in dig_arr(doc, ["paths", "/thing", "post", "parameters"]) {
+        if json_str(p, "in") == "body" {
+          found = dig(p, ["schema"]).unwrap()
+        }
+      }
+      found
+    }
+    _ =>
+      dig(doc, [
+        "paths", "/thing", "post", "requestBody", "content", "application/json",
+        "schema",
+      ]).unwrap()
+  }
+}
+
+///|
+/// Get an object field by key, `None` if not an object or absent — test helper.
+fn obj_get(j : Json, k : String) -> Json? {
+  match j {
+    Object(m) => m.get(k)
+    _ => None
+  }
+}
+
+///|
+/// Walk a chain of object keys into a JSON document — test helper.
+fn dig(j : Json, path : Array[String]) -> Json? {
+  let mut cur : Json? = Some(j)
+  for k in path {
+    cur = match cur {
+      Some(x) => obj_get(x, k)
+      None => None
+    }
+  }
+  cur
+}
+
+///|
+/// The array at `path`, empty if absent or not an array — test helper.
+fn dig_arr(j : Json, path : Array[String]) -> Array[Json] {
+  match dig(j, path) {
+    Some(Array(a)) => a
+    _ => []
+  }
+}
+
+///|
+/// Parse a response body back into JSON — test helper.
+fn resp_json(r : @moonasgi.Response) -> Json {
+  @json.parse(@utf8.decode_lossy(r.body[:])) catch {
+    _ => Json::null()
+  }
+}
+
+///|
+/// The first `detail[]` entry of a 422 body — test helper.
+fn detail0(r : @moonasgi.Response) -> Json {
+  match resp_json(r) {
+    Object(m) =>
+      match m.get("detail") {
+        Some(Array(a)) => if a.length() > 0 { a[0] } else { Json::null() }
+        _ => Json::null()
+      }
+    _ => Json::null()
+  }
+}
+
+///|
+/// The `loc` of a validation-error JSON object as a list of strings — helper.
+fn err_loc(e : Json) -> Array[String] {
+  let out : Array[String] = []
+  match obj_get(e, "loc") {
+    Some(Array(a)) =>
+      for v in a {
+        match v {
+          String(s) => out.push(s)
+          _ => ()
+        }
+      }
+    _ => ()
+  }
+  out
+}
+
+///|
+/// A typed route whose body carries an enum field (← a Python `Enum` /
+/// `typing.Literal`): its OpenAPI schema advertises the closed value set and its
+/// validation enforces membership.
+fn enum_app() -> App {
+  let body = @schema.Schema::object("Order", [
+    @schema.Field::new(
+      "status",
+      SEnum(@schema.SStr, [Json("qwq"), Json("hhh")]),
+    ),
+  ])
+  let ep = @endpoint.Endpoint::new(request_body=body, responses=[
+    @endpoint.ResponseSpec::new(200, body~),
+  ])
+  let app = App::new()
+  app.post(
+    "/orders",
+    ctx => {
+      let errs = ep.validate(ctx)
+      if errs.length() > 0 {
+        @schema.unprocessable(errs)
+      } else {
+        @status.json(200, ctx.body_json().unwrap_or(Json::null()))
+      }
+    },
+    endpoint=ep,
+  )
+  app
+}
+
+///|
+/// A request carrying arbitrary `headers`, and optionally a query string —
+/// test helper.
+fn mkreq_hdrs(
+  verb : String,
+  path : String,
+  headers : Array[(String, String)],
+  query~ : Bytes = b"",
+) -> @moonasgi.Request {
+  { http_method: verb, path, query_string: query, headers, body: b"", }
+}
+
+///|
+/// An app with one guarded `GET /vault` behind the scheme `name` — test helper.
+fn guarded(name : String) -> App {
+  let app = App::new()
+  app.set_clock(() => 1000L)
+  app.get("/vault", _ctx => @status.text(200, "gold"), security=[
+    @security.SecurityRequirement::new(name),
+  ])
+  app
+}
+
+///|
+/// A request with an `Authorization` header and no body — test helper.
+fn mkreq_auth(
+  verb : String,
+  path : String,
+  authorization : String,
+) -> @moonasgi.Request {
+  {
+    http_method: verb,
+    path,
+    query_string: b"",
+    headers: [("authorization", authorization)],
+    body: b"",
+  }
+}
+
+///|
+/// The body events of a reply, in order — test helper.
+fn body_events(app : App, req : @moonasgi.Request) -> Array[@moonasgi.Event] {
+  let (resp, _bg) = app.handle_with_stream(req)
+  resp.events().filter(e => e is HttpResponseBody(_))
+}
+
+///|
+/// The `more_body` flag of each body event, in order — test helper.
+fn more_body_flags(app : App, req : @moonasgi.Request) -> Array[Bool] {
+  body_events(app, req).map(e => {
+    match e {
+      HttpResponseBody(more_body~, ..) => more_body
+      _ => false
+    }
+  })
+}
+
+///|
+/// Whether the merged document declares `path`.
+fn path_exists(doc : Json, path : String) -> Bool {
+  match doc {
+    Object(m) =>
+      match m.get("paths") {
+        Some(Object(p)) => p.get(path) is Some(_)
+        _ => false
+      }
+    _ => false
+  }
+}
+
+///|
+test "query param: Swagger 2.0 carries the bounds on the parameter itself" {
+  let app = param_app(
+    @endpoint.Param::new(
+      "limit",
+      InQuery,
+      schema=SInt,
+      required=false,
+      constraints=[@schema.Minimum(1.0), @schema.Maximum(100.0)],
+      default=Json(10),
+    ),
+  )
+  // 2.0 has no `schema` for a scalar parameter, so type, bounds and default all
+  // sit on the parameter object.
+  let p = only_param(app, Swagger20)
+  assert_eq(json_str(p, "type"), "integer")
+  assert_eq(dig(p, ["minimum"]), Some(Json(1.0)))
+  assert_eq(dig(p, ["maximum"]), Some(Json(100.0)))
+  assert_eq(dig(p, ["default"]), Some(Json(10)))
+  assert_eq(dig(p, ["schema"]) is None, true)
+}
+
+///|
+test "nullable: null is accepted, the wrapped type is still enforced" {
+  let app = body_app(
+    @schema.Schema::object("Note", [
+      @schema.Field::new("title", @schema.Schema::nullable(SStr)),
+    ]),
+  )
+  assert_eq(post_body(app, "{\"title\":null}").status, 200)
+  assert_eq(post_body(app, "{\"title\":\"hi\"}").status, 200)
+  // Nullable widens the type; it does not abandon it.
+  let bad = post_body(app, "{\"title\":5}")
+  assert_eq(bad.status, 422)
+  assert_eq(json_str(detail0(bad), "type"), "string_type")
+  assert_eq(err_loc(detail0(bad)), ["body", "title"])
+  // And nullable is not optional: the field still has to be there.
+  let miss = post_body(app, "{}")
+  assert_eq(miss.status, 422)
+  assert_eq(json_str(detail0(miss), "type"), "missing")
+}
+
+///|
+test "map body: emitted as additionalProperties and validated per value" {
+  let app = body_app(@schema.Schema::map(SInt))
+  let s = body_schema(app, OpenApi31)
+  assert_eq(json_str(s, "type"), "object")
+  assert_eq(
+    json_str(dig(s, ["additionalProperties"]).unwrap(), "type"),
+    "integer",
+  )
+  assert_eq(post_body(app, "{\"a\":1,\"b\":2}").status, 200)
+  // An empty map has no values to disagree with.
+  assert_eq(post_body(app, "{}").status, 200)
+  // A bad value is located by its key.
+  let bad = post_body(app, "{\"a\":1,\"b\":\"two\"}")
+  assert_eq(bad.status, 422)
+  assert_eq(json_str(detail0(bad), "type"), "int_type")
+  assert_eq(err_loc(detail0(bad)), ["body", "b"])
+  // A body that is not an object at all.
+  let arr = post_body(app, "[1,2]")
+  assert_eq(arr.status, 422)
+  assert_eq(json_str(detail0(arr), "type"), "dict_type")
+  assert_eq(err_loc(detail0(arr)), ["body"])
+}
+
+///|
+test "map body: a map of objects hoists its value schema" {
+  let app = body_app(
+    @schema.Schema::map(
+      @schema.Schema::object("Addr", [@schema.Field::new("city", SStr)]),
+    ),
+  )
+  assert_eq(
+    json_str(
+      dig(body_schema(app, OpenApi31), ["additionalProperties"]).unwrap(),
+      "$ref",
+    ),
+    "#/components/schemas/Addr",
+  )
+  assert_eq(post_body(app, "{\"home\":{\"city\":\"Nowhere\"}}").status, 200)
+  let bad = post_body(app, "{\"home\":{}}")
+  assert_eq(bad.status, 422)
+  assert_eq(err_loc(detail0(bad)), ["body", "home", "city"])
+}
+
+///|
+test "map body: Swagger 2.0 says additionalProperties too" {
+  let app = body_app(@schema.Schema::map(SStr))
+  assert_eq(
+    json_str(
+      dig(body_schema(app, Swagger20), ["additionalProperties"]).unwrap(),
+      "type",
+    ),
+    "string",
+  )
+}
+
+///|
+test "any: the empty schema, which constrains nothing" {
+  let app = body_app(@schema.Schema::map(SAny))
+  let s = body_schema(app, OpenApi31)
+  // A free-form object: the values may be anything, so their schema says
+  // nothing at all.
+  assert_eq(dig(s, ["additionalProperties"]).unwrap(), @json.parse("{}"))
+  assert_eq(post_body(app, "{\"a\":1,\"b\":\"two\",\"c\":[null]}").status, 200)
+}

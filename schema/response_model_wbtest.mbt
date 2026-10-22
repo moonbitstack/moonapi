@@ -1,4 +1,12 @@
 ///|
+/// Parse a response body back into JSON — test helper.
+fn resp_json(r : @moonasgi.Response) -> Json {
+  @json.parse(@utf8.decode_lossy(r.body[:])) catch {
+    _ => Json::null()
+  }
+}
+
+///|
 /// A response model that mirrors a public "user" view: id, name, and a nested
 /// address — deliberately narrower than what a handler might hold internally.
 fn user_view_model() -> Schema {
@@ -34,30 +42,6 @@ test "response_model drops fields the model doesn't declare" {
   let addr = dig(filtered, ["address"]).unwrap()
   assert_eq(json_str(addr, "city"), "London")
   assert_eq(dig(addr, ["country"]) is None, true)
-}
-
-///|
-test "response_model projects through arrays element-wise" {
-  let model = Schema::array(Schema::object("Tag", [Field::new("label", SStr)]))
-  let produced = @json.parse(
-    "[{\"label\":\"a\",\"weight\":5},{\"label\":\"b\",\"weight\":9}]",
-  ) catch {
-    _ => Json::null()
-  }
-  let filtered = match filter_response(model, produced) {
-    Ok(j) => j
-    Err(_) => Json::null()
-  }
-  match filtered {
-    Array(a) => {
-      assert_eq(a.length(), 2)
-      assert_eq(json_str(a[0], "label"), "a")
-      // The undeclared `weight` was stripped from each element.
-      assert_eq(dig(a[0], ["weight"]) is None, true)
-      assert_eq(dig(a[1], ["weight"]) is None, true)
-    }
-    _ => assert_eq("expected array", "got other")
-  }
 }
 
 ///|

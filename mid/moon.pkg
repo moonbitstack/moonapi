@@ -4,3 +4,7 @@ import {
   "moonbitstack/moonasgi",
   "moonbitstack/moonzip/gzip",
 }
+
+import {
+  "moonbitstack/moonapi/di",
+} for "wbtest"

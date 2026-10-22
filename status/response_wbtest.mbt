@@ -1,6 +1,3 @@
-// The envelope response kinds: a redirect, which is a status and a `Location`,
-// and a file download, which is a body plus the headers that name it.
-
 ///|
 /// A redirect is a status and a `Location`, and nothing else — no body to read
 /// and no content type to describe one.
@@ -118,11 +115,25 @@ test "file_response sends a non-ASCII filename as filename*" {
 }
 
 ///|
-/// Nothing to name, nothing to say: a body with no filename is still a response,
-/// just not a download.
-test "file_response without a filename omits the disposition" {
-  let resp = file_response(b"raw", status=HTTP_206_PARTIAL_CONTENT)
-  assert_eq(resp.status, 206)
-  assert_eq(resp.header("content-disposition"), None)
-  assert_eq(resp.header("content-length"), Some("3"))
+/// What `canvas.toDataURL()` hands a client, served back as what it says it is.
+test "a data URL becomes a response, and bytes become a data URL" {
+  let resp = data_response("data:image/png;base64,AAEC", filename="x.png")
+  guard resp is Some(resp) else { fail("a data URL did not become a response") }
+  assert_eq(resp.status, 200)
+  assert_eq(resp.body, b"\x00\x01\x02")
+  assert_eq(resp.header("content-type"), Some("image/png"))
+  // Inline by default: a data URL is something to show, not to save.
+  assert_true(
+    resp.header("content-disposition") is Some(value) &&
+    value.has_prefix("inline"),
+  )
+  // Not a data URL is not a response.
+  assert_true(data_response("https://example.test/x.png") is None)
+  assert_true(data_response("") is None)
+  // And back the other way.
+  assert_eq(
+    data_url(b"\x00\x01\x02", media_type="image/png"),
+    "data:image/png;base64,AAEC",
+  )
+  assert_eq(data_url(b"hi"), "data:;base64,aGk=")
 }

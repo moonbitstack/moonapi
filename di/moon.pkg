@@ -2,3 +2,7 @@
 import {
   "moonbitstack/moonasgi",
 }
+
+import {
+  "moonbitstack/moonapi/status",
+} for "wbtest"

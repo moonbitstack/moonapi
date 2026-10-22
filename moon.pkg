@@ -21,10 +21,8 @@ import {
 }
 
 import {
-  "moonbitstack/moonhttp/mime",
   "moonbitstack/moonzip/gzip",
   "moonbitlang/core/encoding/utf8",
   "moonbitlang/core/json",
-  "moonbitstack/mooncred/jwt",
   "moonbitstack/moonhttp/sse",
 } for "wbtest"

@@ -1,77 +1,24 @@
 ///|
-/// An echo handler: accept, mirror each frame back, close on disconnect.
-fn echo_ws(ws : @socket.WebSocket) -> Unit {
-  ws.accept()
-  for ;; {
-    match ws.receive() {
-      Some(WsText(t)) => ws.send_text(t)
-      Some(WsBinary(b)) => ws.send_bytes(b)
-      None => break
-    }
-  }
-  ws.close()
-}
-
-///|
-test "ws: echo route mirrors text and binary frames" {
-  let events = @socket.drive_websocket(echo_ws, [
-    @socket.WsText("hi"),
-    @socket.WsBinary(b"\x01\x02"),
-  ])
-  assert_eq(events.length(), 4)
-  assert_eq(
-    events[0] == @moonasgi.Event::WebSocketAccept(subprotocol=None, headers=[]),
-    true,
-  )
-  assert_eq(events[1] == @moonasgi.Event::WebSocketSendText("hi"), true)
-  assert_eq(events[2] == @moonasgi.Event::WebSocketSendBytes(b"\x01\x02"), true)
-  assert_eq(
-    events[3] == @moonasgi.Event::WebSocketClose(code=1000, reason=""),
-    true,
-  )
-}
-
-///|
-test "ws: accept is idempotent and records the chosen subprotocol" {
-  let handler : @socket.WsHandler = ws => {
-    ws.accept(subprotocol="chat")
+/// A router's WebSocket routes come along too, and take the prefix.
+test "include_router: a WebSocket route joins under the prefix" {
+  let joined : Array[String] = []
+  let live = @route.Router::new()
+  live.websocket("/feed/:room", ws => {
     ws.accept()
-    ws.close(code=1001, reason="bye")
-  }
-  let events = @socket.drive_websocket(handler, [])
-  assert_eq(events.length(), 2)
-  assert_eq(
-    events[0] ==
-    @moonasgi.Event::WebSocketAccept(subprotocol=Some("chat"), headers=[]),
-    true,
-  )
-  assert_eq(
-    events[1] == @moonasgi.Event::WebSocketClose(code=1001, reason="bye"),
-    true,
-  )
-}
-
-///|
-test "ws: receive_text and receive_bytes discriminate frame kinds" {
-  let seen : Array[String] = []
-  let handler : @socket.WsHandler = ws => {
-    ws.accept()
-    // first frame is text, second is binary.
-    match ws.receive_text() {
-      Some(t) => seen.push("text:" + t)
-      None => seen.push("not-text")
+    joined.push(ws.param("room").unwrap_or("?"))
+    ws.close()
+  })
+  let app = App::new()
+  app.include_router(live, prefix="/live")
+  match app.match_ws("/live/feed/qwq") {
+    Some((handler, params)) => {
+      let _ = @socket.drive_websocket(handler, [], params~)
+      assert_eq(joined, ["qwq"])
     }
-    match ws.receive_bytes() {
-      Some(b) => seen.push("bytes:" + b.length().to_string())
-      None => seen.push("not-bytes")
-    }
+    None => fail("the included route should match under its prefix")
   }
-  let _ = @socket.drive_websocket(handler, [
-    @socket.WsText("a"),
-    @socket.WsBinary(b"\xaa\xbb\xcc"),
-  ])
-  assert_eq(seen[0], "text:a")
-  assert_eq(seen[1], "bytes:3")
+  // The path the router knew it by is not a route on the app.
+  assert_eq(app.match_ws("/feed/qwq") is None, true)
 }
 
 ///|

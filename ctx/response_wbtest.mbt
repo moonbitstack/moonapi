@@ -1,6 +1,3 @@
-// Serving content with the request taken into account: the four answers of
-// RFC 9110 §13 and §14 that a handler should not have to write out again.
-
 ///|
 fn asking(verb : String, headers : Array[(String, String)]) -> Context {
   {
@@ -190,30 +187,3 @@ test "serve can be told not to offer ranges, and answers HEAD without a body" {
 }
 
 // ------------------------------------------------------------------ data URLs
-
-///|
-/// What `canvas.toDataURL()` hands a client, served back as what it says it is.
-test "a data URL becomes a response, and bytes become a data URL" {
-  let resp = @status.data_response(
-    "data:image/png;base64,AAEC",
-    filename="x.png",
-  )
-  guard resp is Some(resp) else { fail("a data URL did not become a response") }
-  assert_eq(resp.status, 200)
-  assert_eq(resp.body, b"\x00\x01\x02")
-  assert_eq(resp.header("content-type"), Some("image/png"))
-  // Inline by default: a data URL is something to show, not to save.
-  assert_true(
-    resp.header("content-disposition") is Some(value) &&
-    value.has_prefix("inline"),
-  )
-  // Not a data URL is not a response.
-  assert_true(@status.data_response("https://example.test/x.png") is None)
-  assert_true(@status.data_response("") is None)
-  // And back the other way.
-  assert_eq(
-    @status.data_url(b"\x00\x01\x02", media_type="image/png"),
-    "data:image/png;base64,AAEC",
-  )
-  assert_eq(@status.data_url(b"hi"), "data:;base64,aGk=")
-}
