@@ -1,5 +1,5 @@
 import {
-  "moonbitstack/moonhttp/mime",
+  "moonbitstack/moonmime",
   "moonbitstack/moonapi",
   "moonbitstack/moonasgi",
   "moonbitlang/core/encoding/utf8",

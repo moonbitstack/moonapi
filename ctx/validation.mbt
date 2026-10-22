@@ -5,14 +5,9 @@
 pub fn Context::query(
   self : Context,
   name : String,
-  limits~ : @mime.Limits = @schema.query_limits,
+  limits~ : @moonurl.Limits = @schema.query_limits,
 ) -> String? {
-  for kv in query_pairs(self.request.query_string, limits) {
-    if kv.0 == name {
-      return Some(kv.1)
-    }
-  }
-  None
+  query_of(self.request.query_string, limits).get(name[:])
 }
 
 ///|
@@ -21,15 +16,9 @@ pub fn Context::query(
 pub fn Context::query_all(
   self : Context,
   name : String,
-  limits~ : @mime.Limits = @schema.query_limits,
+  limits~ : @moonurl.Limits = @schema.query_limits,
 ) -> Array[String] {
-  let out : Array[String] = []
-  for kv in query_pairs(self.request.query_string, limits) {
-    if kv.0 == name {
-      out.push(kv.1)
-    }
-  }
-  out
+  query_of(self.request.query_string, limits).values(name[:])
 }
 
 ///|
@@ -75,19 +64,16 @@ fn decode_field(raw : Bytes) -> String {
 }
 
 ///|
-/// Split a query string into decoded key/value pairs.
+/// The query string as pairs, or none at all when it breaks its bounds.
 ///
 /// A query string is `application/x-www-form-urlencoded`, so the decoding is
-/// `moonhttp/mime`'s: splitting on the raw bytes so a percent-escaped `&` or `=`
-/// inside a value cannot be mistaken for a separator, `+` as a space, and a pair
-/// with no `=` as a bare key.
-fn query_pairs(raw : Bytes, limits : @mime.Limits) -> Array[(String, String)] {
-  let out : Array[(String, String)] = []
-  let form = @mime.urlencoded(raw[:], limits~) catch { _ => return out }
-  for field in form.entries() {
-    out.push((field.name, field.value))
+/// moonurl's: splitting on the raw bytes so a percent-escaped `&` or `=` inside a
+/// value cannot be mistaken for a separator, `+` as a space, and a pair with no
+/// `=` as a bare key.
+fn query_of(raw : Bytes, limits : @moonurl.Limits) -> @moonurl.Query {
+  @moonurl.Query::decode(raw[:], limits~) catch {
+    _ => @moonurl.Query::new()
   }
-  out
 }
 
 ///|

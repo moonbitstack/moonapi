@@ -4,7 +4,7 @@ import {
   "moonbitstack/moonapi/status",
   "moonbitstack/moonmodel",
   "moonbitstack/moonasgi",
-  "moonbitstack/moonhttp/mime",
+  "moonbitstack/moonurl",
   "moonbitstack/moonschema",
   "moonbitlang/core/string",
 }

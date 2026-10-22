@@ -7,8 +7,8 @@
 /// request is an attempt to make the server allocate.
 ///
 /// An endpoint that genuinely takes more says so:
-/// `ctx.query("tag", limits=@mime.Limits::new(parts=100000))`.
-pub let query_limits : @mime.Limits = { parts: 1000, part_size: 1 << 16, }
+/// `ctx.query("tag", limits=@moonurl.Limits::new(pairs=100000))`.
+pub let query_limits : @moonurl.Limits = { pairs: 1000, size: 1 << 16, }
 
 ///|
 /// Parse a base-10 integer, `None` if `s` is not a well-formed integer literal

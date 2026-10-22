@@ -4,8 +4,8 @@ package "moonbitstack/moonapi/schema"
 import {
   "moonbitlang/core/debug",
   "moonbitstack/moonasgi/http",
-  "moonbitstack/moonhttp/mime",
   "moonbitstack/moonmodel",
+  "moonbitstack/moonurl",
 }
 
 // Values
@@ -23,7 +23,7 @@ pub fn json_model(Int32, Schema, Json) -> @http.Response
 
 pub fn parse_int(String) -> Int32?
 
-pub let query_limits : @mime.Limits
+pub let query_limits : @moonurl.Limits
 
 pub fn[T : ToSchema] schema_of(T) -> Schema
 

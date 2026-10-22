@@ -17,8 +17,8 @@ import {
   "moonbitstack/mooncred/jwt",
   "moonbitstack/moondate",
   "moonbitstack/moonhttp/cookie",
-  "moonbitstack/moonhttp/mime",
   "moonbitstack/moonhttp/sse",
+  "moonbitstack/moonurl",
 }
 
 // Values
@@ -208,7 +208,7 @@ pub fn json_model(Int32, @schema.Schema, Json) -> @http.Response
 
 pub fn parse_basic_auth(String) -> @ctx.HttpBasicCredentials?
 
-pub let query_limits : @mime.Limits
+pub let query_limits : @moonurl.Limits
 
 pub fn redirect(String, status? : Int32) -> @http.Response
 

@@ -5,7 +5,7 @@
 /// boundary. `Form::field` reads the first value, `values` every value a
 /// repeated field submitted, and `file` an `Upload` — filename, content-type,
 /// and the raw bytes byte-for-byte, so a binary upload survives untouched.
-/// `@mime.Limits` bounds what a sender may spend: a body over the limit comes back
+/// `@moonmime.Limits` bounds what a sender may spend: a body over the limit comes back
 /// as `None` and is answered `413` rather than parsed.
 ///
 ///     moon run examples/13-forms-files
@@ -14,7 +14,7 @@ fn main {
   let app = @moonapi.App::new()
   app.post("/upload", ctx => {
     // A title and three tags is the whole of this form, so more is not it.
-    let form = match ctx.form(limits={ ..@mime.limits, parts: 4, }) {
+    let form = match ctx.form(limits={ ..@moonmime.limits, parts: 4, }) {
       Some(f) => f
       None =>
         return @moonapi.text(

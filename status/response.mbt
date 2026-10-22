@@ -12,7 +12,7 @@
 pub fn redirect(url : String, status~ : Int32 = 307) -> @moonasgi.Response {
   @moonasgi.Response::new(
     status,
-    [("location", @url.escape_text(url[:], kind=Whole))],
+    [("location", @moonurl.escape_text(url[:], kind=Whole))],
     b"",
   )
 }
@@ -81,7 +81,7 @@ pub fn envelope(
   let kind = if media_type != "" {
     media_type
   } else {
-    @media.type_of(filename[:])
+    charset(@moonmime.guess_type(filename[:]))
   }
   let headers : Array[(String, String)] = [
     ("content-type", kind),
@@ -89,8 +89,22 @@ pub fn envelope(
   ]
   if filename != "" {
     headers.push(
-      ("content-disposition", @media.disposition(filename[:], inline~)),
+      (
+        "content-disposition",
+        @moonmime.content_disposition(filename[:], inline~),
+      ),
     )
   }
   headers
+}
+
+///|
+/// A text type with `charset=utf-8` added, as Starlette's `Response` adds it: a
+/// browser handed `text/plain` with no charset applies its own locale's.
+fn charset(kind : String) -> String {
+  if kind.has_prefix("text/") && !kind.to_lower().contains("charset=") {
+    kind + "; charset=utf-8"
+  } else {
+    kind
+  }
 }

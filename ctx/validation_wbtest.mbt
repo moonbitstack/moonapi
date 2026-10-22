@@ -44,7 +44,7 @@ test "query_all reads every value of a repeated key" {
 /// The bound on a query string is the caller's to set, and the preset is the
 /// one Express carries: `qs` allows a thousand parameters by default.
 test "the query bound is public and reaches both extractors" {
-  inspect(@schema.query_limits.parts, content="1000")
+  inspect(@schema.query_limits.pairs, content="1000")
   let many = StringBuilder()
   for i in 0..<40 {
     if i > 0 {
@@ -58,12 +58,12 @@ test "the query bound is public and reaches both extractors" {
   inspect(q(c, "tag"), content="0")
   // Under a bound of eight, the query is refused rather than truncated, and an
   // extractor that cannot answer answers nothing.
-  let tight = @mime.Limits::new(parts=8)
+  let tight = @moonurl.Limits::new(pairs=8)
   inspect(c.query_all("tag", limits=tight).length(), content="0")
   inspect(c.query("tag", limits=tight) is None, content="true")
   // And a bound it fits under changes nothing.
   inspect(
-    c.query_all("tag", limits=@mime.Limits::new(parts=100)).length(),
+    c.query_all("tag", limits=@moonurl.Limits::new(pairs=100)).length(),
     content="40",
   )
 }

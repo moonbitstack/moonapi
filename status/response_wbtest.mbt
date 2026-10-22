@@ -100,12 +100,13 @@ test "file_response inline displays instead of downloading" {
 }
 
 ///|
-/// A quoted filename cannot carry a non-ASCII name, so one that needs escaping
-/// goes out as RFC 6266's `filename*` instead.
+/// A quoted filename cannot carry a non-ASCII name, so one outside ASCII goes out
+/// as RFC 6266's `filename*` instead; a space is plain ASCII and stays quoted, as
+/// Django, Go's `mime` and Python's `email` write it.
 test "file_response sends a non-ASCII filename as filename*" {
   assert_eq(
     file_response(b"", filename="my notes.txt").header("content-disposition"),
-    Some("attachment; filename*=utf-8''my%20notes.txt"),
+    Some("attachment; filename=\"my notes.txt\""),
   )
   // Non-ASCII is UTF-8 percent-encoded, the only form the header can carry.
   assert_eq(

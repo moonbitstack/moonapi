@@ -108,7 +108,7 @@ is not known is a raised error, where the subpackage is named:
 - **Typed body extractors** — `Context::body[T]` deserialises the JSON body into a `derive(FromJson)` struct; `Context::body_validated[T]` first checks it against the endpoint descriptor and returns either the built value or a FastAPI-shaped `422` error list — schema emission, validation, and deserialisation all off one descriptor.
 - **Dependency injection** — a `Container` (provider registry + `dependency_overrides`) with request-scoped, one-shot resolution (per-request caching) and `yield`-style teardown run LIFO around the handler — the explicit MoonBit equivalent of FastAPI's `Depends`. `App::depends(container.erase())` attaches one to the application, and any route builder takes `dependencies=["key"]` (← `dependencies=[Depends(...)]`): the keys resolve before the handler and are torn down after it, whatever the handler did. The teardown is handed the error that ended the request, so cleanup can tell a rollback from a commit.
 - **OAuth2 + JWT security** — a `/token` password-grant endpoint issues an HS256 JWT (`create_access_token`), and an `OAuth2PasswordBearer` reads the `Authorization: Bearer` header, verifies the token, and enforces scopes: `401` on a missing or invalid/expired token, `403` when a valid token lacks a required scope. The token itself is `mooncred`'s and the algorithms are `mooncrypt`'s; moonapi names HS256 and hands over a key. `alg: "none"` cannot be expressed, the verifier's algorithm is the one that counts rather than the token's, and signatures compare in constant time — all of that is `mooncred`'s to guarantee, and it does.
-- **Form & file extractors** — `Context::form` parses both an `application/x-www-form-urlencoded` body (percent- and `+`-decoded) and a `multipart/form-data` body, splitting the boundary stream into fields and byte-exact uploads (filename + content-type + `size` + the part's own headers + raw bytes). Reading the body is `moonhttp/mime`'s; a body is attacker-controlled and already buffered, so `@mime.Limits` bounds what one may spend — a thousand parts of a megabyte by default — and a body over either bound comes back as `None`, refused whole rather than truncated. `Context::oauth2_password_form` reads the OAuth2 password form off it.
+- **Form & file extractors** — `Context::form` parses both an `application/x-www-form-urlencoded` body (percent- and `+`-decoded) and a `multipart/form-data` body, splitting the boundary stream into fields and byte-exact uploads (filename + content-type + `size` + the part's own headers + raw bytes). Reading the body is `moonhttp/form`'s, over moonmime and moonurl; a body is attacker-controlled and already buffered, so `@moonmime.Limits` bounds what one may spend — a thousand parts of a megabyte by default — and a body over either bound comes back as `None`, refused whole rather than truncated. `Context::oauth2_password_form` reads the OAuth2 password form off it.
 - **response_model** — `filter_response` / `json_model` validate a handler's return value against a declared `Schema` and project it down to exactly the model's fields, so a route can hold a richer object internally than it exposes (an id, a password hash) and still emit only what it promised.
 - **Middleware & exception handlers** — an outer middleware chain (`App::middleware`) with `cors(...)` (preflight + actual-request headers, configurable origins/methods/headers, credentials, exposed headers) and `gzip(...)` (`moonzip`'s compressor), plus exception handlers (`App::exception_handler`): a handler `raise`s an `HttpException` and the app maps it to a response, falling through to a built-in `{"detail": ...}` for `HttpException` and a `500` for anything else. `App::add_status_handler(code, ...)` swaps in a custom response for any error status — a routing `404` / `405` or a raised exception's status — so an app can serve its own error pages.
 - **Per-operation security** — a route carries `security=[SecurityRequirement::new(scheme, scopes=[...])]`, and every scheme shape has a guard: `secure_oauth2`, `secure_oauth2_code`, `secure_bearer`, `secure_api_key` (header / query / cookie), `secure_basic`, `secure_digest`, `secure_openid`. Each surfaces the scheme in the spec *and* registers the check that runs **before** the handler — `401` with the `WWW-Authenticate` challenge the scheme owes (a scoped bearer route names the scope it wanted), `403` on a missing scope or a rejected API key. Every one takes `description=` and `auto_error=` (with the flag off, the guard admits an anonymous caller and leaves the decision to the route). A bare `add_security_scheme` documents without enforcing (FastAPI's split between a scheme and a wired dependency).
@@ -136,8 +136,8 @@ default, and every default is the one the mainstream framework uses.
 
 ```moonbit
 ctx.query("tag")                                       // the preset bound
-ctx.query("tag", limits=@mime.Limits::new(parts=100000))
-ctx.form(limits=@mime.Limits::new(part_size=8 << 20))  // an upload endpoint
+ctx.query("tag", limits=@moonurl.Limits::new(pairs=100000))
+ctx.form(limits=@moonmime.Limits::new(part_size=8 << 20))  // an upload endpoint
 
 @moonapi.create_access_token(sub, secret, now, extra={ "tenant": Json::string("acme") })
 @moonapi.sse_response(events, headers=[("cache-control", "no-store")])
@@ -146,9 +146,9 @@ ctx.form(limits=@mime.Limits::new(part_size=8 << 20))  // an upload endpoint
 
 | Setting | Default | Why that one |
 |:--:|:--:|:--|
-| `query_limits.parts` | 1000 | `qs`, and therefore Express, allows a thousand query parameters |
-| `query_limits.part_size` | 64 KiB | Well past the 8 KiB the common servers allow a whole request line |
-| `form`'s `limits` | `@mime.limits` | Starlette's `max_files` and `max_fields`, with python-multipart's part size |
+| `query_limits.pairs` | 1000 | `qs`, and therefore Express, allows a thousand query parameters |
+| `query_limits.size` | 64 KiB | Well past the 8 KiB the common servers allow a whole request line |
+| `form`'s `limits` | `@moonmime.limits` | Starlette's `max_files` and `max_fields`, with python-multipart's part size |
 | `expires_in_secs` | 3600 | The hour every OAuth2 example issues |
 | `space` on a stream | on | The space after a colon is universal on the wire and stripped by every reader |
 
