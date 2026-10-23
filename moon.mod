@@ -34,7 +34,7 @@ import {
   "moonbitstack/moonschema@0.2.0",
   "moonbitstack/moonzip@0.3.0",
   "moonbitstack/mooncat@0.18.1",
-  "moonbitstack/moonast@0.2.0",
+  "moonbitstack/moonast@0.2.1",
   "moonbitlang/parser@0.4.6",
   "moonbitlang/async@0.22.5",
 }
