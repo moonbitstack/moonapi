@@ -12,10 +12,10 @@ jobs:
       contents: read
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-26.04, macos-26, windows-2025]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -63,3 +63,7 @@ jobs:
       - name: lint (fmt is clean)
         run: |
           moon fmt && git -c core.autocrlf=false diff --ignore-cr-at-eol --exit-code
+
+      - name: interfaces are up to date
+        run: |
+          moon info --target all && git -c core.autocrlf=false diff --ignore-cr-at-eol --exit-code
