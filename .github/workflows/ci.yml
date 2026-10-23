@@ -54,6 +54,12 @@ jobs:
       - name: moon test (all backends)
         run: moon test --target all
 
+      - name: generated routes are fresh
+        run: moon run cmd/routes --target native -- -C . examples/27-annotations/routes.mbt -o examples/27-annotations/routes.g.mbt --check
+
+      - name: annotated example runs
+        run: moon run examples/27-annotations | grep -q "PURGE /cache -> 200 purged"
+
       - name: lint (fmt is clean)
         run: |
           moon fmt && git -c core.autocrlf=false diff --ignore-cr-at-eol --exit-code

@@ -1,0 +1,17 @@
+// The generator behind `#app.get` and `#router.post`: the handlers a package
+// annotates, registered in one function the application calls at start-up.
+// moonx runs it as a dev_build rule; see the README.
+supported_targets = "+native+wasm"
+
+pkgtype(kind: "executable")
+
+import {
+  "moonbitstack/moonast/quote",
+  "moonbitstack/moonast/attr",
+  "moonbitstack/moonast/gen",
+  "moonbitstack/moonast/cli",
+  "moonbitlang/parser/attribute",
+  "moonbitstack/moonhttp/method",
+  "moonbitlang/async",
+  "moonbitlang/core/env",
+}

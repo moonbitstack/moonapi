@@ -6,4 +6,5 @@ import {
   "moonbitstack/moonapi/endpoint",
   "moonbitstack/moonapi/security",
   "moonbitstack/moonasgi",
+  "moonbitstack/moonhttp/method",
 }

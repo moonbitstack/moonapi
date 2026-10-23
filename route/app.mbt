@@ -1,14 +1,7 @@
 ///|
-/// HTTP methods a moonapi route can bind to.
-pub(all) enum Method {
-  Get
-  Post
-  Put
-  Patch
-  Delete
-  Head
-  Options
-} derive(Eq)
+/// The request method a route binds to: the nine standard ones and any other
+/// token, from moonhttp.
+pub using @method {type Method}
 
 ///|
 /// A moonapi route handler: request context in, response out. It may `raise` an
@@ -103,6 +96,3 @@ pub fn segments(path : String) -> Array[String] {
   }
   out
 }
-
-///|
-pub extend Method with Eq::{not_equal, equal}

@@ -31,7 +31,8 @@ pub fn App::openapi(
   self.collect_routes("", all_routes)
   for entry in all_routes {
     let (full_path, route) = entry
-    if !route.include_in_schema {
+    guard route.include_in_schema &&
+      operation_key(route.verb, version) is Some(key) else {
       continue
     }
     let op : Map[String, Json] = Map([])
@@ -99,7 +100,7 @@ pub fn App::openapi(
       Some(Object(m)) => m
       _ => Map([])
     }
-    item[method_lower(route.verb)] = Json(op)
+    item[key] = Json(op)
     paths[doc_path] = Json(item)
   }
   let info : Map[String, Json] = Map([

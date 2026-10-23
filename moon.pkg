@@ -17,6 +17,7 @@ import {
   "moonbitstack/moonapi/route",
   "moonbitstack/moonapi/openapi",
   "moonbitstack/moonasgi",
+  "moonbitstack/moonhttp/method",
   "moonbitstack/moonjson",
 }
 

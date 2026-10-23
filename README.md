@@ -72,6 +72,60 @@ provides Swagger UI at `http://127.0.0.1:8000/docs`, ReDoc at
 `http://127.0.0.1:8000/redoc`, and OpenAPI 3.0.3 at
 `http://127.0.0.1:8000/openapi.json`.
 
+## Routes as annotations
+
+FastAPI's `@app.get` is `#app.get` here. Annotate free functions and the generator writes the registration:
+
+```moonbit
+#app.get("/items/:id", summary="Read an item", tags="items")
+fn read_item(ctx : @moonapi.Context) -> @moonasgi.Response {
+  @moonapi.text(200, "item " + ctx.param("id").unwrap_or(""))
+}
+
+#app.route("PURGE", "/cache")
+fn purge(_ctx : @moonapi.Context) -> @moonasgi.Response {
+  @moonapi.text(200, "purged")
+}
+
+#router.get("/me")
+fn me(_ctx : @moonapi.Context) -> @moonasgi.Response {
+  @moonapi.text(200, "me")
+}
+```
+
+Wire the generator into the build once. In `moon.mod`:
+
+```
+rule(name: "routes", command: "moonx moonbitstack/moonapi/cmd/routes@0.17.0 -C \"$mod_dir\" \"$input\" -o \"$output\"")
+```
+
+and in the `moon.pkg` of the package holding the handlers:
+
+```
+dev_build(rule: "routes", input: "routes.mbt", output: "routes.g.mbt")
+formatter(ignore: [ "routes.g.mbt" ])
+```
+
+`moon check`, `moon build` and `moon run` regenerate `routes.g.mbt` whenever `routes.mbt` changes. It holds `register(app)` for the `#app.*` routes and `register_router(router)` for the `#router.*` ones. MoonBit runs nothing on import, so the application calls them once at start-up:
+
+```moonbit
+let app = @moonapi.App::new()
+register(app)
+```
+
+| Annotation | Registers |
+|:--:|:--|
+| `#app.get(path)`, likewise `post`, `put`, `patch`, `delete`, `head`, `options`, `trace` | a route for that method |
+| `#app.route(method, path)` | a route for any method, an extension one included |
+| `#app.websocket(path)` | a WebSocket route |
+| `#router.<any of the above>` | the same on a `Router` |
+
+An annotation takes the arguments that can be written as strings or booleans: `summary`, `description`, `operation_id`, `name`, `status_code` (written `"201"`), `deprecated`, `include_in_schema`, `validate`, and `tags` or `dependencies` repeated. A handler with a second parameter gets the background tasks, and one returning a `StreamingResponse` streams. `responses`, `security`, `endpoint` and `openapi_extra` take MoonBit values, so routes that need them are registered with `app.route`. [Example 27](examples/27-annotations/) is a complete package.
+
+### Extension methods
+
+`Method` is moonhttp's: the nine methods of RFC 9110 and RFC 5789, and `Other` for any other token. `app.route(Other("PURGE"), "/cache", handler)` registers one; names are case-sensitive, so `purge` does not reach it. An OpenAPI document has no key for `CONNECT` or an extension method before 3.2, nor for `TRACE` in Swagger 2.0, so those routes serve requests but are not listed.
+
 ## Packages
 
 Each concern is its own subpackage, so a program links the parts it uses. The
@@ -81,7 +135,8 @@ as they always did.
 |  Package  | What it holds | Depends on |
 |:--:|:--|:--|
 | `moonapi` | `App` and its methods, the façade | everything below |
-| `moonapi/route` | `Method`, `Route`, `Router`, path matching | `ctx`, `endpoint`, `security`, `socket` |
+| `moonapi/route` | `Route`, `Router`, path matching; `Method` from moonhttp | `ctx`, `endpoint`, `security`, `socket` |
+| `moonapi/cmd/routes` | The `#app.get` generator, run by moonx as a dev_build rule | moonast |
 | `moonapi/openapi` | the document's info block, routes as operations | `route`, `schema` |
 | `moonapi/security` | schemes, guards, per-operation requirements, tokens | `ctx`, `schema`, `status` |
 | `moonapi/mid` | CORS, gzip, exception handlers | `ctx` |

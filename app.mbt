@@ -1,43 +1,25 @@
 ///|
+/// The method a request names. A name that is not a token matches no route.
 fn parse_method(s : String) -> @route.Method? {
-  match s {
-    "GET" => Some(Get)
-    "POST" => Some(Post)
-    "PUT" => Some(Put)
-    "PATCH" => Some(Patch)
-    "DELETE" => Some(Delete)
-    "HEAD" => Some(Head)
-    "OPTIONS" => Some(Options)
-    // TRACE, CONNECT, or something invented. Answering it as a GET would run a
-    // handler the caller never asked for.
+  try @method.Method::of(s) catch {
     _ => None
+  } noraise {
+    m => Some(m)
   }
 }
 
 ///|
-/// A method's name as it appears in an `Allow` header.
-fn method_name(m : @route.Method) -> String {
+/// The operation key a route is written under in an OpenAPI path item. The
+/// documents moonapi writes have no key for CONNECT or an extension method, and
+/// Swagger 2.0 none for TRACE either.
+fn operation_key(
+  m : @route.Method,
+  version : @schema.OpenApiVersion,
+) -> String? {
   match m {
-    Get => "GET"
-    Post => "POST"
-    Put => "PUT"
-    Patch => "PATCH"
-    Delete => "DELETE"
-    Head => "HEAD"
-    Options => "OPTIONS"
-  }
-}
-
-///|
-fn method_lower(m : @route.Method) -> String {
-  match m {
-    Get => "get"
-    Post => "post"
-    Put => "put"
-    Patch => "patch"
-    Delete => "delete"
-    Head => "head"
-    Options => "options"
+    Connect | Other(_) => None
+    Trace if version is Swagger20 => None
+    m => Some(m.name().to_lower())
   }
 }
 
@@ -925,7 +907,7 @@ fn App::route_and_dispatch(
             resp
           }
         } else {
-          allowed.push(method_name(route.verb))
+          allowed.push(route.verb.name())
           if route.verb is Get {
             allowed.push("HEAD")
           }

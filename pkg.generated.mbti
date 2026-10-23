@@ -17,6 +17,7 @@ import {
   "moonbitstack/mooncred/jwt",
   "moonbitstack/moondate",
   "moonbitstack/moonhttp/cookie",
+  "moonbitstack/moonhttp/method",
   "moonbitstack/moonhttp/sse",
   "moonbitstack/moonurl",
 }
@@ -276,9 +277,9 @@ pub fn App::openapi_json(Self, version? : @schema.OpenApiVersion) -> String
 pub fn App::patch(Self, String, (@ctx.Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
 pub fn App::post(Self, String, (@ctx.Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
 pub fn App::put(Self, String, (@ctx.Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
-pub fn App::route(Self, @route.Method, String, (@ctx.Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
-pub fn App::route_bg(Self, @route.Method, String, (@ctx.Context, @ctx.BackgroundTasks) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
-pub fn App::route_stream(Self, @route.Method, String, (@ctx.Context) -> @http.StreamingResponse raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn App::route(Self, @method.Method, String, (@ctx.Context) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn App::route_bg(Self, @method.Method, String, (@ctx.Context, @ctx.BackgroundTasks) -> @http.Response raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn App::route_stream(Self, @method.Method, String, (@ctx.Context) -> @http.StreamingResponse raise, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
 pub fn App::secure_api_key(Self, String, @security.ApiKey, description? : String, auto_error? : Bool) -> Unit
 pub fn App::secure_basic(Self, String, @security.BasicAuth, description? : String, auto_error? : Bool) -> Unit
 pub fn App::secure_bearer(Self, String, String, bearer_format? : String, description? : String, auto_error? : Bool) -> Unit
@@ -337,7 +338,7 @@ pub using @mid {type HttpException}
 
 pub using @openapi {type License}
 
-pub using @route {type Method}
+pub using @method {type Method}
 
 pub using @security {type OAuth2CodeBearer}
 

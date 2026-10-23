@@ -604,7 +604,7 @@ test "method handling: unknown verbs, Allow on 405, and HEAD off GET" {
   let app = App::new()
   app.get("/thing", _ctx => @status.text(200, "hhh"))
   app.post("/thing", _ctx => @status.text(201, "made"))
-  // An invented verb reaches no handler.
+  // A method no route registered reaches no handler.
   let weird = app.handle(mkreq("TRACE", "/thing"))
   assert_eq(weird.status, 405)
   assert_eq(weird.header("content-type"), Some("application/json"))
@@ -620,6 +620,34 @@ test "method handling: unknown verbs, Allow on 405, and HEAD off GET" {
   let missing = app.handle(mkreq("GET", "/nope"))
   assert_eq(missing.status, 404)
   assert_eq(@utf8.decode_lossy(missing.body), "{\"detail\":\"Not Found\"}")
+}
+
+///|
+test "an extension method is a route like any other, by its exact name" {
+  let app = App::new()
+  app.route(Other("PURGE"), "/cache", _ctx => @status.text(200, "purged"))
+  app.route(Trace, "/echo", _ctx => @status.text(200, "echo"))
+  assert_eq(app.handle(mkreq("PURGE", "/cache")).status, 200)
+  assert_eq(app.handle(mkreq("TRACE", "/echo")).status, 200)
+  let lower = app.handle(mkreq("purge", "/cache"))
+  assert_eq(lower.status, 405)
+  assert_eq(lower.header("allow"), Some("PURGE"))
+  assert_eq(app.handle(mkreq("BAD METHOD", "/cache")).status, 405)
+}
+
+///|
+test "OpenAPI writes the methods its version has a key for" {
+  let app = App::new()
+  app.route(Other("PURGE"), "/cache", _ctx => @status.text(200, "purged"))
+  app.route(Trace, "/cache", _ctx => @status.text(200, "echo"))
+  app.get("/cache", _ctx => @status.text(200, "cached"))
+  let v31 = app.openapi(version=OpenApi31)
+  assert_eq(op_of(v31, "/cache", "trace") is Some(_), true)
+  assert_eq(op_of(v31, "/cache", "get") is Some(_), true)
+  assert_eq(op_of(v31, "/cache", "purge"), None)
+  let v20 = app.openapi(version=Swagger20)
+  assert_eq(op_of(v20, "/cache", "trace"), None)
+  assert_eq(op_of(v20, "/cache", "get") is Some(_), true)
 }
 
 ///|

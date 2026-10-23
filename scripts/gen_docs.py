@@ -14,9 +14,15 @@ SECTIONS = [
      "a handler, WebSocket routes, the OpenAPI document, lifespan, and to_asgi to "
      "run anywhere."),
     ("route", "route", "Routes & routers",
-     "Method, Route and Router: the record an app keeps per operation, routers "
-     "that collect routes away from any application and fold in under a prefix, "
-     "and how a path is cut into segments and matched."),
+     "Route and Router: the record an app keeps per operation, routers that "
+     "collect routes away from any application and fold in under a prefix, and "
+     "how a path is cut into segments and matched. Method is moonhttp's: the nine "
+     "standard methods and Other for any extension token."),
+    ("routes", "cmd/routes", "Route annotations",
+     "#app.get, #router.post, #app.route(method, path) and #app.websocket on free "
+     "functions, turned into register(app) and register_router(router) by a "
+     "generator that moonx runs as a dev_build rule. The README shows the wiring; "
+     "example 27 is a complete package."),
     ("ctx", "ctx", "Request context & extractors",
      "The Context and everything read from it: path, query, header and cookie "
      "parameters, the JSON body (raw, typed with derive(FromJson), or validated), "
