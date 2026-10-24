@@ -1,0 +1,15 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonapi/examples/03-openapi-versions"
+
+// Values
+
+// Errors
+
+// Types and methods
+type Price derive(ToJson)
+
+type Widget derive(ToJson)
+
+// Type aliases
+
+// Traits

@@ -1,8 +1,0 @@
-import {
-  "moonbitstack/moonzip/gzip",
-  "moonbitstack/moonapi",
-  "moonbitstack/moonasgi",
-  "moonbitlang/core/encoding/utf8",
-}
-
-pkgtype(kind: "executable")

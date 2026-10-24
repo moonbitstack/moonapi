@@ -9,10 +9,10 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 # code between files or packages cannot leave the reference behind.
 SECTIONS = [
     ("app", ".", "Application",
-     "The App and everything it does: the route builders (get / post / ...), "
-     "include_router, mounting, the security wiring that enforces a scheme before "
-     "a handler, WebSocket routes, the OpenAPI document, lifespan, and to_asgi to "
-     "run anywhere."),
+     "The App and everything it does: the route builders (get / post / stream / "
+     "...), include_router, mounting, layers and middleware, the security wiring "
+     "that enforces a scheme before a handler, WebSocket routes, the OpenAPI "
+     "document, lifespan, and to_asgi, the ASGI application a server runs."),
     ("route", "route", "Routes & routers",
      "Route and Router: the record an app keeps per operation, routers that "
      "collect routes away from any application and fold in under a prefix, and "
@@ -43,16 +43,17 @@ SECTIONS = [
      "OAuth2 password bearer and code flows, HTTP bearer, basic and digest, API "
      "keys: the schemes emitted into the document, the guards that answer 401 and "
      "403, per-operation requirements, and access tokens signed through mooncred."),
-    ("mid", "mid", "Middleware & errors",
-     "CORS, gzip, per-status pages, and exception handlers that turn a raised "
-     "HttpException into its response, with a 500 fallback."),
+    ("exceptions", "exceptions", "Errors",
+     "HttpException and the exception handlers that turn a raised error into its "
+     "response, with a 500 fallback. CORS, gzip and the host checks are moonasgi "
+     "layers, added with App::layer."),
     ("socket", "socket", "WebSocket",
-     "The connection a WebSocket route drives (accept, receive, send, close), its "
-     "messages, and drive_websocket, which runs a handler against an in-memory "
-     "frame queue so a test needs no socket."),
+     "The live connection a WebSocket route's async handler holds: accept, the "
+     "receive and send calls for text, bytes and JSON, close, and Disconnected, "
+     "raised when the client leaves."),
     ("status", "status", "Responses & status codes",
-     "text, html, json, redirects, downloads, data: URLs, cookies and Server-Sent "
-     "Events, plus the 63 HTTP_* and 15 WS_* constants FastAPI re-exports from "
+     "text, html, json, redirects, downloads, data: URLs, cookies, streams written "
+     "as they go and Server-Sent Events over them, plus the 63 HTTP_* and 15 WS_* constants FastAPI re-exports from "
      "Starlette."),
     ("di", "di", "Dependency injection",
      "Providers, scopes and dependency_overrides: request-scoped resolution with "
@@ -218,7 +219,7 @@ CONTRACT = """let app = @moonapi.App::new()
 app.get("/users/:id", ctx => @moonapi.text(200, "user " + ctx.param("id").unwrap()))
 
 let spec = app.openapi_json(version=@moonapi.OpenApi31)   // also @moonapi.OpenApi30 / @moonapi.Swagger20
-@mooncat.serve(app.to_asgi(), host="127.0.0.1", port=8000)"""
+@mooncat.serve(app.to_asgi())                              // 127.0.0.1:12000"""
 
 
 def esc(t):
@@ -260,18 +261,18 @@ def main():
             '<pre>' + tint(CONTRACT) + '</pre></div>'
             '<div class="contract"><h2>Run the full example</h2>'
             '<p class="pdesc">Start the native Mooncat server on Windows, macOS or Linux:</p>'
-            '<pre>moon run examples/25-full-example --target native</pre>'
-            '<p class="doc"><a href="http://127.0.0.1:8000/docs">Swagger UI</a> · '
-            '<a href="http://127.0.0.1:8000/redoc">ReDoc</a> · '
-            '<a href="http://127.0.0.1:8000/openapi.json">OpenAPI 3.0.3</a> · '
-            '<a href="https://github.com/moonbitstack/moonapi/blob/master/examples/README.md#full-example-api">API route list</a></p></div></header>')
+            '<pre>moon run src/examples/25-full-example --target native</pre>'
+            '<p class="doc"><a href="http://127.0.0.1:12000/docs">Swagger UI</a> · '
+            '<a href="http://127.0.0.1:12000/redoc">ReDoc</a> · '
+            '<a href="http://127.0.0.1:12000/openapi.json">OpenAPI 3.0.3</a> · '
+            '<a href="https://github.com/moonbitstack/moonapi/blob/master/src/examples/README.md#full-example-api">API route list</a></p></div></header>')
 
     body = [HEAD, '<div class="layout">'] + side + [hero]
     total = 0
     for sid, rel, title, desc in SECTIONS:
         body.append('<section class="pkg" id="%s"><h2><span class="at">§</span>%s</h2>'
                     '<p class="pdesc">%s</p>' % (sid, title, esc(desc)))
-        files = sorted(f for f in (ROOT / rel).glob("*.mbt")
+        files = sorted(f for f in (ROOT / "src" / rel).glob("*.mbt")
                        if not f.name.endswith(("_wbtest.mbt", "_test.mbt")))
         for kind, sig, doc in [it for f in files for it in parse(f)]:
             total += 1

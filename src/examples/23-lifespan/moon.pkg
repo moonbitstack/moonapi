@@ -1,0 +1,16 @@
+import {
+  "moonbitstack/moonapi",
+  "moonbitstack/moonasgi/testing",
+  "moonbitlang/async",
+}
+
+pkgtype(kind: "executable")
+
+warnings = "-29"
+
+options(
+  targets: {
+    "main.mbt": [ "native", "wasm", "js" ],
+    "elsewhere.mbt": [ "wasm-gc" ],
+  },
+)

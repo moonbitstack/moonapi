@@ -1,0 +1,17 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonapi/examples/25-full-example/application"
+
+import {
+  "moonbitstack/moonapi",
+}
+
+// Values
+pub fn build() -> @moonapi.App
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits

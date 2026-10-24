@@ -1,0 +1,387 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonapi"
+
+import {
+  "moonbitstack/moonapi/ctx",
+  "moonbitstack/moonapi/di",
+  "moonbitstack/moonapi/endpoint",
+  "moonbitstack/moonapi/exceptions",
+  "moonbitstack/moonapi/openapi",
+  "moonbitstack/moonapi/route",
+  "moonbitstack/moonapi/schema",
+  "moonbitstack/moonapi/security",
+  "moonbitstack/moonapi/socket",
+  "moonbitstack/moonapi/status",
+  "moonbitstack/moonasgi/http",
+  "moonbitstack/moonasgi/mid",
+  "moonbitstack/moonasgi/spec",
+  "moonbitstack/mooncred/jwt",
+  "moonbitstack/moondate",
+  "moonbitstack/moonhttp/cookie",
+  "moonbitstack/moonhttp/method",
+  "moonbitstack/moonurl",
+}
+
+// Values
+pub const HTTP_100_CONTINUE : Int32 = 100
+
+pub const HTTP_101_SWITCHING_PROTOCOLS : Int32 = 101
+
+pub const HTTP_102_PROCESSING : Int32 = 102
+
+pub const HTTP_103_EARLY_HINTS : Int32 = 103
+
+pub const HTTP_200_OK : Int32 = 200
+
+pub const HTTP_201_CREATED : Int32 = 201
+
+pub const HTTP_202_ACCEPTED : Int32 = 202
+
+pub const HTTP_203_NON_AUTHORITATIVE_INFORMATION : Int32 = 203
+
+pub const HTTP_204_NO_CONTENT : Int32 = 204
+
+pub const HTTP_205_RESET_CONTENT : Int32 = 205
+
+pub const HTTP_206_PARTIAL_CONTENT : Int32 = 206
+
+pub const HTTP_207_MULTI_STATUS : Int32 = 207
+
+pub const HTTP_208_ALREADY_REPORTED : Int32 = 208
+
+pub const HTTP_226_IM_USED : Int32 = 226
+
+pub const HTTP_300_MULTIPLE_CHOICES : Int32 = 300
+
+pub const HTTP_301_MOVED_PERMANENTLY : Int32 = 301
+
+pub const HTTP_302_FOUND : Int32 = 302
+
+pub const HTTP_303_SEE_OTHER : Int32 = 303
+
+pub const HTTP_304_NOT_MODIFIED : Int32 = 304
+
+pub const HTTP_305_USE_PROXY : Int32 = 305
+
+pub const HTTP_306_RESERVED : Int32 = 306
+
+pub const HTTP_307_TEMPORARY_REDIRECT : Int32 = 307
+
+pub const HTTP_308_PERMANENT_REDIRECT : Int32 = 308
+
+pub const HTTP_400_BAD_REQUEST : Int32 = 400
+
+pub const HTTP_401_UNAUTHORIZED : Int32 = 401
+
+pub const HTTP_402_PAYMENT_REQUIRED : Int32 = 402
+
+pub const HTTP_403_FORBIDDEN : Int32 = 403
+
+pub const HTTP_404_NOT_FOUND : Int32 = 404
+
+pub const HTTP_405_METHOD_NOT_ALLOWED : Int32 = 405
+
+pub const HTTP_406_NOT_ACCEPTABLE : Int32 = 406
+
+pub const HTTP_407_PROXY_AUTHENTICATION_REQUIRED : Int32 = 407
+
+pub const HTTP_408_REQUEST_TIMEOUT : Int32 = 408
+
+pub const HTTP_409_CONFLICT : Int32 = 409
+
+pub const HTTP_410_GONE : Int32 = 410
+
+pub const HTTP_411_LENGTH_REQUIRED : Int32 = 411
+
+pub const HTTP_412_PRECONDITION_FAILED : Int32 = 412
+
+pub const HTTP_413_REQUEST_ENTITY_TOO_LARGE : Int32 = 413
+
+pub const HTTP_414_REQUEST_URI_TOO_LONG : Int32 = 414
+
+pub const HTTP_415_UNSUPPORTED_MEDIA_TYPE : Int32 = 415
+
+pub const HTTP_416_REQUESTED_RANGE_NOT_SATISFIABLE : Int32 = 416
+
+pub const HTTP_417_EXPECTATION_FAILED : Int32 = 417
+
+pub const HTTP_418_IM_A_TEAPOT : Int32 = 418
+
+pub const HTTP_421_MISDIRECTED_REQUEST : Int32 = 421
+
+pub const HTTP_422_UNPROCESSABLE_ENTITY : Int32 = 422
+
+pub const HTTP_423_LOCKED : Int32 = 423
+
+pub const HTTP_424_FAILED_DEPENDENCY : Int32 = 424
+
+pub const HTTP_425_TOO_EARLY : Int32 = 425
+
+pub const HTTP_426_UPGRADE_REQUIRED : Int32 = 426
+
+pub const HTTP_428_PRECONDITION_REQUIRED : Int32 = 428
+
+pub const HTTP_429_TOO_MANY_REQUESTS : Int32 = 429
+
+pub const HTTP_431_REQUEST_HEADER_FIELDS_TOO_LARGE : Int32 = 431
+
+pub const HTTP_451_UNAVAILABLE_FOR_LEGAL_REASONS : Int32 = 451
+
+pub const HTTP_500_INTERNAL_SERVER_ERROR : Int32 = 500
+
+pub const HTTP_501_NOT_IMPLEMENTED : Int32 = 501
+
+pub const HTTP_502_BAD_GATEWAY : Int32 = 502
+
+pub const HTTP_503_SERVICE_UNAVAILABLE : Int32 = 503
+
+pub const HTTP_504_GATEWAY_TIMEOUT : Int32 = 504
+
+pub const HTTP_505_HTTP_VERSION_NOT_SUPPORTED : Int32 = 505
+
+pub const HTTP_506_VARIANT_ALSO_NEGOTIATES : Int32 = 506
+
+pub const HTTP_507_INSUFFICIENT_STORAGE : Int32 = 507
+
+pub const HTTP_508_LOOP_DETECTED : Int32 = 508
+
+pub const HTTP_510_NOT_EXTENDED : Int32 = 510
+
+pub const HTTP_511_NETWORK_AUTHENTICATION_REQUIRED : Int32 = 511
+
+pub const WS_1000_NORMAL_CLOSURE : Int32 = 1000
+
+pub const WS_1001_GOING_AWAY : Int32 = 1001
+
+pub const WS_1002_PROTOCOL_ERROR : Int32 = 1002
+
+pub const WS_1003_UNSUPPORTED_DATA : Int32 = 1003
+
+pub const WS_1005_NO_STATUS_RCVD : Int32 = 1005
+
+pub const WS_1006_ABNORMAL_CLOSURE : Int32 = 1006
+
+pub const WS_1007_INVALID_FRAME_PAYLOAD_DATA : Int32 = 1007
+
+pub const WS_1008_POLICY_VIOLATION : Int32 = 1008
+
+pub const WS_1009_MESSAGE_TOO_BIG : Int32 = 1009
+
+pub const WS_1010_MANDATORY_EXT : Int32 = 1010
+
+pub const WS_1011_INTERNAL_ERROR : Int32 = 1011
+
+pub const WS_1012_SERVICE_RESTART : Int32 = 1012
+
+pub const WS_1013_TRY_AGAIN_LATER : Int32 = 1013
+
+pub const WS_1014_BAD_GATEWAY : Int32 = 1014
+
+pub const WS_1015_TLS_HANDSHAKE : Int32 = 1015
+
+pub fn check_constraints(Json, Array[@schema.Constraint], Array[String], Array[@schema.ValidationError]) -> Unit
+
+pub fn create_access_token(String, String, Int64, scopes? : Array[String], expires_in_secs? : Int64, extra? : Map[String, Json], wins? : @jwt.Wins, clash? : @jwt.OnClash[Map[String, Json]]) -> String
+
+pub fn data_response(String, filename? : String, status? : Int32, inline? : Bool) -> @http.Response?
+
+pub fn data_url(Bytes, media_type? : String) -> String
+
+pub fn delete_cookie(@http.Response, String, path? : String?, domain? : String, secure? : Bool, http_only? : Bool, same_site? : @cookie.SameSite?) -> @http.Response
+
+pub fn file_response(Bytes, filename? : String, media_type? : String, status? : Int32, inline? : Bool) -> @http.Response
+
+pub fn filter_response(@schema.Schema, Json) -> Result[Json, Array[@schema.ValidationError]]
+
+pub fn html(Int32, String) -> @http.Response
+
+pub fn http_error(Int32, String, headers? : Array[(String, String)]) -> @exceptions.HttpException
+
+pub fn json(Int32, Json) -> @http.Response
+
+pub fn json_model(Int32, @schema.Schema, Json) -> @http.Response
+
+pub fn parse_basic_auth(String) -> @ctx.HttpBasicCredentials?
+
+pub let query_limits : @moonurl.Limits
+
+pub fn redirect(String, status? : Int32) -> @http.Response
+
+pub fn redoc_ui(spec_url? : String, title? : String) -> String
+
+pub fn[T : @schema.ToSchema] schema_of(T) -> @schema.Schema
+
+pub fn set_cookie(@http.Response, String, String, max_age? : Int32, expires? : @moondate.Moment, path? : String?, domain? : String, secure? : Bool, http_only? : Bool, same_site? : @cookie.SameSite?) -> @http.Response
+
+pub fn sse(async (@status.Events) -> Unit, status? : Int32, headers? : Array[(String, String)], space? : Bool, wins? : @jwt.Wins, clash? : @jwt.OnClash[Array[(String, String)]]) -> @status.Stream
+
+pub fn swagger_ui(spec_url? : String, title? : String) -> String
+
+pub fn text(Int32, String) -> @http.Response
+
+pub fn token_response(String) -> @http.Response
+
+pub fn unprocessable(Array[@schema.ValidationError]) -> @http.Response
+
+pub fn validate_schema(@schema.Schema, Json, Array[String], Array[@schema.ValidationError]) -> Unit
+
+pub fn validation_error_body(Array[@schema.ValidationError]) -> Json
+
+pub fn with_constraints(Json, Array[@schema.Constraint], @schema.OpenApiVersion) -> Json
+
+// Errors
+
+// Types and methods
+pub struct App {
+  router : @route.Router
+  layers : Array[&@mid.Layer]
+  exception_handlers : Array[(@ctx.Context, Error) -> @http.Response?]
+  security_schemes : Array[@security.DeclaredScheme]
+  enforcers : Map[String, (@ctx.Context, @security.SecurityScopes, Int64) -> Result[@security.AuthenticatedUser, @http.Response]]
+  status_handlers : Map[Int32, (@ctx.Context) -> @http.Response]
+  mounts : Array[(String, Mount)]
+  startup_hooks : Array[async (Map[String, Json]) -> Unit]
+  shutdown_hooks : Array[async (Map[String, Json]) -> Unit]
+  mut info : @openapi.ApiInfo
+  mut clock : () -> Int64
+  mut deps : @di.Deps?
+}
+pub fn App::add_security_scheme(Self, String, @security.SecurityScheme, description? : String) -> Unit
+pub fn App::add_status_handler(Self, Int32, (@ctx.Context) -> @http.Response) -> Unit
+pub fn App::delete(Self, String, async (@ctx.Context) -> @http.Response, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn App::depends(Self, @di.Deps) -> Unit
+pub fn App::describe(Self, title? : String, api_version? : String, description? : String, terms_of_service? : String, contact? : @openapi.Contact?, license? : @openapi.License?, servers? : Array[@openapi.Server]) -> Unit
+pub fn App::enable_docs(Self, openapi_url? : String?, docs_url? : String?, redoc_url? : String?, version? : @schema.OpenApiVersion) -> Unit
+pub fn App::exception_handler(Self, (@ctx.Context, Error) -> @http.Response?) -> Unit
+pub fn App::get(Self, String, async (@ctx.Context) -> @http.Response, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub async fn App::handle(Self, @http.Request) -> @http.Response
+pub fn App::include_router(Self, @route.Router, prefix? : String, tags? : Array[String], security? : Array[@security.SecurityRequirement], dependencies? : Array[String], responses? : Array[@endpoint.ResponseSpec], deprecated? : Bool, include_in_schema? : Bool) -> Unit
+pub fn App::layer(Self, &@mid.Layer) -> Unit
+pub fn App::middleware(Self, async (@http.Request, async (@http.Request) -> @http.Response) -> @http.Response) -> Unit
+pub fn App::mount(Self, String, Self) -> Unit
+pub fn App::mount_asgi(Self, String, async (@spec.Scope, async () -> @spec.Event, async (@spec.Event) -> Unit) -> Unit) -> Unit
+pub fn App::new() -> Self
+pub fn App::on_shutdown(Self, async (Map[String, Json]) -> Unit) -> Unit
+pub fn App::on_startup(Self, async (Map[String, Json]) -> Unit) -> Unit
+pub fn App::openapi(Self, version? : @schema.OpenApiVersion, title? : String, api_version? : String, description? : String, terms_of_service? : String, contact? : @openapi.Contact?, license? : @openapi.License?, servers? : Array[@openapi.Server]) -> Json
+pub fn App::openapi_json(Self, version? : @schema.OpenApiVersion) -> String
+pub fn App::patch(Self, String, async (@ctx.Context) -> @http.Response, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn App::post(Self, String, async (@ctx.Context) -> @http.Response, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn App::put(Self, String, async (@ctx.Context) -> @http.Response, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn App::route(Self, @method.Method, String, async (@ctx.Context) -> @http.Response, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn App::route_stream(Self, @method.Method, String, async (@ctx.Context) -> @status.Stream, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn App::secure_api_key(Self, String, @security.ApiKey, description? : String, auto_error? : Bool) -> Unit
+pub fn App::secure_basic(Self, String, @security.BasicAuth, description? : String, auto_error? : Bool) -> Unit
+pub fn App::secure_bearer(Self, String, String, bearer_format? : String, description? : String, auto_error? : Bool) -> Unit
+pub fn App::secure_digest(Self, String, @security.DigestAuth, description? : String, auto_error? : Bool) -> Unit
+pub fn App::secure_oauth2(Self, String, @security.OAuth2PasswordBearer, scopes? : Array[(String, String)], description? : String, auto_error? : Bool) -> Unit
+pub fn App::secure_oauth2_code(Self, String, @security.OAuth2CodeBearer, scopes? : Array[(String, String)], description? : String, auto_error? : Bool) -> Unit
+pub fn App::secure_openid(Self, String, String, String, description? : String, auto_error? : Bool) -> Unit
+pub fn App::set_clock(Self, () -> Int64) -> Unit
+pub fn App::stream(Self, String, async (@ctx.Context) -> @status.Stream, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn App::to_asgi(Self) -> async (@spec.Scope, async () -> @spec.Event, async (@spec.Event) -> Unit) -> Unit
+pub fn App::url_for(Self, String, params? : Map[String, String]) -> String?
+pub fn App::websocket(Self, String, async (@socket.WebSocket) -> Unit) -> Unit
+
+type Mount
+
+// Type aliases
+pub type ApiHandler = async (@ctx.Context) -> @http.Response
+
+pub using @openapi {type ApiInfo}
+
+pub using @security {type ApiKey}
+
+pub using @security {type ApiKeyIn}
+
+pub using @security {type AuthenticatedUser}
+
+pub using @ctx {type BackgroundTasks}
+
+pub using @security {type BasicAuth}
+
+pub using @schema {type Constraint}
+
+pub using @openapi {type Contact}
+
+pub using @di {type Container}
+
+pub using @ctx {type Context}
+
+pub using @di {type Deps}
+
+pub using @security {type DigestAuth}
+
+pub using @socket {type Disconnected}
+
+pub using @endpoint {type Endpoint}
+
+pub using @status {type Events}
+
+pub type ExceptionHandler = (@ctx.Context, Error) -> @http.Response?
+
+pub using @schema {type Field}
+
+pub type Hook = async (Map[String, Json]) -> Unit
+
+pub using @ctx {type HttpBasicCredentials}
+
+pub using @exceptions {type HttpException}
+
+pub using @openapi {type License}
+
+pub using @method {type Method}
+
+pub type Middleware = async (@http.Request, async (@http.Request) -> @http.Response) -> @http.Response
+
+pub using @security {type OAuth2CodeBearer}
+
+pub using @security {type OAuth2PasswordBearer}
+
+pub using @ctx {type OAuth2PasswordRequestForm}
+
+pub using @schema {type ObjectSchema}
+
+pub using @schema {type OpenApiVersion}
+
+pub using @endpoint {type Param}
+
+pub using @endpoint {type ParamLoc}
+
+pub using @di {type Provider}
+
+pub using @endpoint {type ResponseSpec}
+
+pub using @route {type Router}
+
+pub using @schema {type Schema}
+
+pub using @di {type Scope}
+
+pub using @security {type SecurityRequirement}
+
+pub using @security {type SecurityScheme}
+
+pub using @security {type SecurityScopes}
+
+pub using @openapi {type Server}
+
+pub using @status {type Stream}
+
+pub type StreamHandler = async (@ctx.Context) -> @status.Stream
+
+pub using @schema {type Unresolved}
+
+pub using @schema {type ValidationError}
+
+pub using @socket {type WebSocket}
+
+pub using @status {type Writer}
+
+pub type WsHandler = async (@socket.WebSocket) -> Unit
+
+pub using @socket {type WsMessage}
+
+pub using @schema {trait ToSchema}
+
+// Traits

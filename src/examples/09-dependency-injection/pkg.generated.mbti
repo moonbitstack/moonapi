@@ -1,0 +1,13 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonapi/examples/09-dependency-injection"
+
+// Values
+
+// Errors
+
+// Types and methods
+type Dep
+
+// Type aliases
+
+// Traits

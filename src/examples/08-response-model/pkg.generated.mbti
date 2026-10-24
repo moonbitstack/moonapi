@@ -1,0 +1,15 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonapi/examples/08-response-model"
+
+// Values
+
+// Errors
+
+// Types and methods
+type Address derive(ToJson)
+
+type User derive(ToJson)
+
+// Type aliases
+
+// Traits

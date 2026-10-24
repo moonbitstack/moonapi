@@ -1,0 +1,12 @@
+// WebSocket handling: the connection, its messages, and the route a handler is
+// mounted on.
+import {
+  "moonbitstack/moonasgi",
+  "moonbitlang/core/encoding/utf8",
+  "moonbitlang/core/json",
+}
+
+import {
+  "moonbitstack/moonasgi/testing",
+  "moonbitlang/async",
+} for "wbtest"

@@ -1,7 +1,0 @@
-import {
-  "moonbitstack/moonhttp/sse",
-  "moonbitstack/moonapi",
-  "moonbitlang/core/encoding/utf8",
-}
-
-pkgtype(kind: "executable")

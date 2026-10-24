@@ -1,7 +1,0 @@
-import {
-  "moonbitstack/moonasgi/spec",
-  "moonbitstack/moonapi",
-  "moonbitstack/moonasgi",
-}
-
-pkgtype(kind: "executable")

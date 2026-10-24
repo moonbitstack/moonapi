@@ -24,8 +24,9 @@ flowchart LR
 
 ## Quickstart
 
-Routing and the OpenAPI document run on every backend. Serving needs a socket,
-so the entry point is `async fn main` and the target is `--target native`:
+Routing and the OpenAPI document build on every backend. Handlers are async, and
+serving needs a socket, so the entry point is `async fn main` and the target is
+native or wasm:
 
 ```moonbit
 async fn main {
@@ -56,8 +57,9 @@ curl http://127.0.0.1:12000/users/233
 `moon.mod` needs `moonbitstack/moonapi`, and — for the serving half —
 `moonbitstack/mooncat` plus `moonbitlang/async`, which `async fn main`
 requires by name. The package importing them needs the same three in its
-`moon.pkg`. Drop the last two and the routes and the document still build on
-wasm, wasm-gc and js.
+`moon.pkg`. Drop mooncat and the app still runs in-process on native, wasm and
+js: `App::handle` and the moonasgi test client drive it through the same ASGI
+path a server does.
 
 `App::enable_docs()` mounts `/openapi.json`, `/docs` and `/redoc` instead of
 printing the document; `swagger_ui()` and `redoc_ui()` return those pages on
@@ -65,12 +67,12 @@ their own.
 
 For a runnable integration of the root API, two routers, authentication,
 validation, middleware, background work, streaming and docs, see the
-[complete application example](examples/25-full-example/). The full example list
-is in [examples/README.md](examples/README.md). On Windows, macOS or Linux, start
-the native server with `moon run examples/25-full-example --target native`. The service
-provides Swagger UI at `http://127.0.0.1:8000/docs`, ReDoc at
-`http://127.0.0.1:8000/redoc`, and OpenAPI 3.0.3 at
-`http://127.0.0.1:8000/openapi.json`.
+[complete application example](src/examples/25-full-example/). The full example list
+is in [src/examples/README.md](src/examples/README.md). On Windows, macOS or Linux, start
+the native server with `moon run src/examples/25-full-example --target native`. The service
+provides Swagger UI at `http://127.0.0.1:12000/docs`, ReDoc at
+`http://127.0.0.1:12000/redoc`, and OpenAPI 3.0.3 at
+`http://127.0.0.1:12000/openapi.json`.
 
 ## Routes as annotations
 
@@ -96,7 +98,7 @@ fn me(_ctx : @moonapi.Context) -> @moonasgi.Response {
 Wire the generator into the build once. In `moon.mod`:
 
 ```
-rule(name: "routes", command: "moonx moonbitstack/moonapi/cmd/routes@0.17.0 -C \"$mod_dir\" \"$input\" -o \"$output\"")
+rule(name: "routes", command: "moonx moonbitstack/moonapi/cmd/routes@0.17.1 -C \"$mod_dir\" \"$input\" -o \"$output\"")
 ```
 
 and in the `moon.pkg` of the package holding the handlers:
@@ -120,7 +122,7 @@ register(app)
 | `#app.websocket(path)` | a WebSocket route |
 | `#router.<any of the above>` | the same on a `Router` |
 
-An annotation takes the arguments that can be written as strings or booleans: `summary`, `description`, `operation_id`, `name`, `status_code` (written `"201"`), `deprecated`, `include_in_schema`, `validate`, and `tags` or `dependencies` repeated. A handler with a second parameter gets the background tasks, and one returning a `StreamingResponse` streams. `responses`, `security`, `endpoint` and `openapi_extra` take MoonBit values, so routes that need them are registered with `app.route`. [Example 27](examples/27-annotations/) is a complete package.
+An annotation takes the arguments that can be written as strings or booleans: `summary`, `description`, `operation_id`, `name`, `status_code` (written `"201"`), `deprecated`, `include_in_schema`, `validate`, and `tags` or `dependencies` repeated. A handler with a second parameter gets the background tasks, and one returning a `Stream` streams. `responses`, `security`, `endpoint` and `openapi_extra` take MoonBit values, so routes that need them are registered with `app.route`. [Example 27](src/examples/27-annotations/) is a complete package.
 
 ### Extension methods
 
@@ -139,12 +141,12 @@ as they always did.
 | `moonapi/cmd/routes` | The `#app.get` generator, run by moonx as a dev_build rule | moonast |
 | `moonapi/openapi` | the document's info block, routes as operations | `route`, `schema` |
 | `moonapi/security` | schemes, guards, per-operation requirements, tokens | `ctx`, `schema`, `status` |
-| `moonapi/mid` | CORS, gzip, exception handlers | `ctx` |
+| `moonapi/exceptions` | `HttpException` and exception handlers | `ctx` |
 | `moonapi/endpoint` | `Param`, `ResponseSpec`, `Endpoint` and its validation | `ctx`, `schema` |
 | `moonapi/ctx` | `Context` and every extractor, background tasks | `schema`, `status` |
 | `moonapi/schema` | `Schema`, constraints, `ValidationError`, `of_model` | `status` |
-| `moonapi/socket` | WebSocket connections and routes | nothing |
-| `moonapi/status` | response helpers, cookies, SSE, status constants | nothing |
+| `moonapi/socket` | the live WebSocket connection and its routes | nothing |
+| `moonapi/status` | response helpers, streams, SSE, cookies, status constants | nothing |
 | `moonapi/di` | dependency injection | nothing |
 
 **Constructors are written without the package.** `pub using` re-exports types
@@ -152,9 +154,9 @@ but not their constructors, so `@moonapi.OpenApi31` does not resolve. Wherever
 the expected type is known — an argument, a field, a match — the bare name does:
 `version=OpenApi31`, `Param::new("id", InPath, schema=SInt)`. The one place it
 is not known is a raised error, where the subpackage is named:
-`raise @mid.HttpException(...)`.
+`raise @exceptions.HttpException(...)`.
 
-## What's here (`v0`)
+## What's here
 
 - **Routing** — `App::get/post/put/patch/delete/route`, `:param` path segments extracted into `Context::param`, correct `404` (no path) vs `405` (path but not method). A route takes the operation arguments FastAPI's path operations take — `summary`, `description`, `tags`, `deprecated`, `operation_id`, `status_code`, `responses`, `name`, `include_in_schema`, and an `openapi_extra` fragment merged over the generated operation object — and `App::url_for(name, params)` resolves a named route back to its path (← `url_path_for`), mount prefix included.
 - **Routers** — `Router` collects routes away from any application, and `App::include_router(router, prefix=, tags=, security=, dependencies=, responses=, deprecated=, include_in_schema=)` folds them in as the app's own (← FastAPI's `APIRouter` / `include_router`). The arguments given at the join reach every route in the group: tags, security requirements and dependencies lead the route's own, group responses are documented under it, and `deprecated` / `include_in_schema` mark or hide the whole set. A router is a value, so the same one can be included twice under different prefixes.
@@ -165,16 +167,16 @@ is not known is a raised error, where the subpackage is named:
 - **OAuth2 + JWT security** — a `/token` password-grant endpoint issues an HS256 JWT (`create_access_token`), and an `OAuth2PasswordBearer` reads the `Authorization: Bearer` header, verifies the token, and enforces scopes: `401` on a missing or invalid/expired token, `403` when a valid token lacks a required scope. The token itself is `mooncred`'s and the algorithms are `mooncrypt`'s; moonapi names HS256 and hands over a key. `alg: "none"` cannot be expressed, the verifier's algorithm is the one that counts rather than the token's, and signatures compare in constant time — all of that is `mooncred`'s to guarantee, and it does.
 - **Form & file extractors** — `Context::form` parses both an `application/x-www-form-urlencoded` body (percent- and `+`-decoded) and a `multipart/form-data` body, splitting the boundary stream into fields and byte-exact uploads (filename + content-type + `size` + the part's own headers + raw bytes). Reading the body is `moonhttp/form`'s, over moonmime and moonurl; a body is attacker-controlled and already buffered, so `@moonmime.Limits` bounds what one may spend — a thousand parts of a megabyte by default — and a body over either bound comes back as `None`, refused whole rather than truncated. `Context::oauth2_password_form` reads the OAuth2 password form off it.
 - **response_model** — `filter_response` / `json_model` validate a handler's return value against a declared `Schema` and project it down to exactly the model's fields, so a route can hold a richer object internally than it exposes (an id, a password hash) and still emit only what it promised.
-- **Middleware & exception handlers** — an outer middleware chain (`App::middleware`) with `cors(...)` (preflight + actual-request headers, configurable origins/methods/headers, credentials, exposed headers) and `gzip(...)` (`moonzip`'s compressor), plus exception handlers (`App::exception_handler`): a handler `raise`s an `HttpException` and the app maps it to a response, falling through to a built-in `{"detail": ...}` for `HttpException` and a `500` for anything else. `App::add_status_handler(code, ...)` swaps in a custom response for any error status — a routing `404` / `405` or a raised exception's status — so an app can serve its own error pages.
+- **Middleware & exception handlers** — two kinds of middleware. `App::layer` takes any moonasgi `@mid.Layer`, which wraps the ASGI application and sees every event, so streams stay streams and WebSocket traffic passes through: moonasgi ships `Cors`, `Gzip`, `TrustedHosts`, `HttpsRedirect` and `ServerErrors`, and `Wrap` turns any function from app to app into one. `App::middleware` is FastAPI's `@app.middleware("http")`: a function of the request and `call_next` that returns the response, whole. Layers and middleware wrap the app in one list, in registration order with the first outermost, and they wrap mounted applications too. Exception handlers (`App::exception_handler`): a handler `raise`s an `HttpException` and the app maps it to a response, falling through to a built-in `{"detail": ...}` for `HttpException` and a `500` for anything else. `App::add_status_handler(code, ...)` swaps in a custom response for any error status — a routing `404` / `405` or a raised exception's status — so an app can serve its own error pages.
 - **Per-operation security** — a route carries `security=[SecurityRequirement::new(scheme, scopes=[...])]`, and every scheme shape has a guard: `secure_oauth2`, `secure_oauth2_code`, `secure_bearer`, `secure_api_key` (header / query / cookie), `secure_basic`, `secure_digest`, `secure_openid`. Each surfaces the scheme in the spec *and* registers the check that runs **before** the handler — `401` with the `WWW-Authenticate` challenge the scheme owes (a scoped bearer route names the scope it wanted), `403` on a missing scope or a rejected API key. Every one takes `description=` and `auto_error=` (with the flag off, the guard admits an anonymous caller and leaves the decision to the route). A bare `add_security_scheme` documents without enforcing (FastAPI's split between a scheme and a wired dependency).
-- **Background tasks** — a background-aware route (`App::route_bg`) receives a `BackgroundTasks` queue; `add_task` defers work that the app runs, in order, **after** the response is sent (← FastAPI's `BackgroundTasks`), so a slow write never delays the client.
-- **Sub-application mounting** — `App::mount(prefix, subapp)` composes routers: a request under `prefix` is routed by the sub-app with the prefix stripped (its own middleware, security, and background tasks apply), and the sub-app's routes and security schemes fold into the parent's merged OpenAPI document under the prefix. Mounts nest. `App::mount_handler(prefix, handler)` mounts a foreign moonasgi `Handler` the same way — a third-party component, or static files — which the app routes to but does not document.
-- **Streaming responses** — `App::stream(path, handler)` / `App::route_stream(verb, ...)` register a route returning a `moonasgi.StreamingResponse`, whose chunks reach the client as separate body events — a client reads the first long before the last one exists. `App::handle_with_stream` is the chunk-level view a test reads. A middleware is typed buffered-in, buffered-out, so one that rewrites the body (`gzip`) collapses the reply to a single chunk rather than cutting new bytes at boundaries that no longer describe them.
-- **Server-Sent Events** — `moonhttp/sse` frames an event per the WHATWG event-stream format (`id` / `event` / `retry` / multi-line `data` / `:` comments); `sse_response` is a `text/event-stream` stream of those frames, **one chunk per event**, so each dispatches on arrival. Hand it to `App::stream`. (An event stream delivered as one body is not an event stream — it is a file shaped like one.)
-- **WebSocket routes** — `App::websocket(path, handler)` over the moonasgi WS SEAM. The handler drives a `WebSocket` (accept / receive / send / close); it's a synchronous core, so `drive_websocket` runs it against an in-memory frame queue in a test and `App::to_asgi` serves it over the async transport.
+- **Background tasks** — every handler has `ctx.background`; `add_task` defers async work that the app runs, in order, **after** the last body event is sent (← FastAPI's `BackgroundTasks`), so a slow write never delays the client.
+- **Sub-application mounting** — `App::mount(prefix, subapp)` composes applications: a request under `prefix` reaches the sub-app with the prefix moved from `path` to `root_path` (its own layers, security and background tasks apply), and the sub-app's routes and security schemes fold into the parent's merged OpenAPI document under the prefix. Mounts nest, and a sub-app's lifespan hooks run with the parent's. `App::mount_asgi(prefix, app)` mounts any other ASGI application the same way — a third-party component, or static files — which the app routes to but does not document.
+- **Streaming responses** — `App::stream(path, handler)` / `App::route_stream(verb, ...)` register a route returning a `Stream`, whose body writes through a `Writer`: each `write` is one body event, so a client reads the first long before the last one exists, and HTTP trailers follow the body when the route declares them. A client that leaves cancels the body. Layers see each event as it goes; an `App::middleware` gets the response whole, so the stream is gathered for it.
+- **Server-Sent Events** — `moonhttp/sse` frames an event per the WHATWG event-stream format (`id` / `event` / `retry` / multi-line `data` / `:` comments); `sse(body)` is a `text/event-stream` `Stream` whose body sends those frames through `Events::send` and `ping`, **one body event per frame**, so each dispatches on arrival. (An event stream delivered as one body is not an event stream — it is a file shaped like one.)
+- **WebSocket routes** — `App::websocket(path, handler)` over the moonasgi WebSocket protocol. The async handler holds the live connection: `accept` (with a subprotocol and headers), `receive` / `receive_text` / `receive_bytes` / `receive_json`, the matching `send_*`, and `close`. It can speak first and answer as messages arrive; a client that leaves raises `Disconnected(code~, reason~)` out of `receive`, which ends the handler quietly unless it catches it. The moonasgi test client's `websocket` drives a route in-process.
 - **Security schemes** — the six OpenAPI shapes (OAuth2 password and authorization-code flows, HTTP bearer / basic / digest, an API key in a header / query / cookie, and OpenID Connect) are emitted in each dialect's form: `components/securitySchemes` in 3.x, `securityDefinitions` in 2.0, where an `http` scheme becomes the standard `apiKey`-in-`Authorization` workaround and OpenID Connect — which 2.0 cannot express — is left out rather than described as something it is not.
 - **Documentation UI** — `App::enable_docs()` mounts `/openapi.json`, `/docs` and `/redoc`, all three with `include_in_schema=false` so turning documentation on does not change the document. `swagger_ui()` and `redoc_ui()` return the pages alone, for an app that serves them under its own paths or behind its own guard.
-- **Lifespan hooks** — `App::on_startup` / `App::on_shutdown` (← FastAPI's `lifespan`), driven over the ASGI lifespan protocol. Startup in registration order, shutdown in reverse, so a resource is released before whatever opened it. `App::lifespan_handler` runs the same thing in-process, for a test with no socket.
+- **Lifespan hooks** — `App::on_startup` / `App::on_shutdown` (← FastAPI's `lifespan`), driven over the ASGI lifespan protocol. Startup in registration order, shutdown in reverse, so a resource is released before whatever opened it. A hook gets the lifespan state, and what it stores there reaches every request as `ctx.state()`. The moonasgi test client's `lifespan` runs the same thing in-process.
 - **Responses** — `text`, `html`, `json` and `json_model` helpers over `moonasgi.Response`, plus `redirect(url, status=307)` (← `RedirectResponse`; the URL is encoded over the characters a URI reserves for structure, so an already-encoded URL passes through and a smuggled `CRLF` cannot open a header) and `file_response(content, filename=, media_type=, inline=)` (← `FileResponse`: a media type guessed from the extension, `Content-Length`, and a `Content-Disposition` that falls back to RFC 6266's `filename*` when the name will not survive quoting). It takes bytes rather than a path because moonapi has no filesystem — the same app runs on wasm, js and native.
 - **Conditional and partial serving** — `Context::serve(content, ...)` is `file_response` with the request weighed: `304` when the client's copy is current, `412` when a precondition fails, `206` for a range (one `Content-Range`, or `multipart/byteranges` for several), `416` for a range that is not there. This is what makes a download resumable. The entity-tags, the five precondition fields and the range arithmetic are [moonhttp](https://github.com/moonbitstack/moonhttp)'s `conditional` and `range`, so it is RFC 9110 §13 and §14 rather than a guess. Everything turns on `etag=`; left out, one is hashed from the content, which costs a pass over the body — pass `@conditional.stamp(length~, modified~)` for one stat's worth instead.
 - **Data URLs** — `data_response(url)` serves what a `data:` URL carries, under the media type it names; `data_url(content, media_type=)` writes one. This is what `canvas.toDataURL()` and `FileReader.readAsDataURL()` hand back, and how a client posts an image inside a JSON field. Not a data URL yields `None`, so a handler tells "no picture" from "not a picture" without touching base64.
@@ -195,8 +197,8 @@ ctx.query("tag", limits=@moonurl.Limits::new(pairs=100000))
 ctx.form(limits=@moonmime.Limits::new(part_size=8 << 20))  // an upload endpoint
 
 @moonapi.create_access_token(sub, secret, now, extra={ "tenant": Json::string("acme") })
-@moonapi.sse_response(events, headers=[("cache-control", "no-store")])
-@moonapi.sse_response(events, space=false)
+@moonapi.sse(body, headers=[("cache-control", "no-store")])
+@moonapi.sse(body, space=false)
 ```
 
 | Setting | Default | Why that one |
@@ -210,14 +212,14 @@ ctx.form(limits=@moonmime.Limits::new(part_size=8 << 20))  // an upload endpoint
 ### Where a setting can arrive twice
 
 `create_access_token` computes `sub`, `iat`, `exp` and `scopes` from its
-arguments, and `extra` adds claims alongside them. `sse_response` sets the three
+arguments, and `extra` adds claims alongside them. `sse` sets the three
 headers a stream needs, and `headers` adds its own. Where the two name the same
 thing, the rule is published rather than implied:
 
 | Function | Who wins by default | What happens when both speak |
 |:--:|:--:|:--|
 | `create_access_token` | the arguments | aborts — a token whose subject is not the `subject` passed in is a mistake in the program |
-| `sse_response` | the caller's header | replaces ours, so a response never carries two `content-type` headers |
+| `sse` | the caller's header | replaces ours, so a response never carries two `content-type` headers |
 
 Both take `wins` to turn the direction around and `clash` to choose between
 merging in silence, aborting, and handing the decision to a callback of your
@@ -226,18 +228,18 @@ meanings.
 
 ## Design notes
 
-Two places make an explicit, documented trade-off rather than a silent shortcut:
+- **One path for every caller.** `App::to_asgi` is the application; `App::handle`, the test client and a server all go through it, so a test exercises the layers, mounts, lifespan state and disconnect handling a server does, not a shortcut beside them.
+- **Middleware that is not moonapi's lives in moonasgi.** CORS, gzip and the host checks are ASGI layers, so a moonapi app, a moongql endpoint and a hand-written ASGI app share one implementation and one configuration.
 
-- **GZip** is `moonzip`'s, whose output zlib reads and whose reader takes what zlib writes. What lives here is the middleware around it: when to compress, and which headers to set.
-- **WebSocket** handlers are a synchronous core: the same handler runs in a test and under a server. Because the core can't suspend on the async transport (MoonBit runs async only in an async context), the serving shell buffers the client's inbound frames, runs the handler, then emits its frames. Content and order are preserved — exact for echo, broadcast, and request-reply — but it doesn't interleave live per-frame with the client.
+## Roadmap
 
-## Roadmap (transliterating FastAPI)
-
-The descriptor tree (`Endpoint` / `Param` / `Schema`) drives OpenAPI body schemas and validation; on top sit the typed `derive(FromJson)` body extractors, the dependency-injection container, the OAuth2 password-bearer security layer, the `Form` / `File` extractors, and `response_model` filtering. On the middleware side: CORS, `gzip`, exception and per-status handlers, Server-Sent Events, and WebSocket routes.
+The descriptor tree (`Endpoint` / `Param` / `Schema`) drives OpenAPI body schemas and validation; on top sit the typed `derive(FromJson)` body extractors, the dependency-injection container, the OAuth2 password-bearer security layer, the `Form` / `File` extractors, and `response_model` filtering. Around them: ASGI layers, exception and per-status handlers, streams, Server-Sent Events, and live WebSocket routes.
 
 **0.9.0 is where moonapi stopped being several libraries at once.** The cryptography went to `mooncrypt`, the token format to `mooncred`, the wire formats to `moonhttp`, the compression to `moonzip`, and the JSON to `moonjson` — 2 329 lines out of the framework and into libraries anything can use, with every existing test still passing. What is left is routing, extraction, validation, OpenAPI, injection and middleware, which is what a web framework is.
 
 **0.13.1 finished the file story.** `Context::serve` weighs the conditional fields and the `Range` before answering, so a download resumes and a repeat request costs a header rather than a body. The tags, the fields and the arithmetic are `moonhttp`'s; the four answers and the envelope are here.
+
+**0.17.1 made moonapi ASGI-native.** Handlers are async and a request runs as ASGI events end to end: streams write as they go, a WebSocket handler holds the live connection, background tasks run after the last body event, and CORS and gzip are moonasgi layers. Moving from 0.17.0: `cors(...)` and `gzip(...)` become `app.layer(@mid.Cors::new(...))` and `app.layer(@mid.Gzip::new(...))`; `route_bg` becomes a plain route using `ctx.background`; `sse_response(events)` becomes `sse(e => ...)`; lifespan hooks take the state map; `mount_handler` is `mount_asgi`; `moonapi/mid` is `moonapi/exceptions`.
 
 Next: splitting what remains into packages, so a program that wants the router does not link the OpenAPI writer; static files and templates; and codegen'd request schemas via `moonctl`.
 

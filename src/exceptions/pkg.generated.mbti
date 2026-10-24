@@ -1,0 +1,22 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonapi/exceptions"
+
+import {
+  "moonbitstack/moonapi/ctx",
+  "moonbitstack/moonasgi/http",
+}
+
+// Values
+pub fn http_error(Int32, String, headers? : Array[(String, String)]) -> HttpException
+
+// Errors
+pub(all) suberror HttpException {
+  HttpException(status~ : Int32, detail~ : Json, headers~ : Array[(String, String)])
+}
+
+// Types and methods
+
+// Type aliases
+pub type ExceptionHandler = (@ctx.Context, Error) -> @http.Response?
+
+// Traits

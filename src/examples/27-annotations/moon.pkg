@@ -1,0 +1,21 @@
+// Routes written as annotations, FastAPI's way: `moon run src/examples/27-annotations`.
+// `routes.g.mbt` comes from `cmd/routes`; a project wires it as a dev_build rule.
+import {
+  "moonbitlang/async",
+  "moonbitstack/moonapi",
+  "moonbitstack/moonasgi",
+  "moonbitlang/core/encoding/utf8",
+}
+
+pkgtype(kind: "executable")
+
+formatter(ignore: [ "routes.g.mbt" ])
+
+warnings = "-29"
+
+options(
+  targets: {
+    "main.mbt": [ "native", "wasm", "js" ],
+    "elsewhere.mbt": [ "wasm-gc" ],
+  },
+)
