@@ -10,9 +10,12 @@
 /// The URL is escaped as a whole URI reference, so an encoded one is not encoded
 /// twice and a `\r\n` cannot open a header of its own.
 ///
-/// ```mbt
-/// app.get("/old", _ctx => redirect("/new"))
-/// // GET /old  ->  307, Location: /new
+/// ```mbt check
+/// test {
+///   let moved = @status.redirect("/new")
+///   assert_eq(moved.status, 307)
+///   assert_eq(moved.header("location"), Some("/new"))
+/// }
 /// ```
 pub fn redirect(url : String, status~ : Int32 = 307) -> @moonasgi.Response {
   @moonasgi.Response::new(

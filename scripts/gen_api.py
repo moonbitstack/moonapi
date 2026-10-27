@@ -250,10 +250,9 @@ def collect_docs(pkgdir: str):
 def strip_arrow_refs(text: str) -> str:
     """Remove `(← LibraryName's …)` analogy references (e.g. "← FastAPI's `X`").
 
-    The brief keeps the documentation free of other projects' names; these
-    cross-references are the only place they appear. We delete the parenthesised
-    span (counting parens so a code sample inside does not end it early) and leave
-    the genuine surrounding prose intact. A `←` with no enclosing `(` is dropped
+    The site names no other project, and these cross-references are the only
+    place one appears. The parenthesised span goes, counting parens so a code
+    sample inside does not end it early; a `←` with no enclosing `(` is dropped
     to the end of the line.
     """
     out = []
@@ -282,7 +281,7 @@ def strip_arrow_refs(text: str) -> str:
     return "".join(out).rstrip()
 
 
-# Competitor / other-project names the brief keeps out of the documentation.
+# Names the site leaves out.
 BRANDS = ["FastAPI", "Starlette", "Django", "Flask", "Express", "Sanic", "Hug"]
 
 
@@ -600,6 +599,7 @@ SHELL = """<!doctype html>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/base.css">
+<link rel="icon" type="image/svg+xml" href="assets/icon.svg">
 </head>
 <body>
 <header class="topbar">

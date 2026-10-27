@@ -63,9 +63,19 @@ pub struct App {
 /// kept (← FastAPI's and Starlette's `redirect_slashes`, on by default in both).
 /// `/` itself is never redirected, nor is a WebSocket connection.
 ///
-/// ```mbt
-/// let app = App::new()
-/// app.get("/", _ctx => text(200, "Hello"))
+/// ```mbt check
+/// async test {
+///   let app = @moonapi.App::new()
+///   app.get("/", _ctx => @moonapi.text(200, "Hello"))
+///   let reply = app.handle({
+///     http_method: "GET",
+///     path: "/",
+///     query_string: b"",
+///     headers: [],
+///     body: b"",
+///   })
+///   assert_eq(reply.status, 200)
+/// }
 /// ```
 pub fn App::new(redirect_slashes~ : Bool = true) -> App {
   {

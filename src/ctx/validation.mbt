@@ -3,10 +3,19 @@
 /// values are percent/plus-decoded, so `q` above reads back as `cat dog`. When a key
 /// repeats, the first occurrence wins; use `query_all` to read every one.
 ///
-/// ```mbt
-/// app.get("/search", ctx =>
-///   json(200, Json::object([("q", Json::string(ctx.query("q").unwrap_or("")))])))
-/// // GET /search?q=cat  ->  {"q":"cat"}
+/// ```mbt check
+/// test {
+///   let request : @moonasgi.Request = {
+///     http_method: "GET",
+///     path: "/search",
+///     query_string: b"q=cat%20dog&q=fish",
+///     headers: [],
+///     body: b"",
+///   }
+///   let ctx = @ctx.Context::new(request)
+///   assert_eq(ctx.query("q"), Some("cat dog"))
+///   assert_eq(ctx.query_all("q"), ["cat dog", "fish"])
+/// }
 /// ```
 pub fn Context::query(
   self : Context,
@@ -31,12 +40,21 @@ pub fn Context::query_all(
 /// Parse the request body as JSON, returning `None` for an empty body or one
 /// that does not parse — the total counterpart of FastAPI reading a JSON body.
 ///
-/// ```mbt
-/// app.post("/login", ctx =>
-///   match ctx.body_json() {
-///     Some(j) => json(200, j)
-///     None => json(400, Json::object([("error", Json::string("bad json"))]))
-///   })
+/// ```mbt check
+/// test {
+///   let request : @moonasgi.Request = {
+///     http_method: "POST",
+///     path: "/login",
+///     query_string: b"",
+///     headers: [],
+///     body: b"{\"user\":\"ada\"}",
+///   }
+///   assert_eq(@ctx.Context::new(request).body_json(), Some({ "user": "ada" }))
+///   assert_eq(
+///     @ctx.Context::new({ ..request, body: b"not json", }).body_json(),
+///     None,
+///   )
+/// }
 /// ```
 pub fn Context::body_json(self : Context) -> Json? {
   let s = decode_field(self.request.body)

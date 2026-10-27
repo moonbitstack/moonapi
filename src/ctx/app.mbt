@@ -33,10 +33,19 @@ pub fn Context::new(
 ///|
 /// Look up a path parameter by name.
 ///
-/// ```mbt
-/// app.get("/users/{id}", ctx =>
-///   text(200, "user " + ctx.param("id").unwrap_or("")))
-/// // GET /users/42  ->  "user 42"
+/// ```mbt check
+/// test {
+///   let request : @moonasgi.Request = {
+///     http_method: "GET",
+///     path: "/users/42",
+///     query_string: b"",
+///     headers: [],
+///     body: b"",
+///   }
+///   let ctx = @ctx.Context::new(request, params=Map([("id", "42")]))
+///   assert_eq(ctx.param("id"), Some("42"))
+///   assert_eq(ctx.param("name"), None)
+/// }
 /// ```
 pub fn Context::param(self : Context, name : String) -> String? {
   self.params.get(name)

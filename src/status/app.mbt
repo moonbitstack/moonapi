@@ -1,8 +1,12 @@
 ///|
 /// A plain-text response.
 ///
-/// ```mbt
-/// app.get("/", _ctx => text(200, "Hello from moonapi"))
+/// ```mbt check
+/// test {
+///   let reply = @status.text(200, "Hello")
+///   assert_eq(reply.header("content-type"), Some("text/plain; charset=utf-8"))
+///   assert_eq(reply.body, b"Hello")
+/// }
 /// ```
 pub fn text(status : Int32, body : String) -> @moonasgi.Response {
   @moonasgi.Response::new(
@@ -15,8 +19,11 @@ pub fn text(status : Int32, body : String) -> @moonasgi.Response {
 ///|
 /// An HTML response — what the documentation pages are served as.
 ///
-/// ```mbt
-/// app.get("/page", _ctx => html(200, "<h1>Hello</h1>"))
+/// ```mbt check
+/// test {
+///   let page = @status.html(200, "<h1>Hello</h1>")
+///   assert_eq(page.header("content-type"), Some("text/html; charset=utf-8"))
+/// }
 /// ```
 pub fn html(status : Int32, body : String) -> @moonasgi.Response {
   @moonasgi.Response::new(
@@ -29,9 +36,12 @@ pub fn html(status : Int32, body : String) -> @moonasgi.Response {
 ///|
 /// A JSON response serialised from a `Json` value.
 ///
-/// ```mbt
-/// app.get("/me", _ctx =>
-///   json(200, Json::object([("name", Json::string("Ada"))])))
+/// ```mbt check
+/// test {
+///   let reply = @status.json(200, { "name": "Ada" })
+///   assert_eq(reply.header("content-type"), Some("application/json"))
+///   assert_eq(reply.body, b"{\"name\":\"Ada\"}")
+/// }
 /// ```
 pub fn json(status : Int32, value : Json) -> @moonasgi.Response {
   @moonasgi.Response::new(

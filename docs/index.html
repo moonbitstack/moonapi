@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/base.css">
+<link rel="icon" type="image/svg+xml" href="assets/icon.svg">
 </head>
 <body>
 <header class="topbar">
@@ -55,11 +56,10 @@ app.post("/users", _ctx =>
   @moonapi.text(201, "created"))
 
 // run a request in-process
-let request = {
-  http_method: "GET", path: "/users/42",
-  query_string: b"", headers: [], body: b"",
-}
-let response = app.handle(request)~
+let response = app.handle({
+http_method: "GET", path: "/users/42",
+query_string: b"", headers: [], body: b"",
+})
 response.status  // 200</code></pre>
         </div>
       </div>
@@ -93,7 +93,7 @@ created
     <div class="stat"><div class="n">13</div><div class="l">packages, one coherent API</div></div>
     <div class="stat"><div class="n">544</div><div class="l">documented public items</div></div>
     <div class="stat"><div class="n">3.1</div><div class="l">OpenAPI documents generated</div></div>
-    <div class="stat"><div class="n">2</div><div class="l">targets: native &amp; WebAssembly</div></div>
+    <div class="stat"><div class="n">4</div><div class="l">backends: native, wasm, wasm-gc, js</div></div>
   </div>
 </section>
 
@@ -115,7 +115,7 @@ created
     <div class="card feature">
       <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 8l7-5 7 5"/><rect x="4" y="8" width="16" height="12" rx="2"/></svg></div>
       <h3>Dependency injection</h3>
-      <p>Register shared services once and let handlers receive them by type. The container resolves and caches them per request.</p>
+      <p>Register shared services once by name and list them on a route with <code>dependencies=[...]</code>. The container resolves each once per request and tears them down in reverse order.</p>
     </div>
     <div class="card feature">
       <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v5h5"/><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M9 13h6M9 17h6"/></svg></div>
@@ -153,12 +153,12 @@ created
     <a class="pkg-card" href="api.html#pkg-moonapi"><div class="n">@moonapi</div><div class="d">The application object, response helpers and the top-level API.</div></a>
     <a class="pkg-card" href="api.html#pkg-ctx"><div class="n">@ctx</div><div class="d">The request context: path, query, headers and body extraction.</div></a>
     <a class="pkg-card" href="api.html#pkg-route"><div class="n">@route</div><div class="d">The router, path matching and named routes for URL building.</div></a>
-    <a class="pkg-card" href="api.html#pkg-status"><div class="n">@status</div><div class="d">Response helpers: text, html, json, redirect and more.</div></a>
+    <a class="pkg-card" href="api.html#pkg-status"><div class="n">@status</div><div class="d">Response helpers, streams, server-sent events, cookies and status constants.</div></a>
     <a class="pkg-card" href="api.html#pkg-schema"><div class="n">@schema</div><div class="d">Typed bodies, field constraints and JSON schema.</div></a>
     <a class="pkg-card" href="api.html#pkg-openapi"><div class="n">@openapi</div><div class="d">OpenAPI document building and serialisation.</div></a>
     <a class="pkg-card" href="api.html#pkg-security"><div class="n">@security</div><div class="d">Security schemes and request-time enforcers.</div></a>
     <a class="pkg-card" href="api.html#pkg-di"><div class="n">@di</div><div class="d">The dependency-injection container.</div></a>
-    <a class="pkg-card" href="api.html#pkg-socket"><div class="n">@socket</div><div class="d">WebSockets and server-sent events.</div></a>
+    <a class="pkg-card" href="api.html#pkg-socket"><div class="n">@socket</div><div class="d">The live WebSocket connection.</div></a>
     <a class="pkg-card" href="api.html#pkg-templates"><div class="n">@templates</div><div class="d">HTML template rendering.</div></a>
     <a class="pkg-card" href="api.html#pkg-static"><div class="n">@static</div><div class="d">Static file serving and mounting.</div></a>
     <a class="pkg-card" href="api.html#pkg-exceptions"><div class="n">@exceptions</div><div class="d">Typed HTTP exceptions and handlers.</div></a>

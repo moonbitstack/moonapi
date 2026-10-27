@@ -1,29 +1,20 @@
 #!/usr/bin/env python3
-# =============================================================================
-# gen_examples.py — build docs/examples.html
-#
-# A gallery of every runnable example in src/examples/. Each card shows a real
-# code snippet extracted from the example's source, a one-line purpose, and a
-# link to the source on GitHub. Brand names from other frameworks are stripped
-# from the snippets so the published page stays self-contained in moonapi's
-# own voice, per the documentation brief.
-#
-# Run:  python scripts/gen_examples.py
-# Output is deterministic, so a CI step can assert `git diff --exit-code`.
-# =============================================================================
+"""Build docs/examples.html from src/examples: one card per example with a
+snippet from its source and a link to it. Deterministic, so CI can diff it."""
 import os
 import re
 import html
 import glob
+import textwrap
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 EX = os.path.join(ROOT, "src", "examples")
 OUT = os.path.join(ROOT, "docs", "examples.html")
 GITHUB = "https://github.com/moonbitstack/moonapi"
 
-# Capitalised brand names to keep out of the published prose/snippets.
+# Names the site leaves out.
 BRANDS = ["FastAPI", "Starlette", "Django", "Flask", "Express", "Sanic", "Hug"]
-RE_BRAND = re.compile(r"\b(?:" + "|".join(BRANDS) + r")\b")
+RE_BRAND = re.compile(r" ?\b(?:" + "|".join(BRANDS) + r")\b")
 
 # (directory, group, title, description)
 META = {
@@ -61,7 +52,7 @@ META = {
     ),
     "09-dependency-injection": (
         "Dependency injection", "A request-scoped container",
-        "Register services by type; the container builds, caches and tears them down once per request.",
+        "Register services by name; the container builds, caches and tears them down once per request.",
     ),
     "10-oauth2-jwt": (
         "Security", "OAuth2 password flow with JWT",
@@ -179,15 +170,13 @@ def snippet(dirname: str) -> str:
         if ln.lstrip().startswith("///"):
             continue  # drop doc comments from the preview
         picked.append(ln)
-        if len(picked) >= 18:
+        if len(picked) >= 12:
             break
     while picked and picked[-1].strip() == "":
         picked.pop()
 
-    text = "\n".join(picked)
-    text = RE_BRAND.sub("", text)          # keep the page in moonapi's voice
-    text = re.sub(r"\s{2,}", " ", text)     # collapse any doubled spaces left behind
-    return text.strip()
+    text = textwrap.dedent("\n".join(picked))
+    return RE_BRAND.sub("", text).strip("\n")
 
 
 def esc(s: str) -> str:
@@ -196,7 +185,7 @@ def esc(s: str) -> str:
 
 def card(dirname: str, title: str, desc: str) -> str:
     snip = snippet(dirname)
-    src = f"{GITHUB}/tree/main/src/examples/{dirname}"
+    src = f"{GITHUB}/tree/master/src/examples/{dirname}"
     body = esc(snip) if snip else "<span class='muted'>(no preview)</span>"
     return f"""    <article class="ex-card">
       <span class="tag">{esc(dirname)}</span>
@@ -262,6 +251,7 @@ HEADER = f"""<!doctype html>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/base.css">
+<link rel="icon" type="image/svg+xml" href="assets/icon.svg">
 </head>
 <body>
 <header class="topbar">

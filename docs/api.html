@@ -9,13 +9,14 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/base.css">
+<link rel="icon" type="image/svg+xml" href="assets/icon.svg">
 </head>
 <body>
 <header class="topbar">
   <a class="brand" href="index.html">
     <svg class="mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-      <circle cx="16" cy="16" r="14" fill="#898AC4" stroke="#FFF2E0" stroke-width="2"/>
-      <path d="M11 21c4 3 6 3 10 0M12.5 13.5a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2Zm7 0a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2Z" stroke="#FFF2E0" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="16" cy="16" r="14" fill="#FFF2E0" stroke="#898AC4" stroke-width="2"/>
+      <path d="M11 21c4 3 6 3 10 0M12.5 13.5a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2Zm7 0a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2Z" stroke="#898AC4" stroke-width="2" stroke-linecap="round"/>
     </svg>
     <span class="name">moon<b>api</b></span>
   </a>
@@ -1422,9 +1423,6 @@
   <span class="kind kind-fn">function</span>
   <pre class="sig"><code>pub fn App::get(Self, String, async (@ctx.Context) -&gt; @http.Response, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json, callbacks? : Array[@route.Route], hoops? : Array[async (@ctx.Context, async (@ctx.Context) -&gt; @route.Reply) -&gt; @route.Reply]) -&gt; Unit</code></pre>
   <p class="doc">Register a <code>GET</code> route. A shorthand for <code>route(Get, ...)</code>.</p>
-<div class="codewrap ex"><button class="copy" type="button">Copy</button><pre class="sig"><code data-lang="mbt">app.get(&quot;/users/{id}&quot;, ctx =&gt;
-  text(200, &quot;user &quot; + ctx.param(&quot;id&quot;).unwrap_or(&quot;&quot;)))
-// GET /users/42  -&gt;  200 &quot;user 42&quot;</code></pre></div>
   <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname '><span class="muted">type only</span></td><td><code>String</code></td><td class=''>required</td></tr><tr><td class='pname '><span class="muted">type only</span></td><td><code>async (@ctx.Context) -&gt; @http.Response</code></td><td class=''>required</td></tr><tr><td class='pname opt'>summary</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>description</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>tags</td><td><code>Array[String]</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>deprecated</td><td><code>Bool</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>operation_id</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>status_code</td><td><code>Int32</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>responses</td><td><code>Array[@endpoint.ResponseSpec]</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>name</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>endpoint</td><td><code>@endpoint.Endpoint</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>security</td><td><code>Array[@security.SecurityRequirement]</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>dependencies</td><td><code>Array[String]</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>include_in_schema</td><td><code>Bool</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>validate</td><td><code>Bool</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>openapi_extra</td><td><code>Json</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>callbacks</td><td><code>Array[@route.Route]</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>hoops</td><td><code>Array[async (@ctx.Context, async (@ctx.Context) -&gt; @route.Reply) -&gt; @route.Reply]</code></td><td class='opt'>optional</td></tr></tbody></table><p class="returns">Returns <code>Unit</code></p>
   
 </section>
@@ -1433,9 +1431,20 @@
   <span class="kind kind-fn">function</span>
   <pre class="sig"><code>pub async fn App::handle(Self, @http.Request) -&gt; @http.Response</code></pre>
   <p class="doc">Run <code>request</code> through the app in-process and return the response, the way a server would see it answered: the same ASGI path, layers included . A streamed response comes back with its body joined.</p>
-<div class="codewrap ex"><button class="copy" type="button">Copy</button><pre class="sig"><code data-lang="mbt">let request = { http_method: &quot;GET&quot;, path: &quot;/&quot;, query_string: b&quot;&quot;, headers: [], body: b&quot;&quot; }
-let response = app.handle(request)~
-response.status   // 200</code></pre></div>
+<div class="codewrap ex"><button class="copy" type="button">Copy</button><pre class="sig"><code data-lang="mbt check">async test {
+  let app = @moonapi.App::new()
+  app.get(&quot;/users/{id}&quot;, ctx =&gt; {
+    @moonapi.text(200, &quot;user &quot; + ctx.param(&quot;id&quot;).unwrap())
+  })
+  let reply = app.handle({
+    http_method: &quot;GET&quot;,
+    path: &quot;/users/42&quot;,
+    query_string: b&quot;&quot;,
+    headers: [],
+    body: b&quot;&quot;,
+  })
+  assert_eq(reply.body, b&quot;user 42&quot;)
+}</code></pre></div>
   <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname '><span class="muted">type only</span></td><td><code>@http.Request</code></td><td class=''>required</td></tr></tbody></table><p class="returns">Returns <code>@http.Response</code></p>
   
 </section>
@@ -1494,8 +1503,18 @@ response.status   // 200</code></pre></div>
   <pre class="sig"><code>pub fn App::new(redirect_slashes? : Bool) -&gt; Self</code></pre>
   <p class="doc">Create an empty application. The verification clock defaults to <code>0</code> (Unix epoch); a server sets a real one with <code>App::set_clock</code>, and tests inject a fixed time so token expiry is deterministic.</p>
 <p class="doc"><code>redirect_slashes</code> answers a path that matches no route, but would with its trailing slash added or removed, with a <code>307</code> to that other path, the query kept . <code>/</code> itself is never redirected, nor is a WebSocket connection.</p>
-<div class="codewrap ex"><button class="copy" type="button">Copy</button><pre class="sig"><code data-lang="mbt">let app = App::new()
-app.get(&quot;/&quot;, _ctx =&gt; text(200, &quot;Hello&quot;))</code></pre></div>
+<div class="codewrap ex"><button class="copy" type="button">Copy</button><pre class="sig"><code data-lang="mbt check">async test {
+  let app = @moonapi.App::new()
+  app.get(&quot;/&quot;, _ctx =&gt; @moonapi.text(200, &quot;Hello&quot;))
+  let reply = app.handle({
+    http_method: &quot;GET&quot;,
+    path: &quot;/&quot;,
+    query_string: b&quot;&quot;,
+    headers: [],
+    body: b&quot;&quot;,
+  })
+  assert_eq(reply.status, 200)
+}</code></pre></div>
   <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname opt'>redirect_slashes</td><td><code>Bool</code></td><td class='opt'>optional</td></tr></tbody></table><p class="returns">Returns <code>Self</code></p>
   
 </section>
@@ -1529,7 +1548,13 @@ app.get(&quot;/&quot;, _ctx =&gt; text(200, &quot;Hello&quot;))</code></pre></di
   <span class="kind kind-fn">function</span>
   <pre class="sig"><code>pub fn App::openapi_json(Self, version? : @schema.OpenApiVersion) -&gt; String</code></pre>
   <p class="doc">The app&#x27;s OpenAPI / Swagger document for <code>version</code>, stringified.</p>
-<div class="codewrap ex"><button class="copy" type="button">Copy</button><pre class="sig"><code data-lang="mbt">let doc = app.openapi_json()        // a JSON string for OpenAPI 3.1</code></pre></div>
+<div class="codewrap ex"><button class="copy" type="button">Copy</button><pre class="sig"><code data-lang="mbt check">test {
+  let app = @moonapi.App::new()
+  app.get(&quot;/ping&quot;, _ctx =&gt; @moonapi.text(200, &quot;pong&quot;), summary=&quot;health check&quot;)
+  let doc = app.openapi_json()
+  assert_true(doc.contains(&quot;\&quot;openapi\&quot;: \&quot;3.1.0\&quot;&quot;))
+  assert_true(doc.contains(&quot;\&quot;/ping\&quot;&quot;))
+}</code></pre></div>
   <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname opt'>version</td><td><code>@schema.OpenApiVersion</code></td><td class='opt'>optional</td></tr></tbody></table><p class="returns">Returns <code>String</code></p>
   
 </section>
@@ -1679,8 +1704,14 @@ app.get(&quot;/&quot;, _ctx =&gt; text(200, &quot;Hello&quot;))</code></pre></di
   <pre class="sig"><code>pub fn App::url_for(Self, String, params? : Map[String, String]) -&gt; String?</code></pre>
   <p class="doc">The path of the route registered under <code>name</code>, with its parameters filled from <code>params</code> . Mounted sub-applications are searched too, so what comes back already carries the mount prefix — the path a client would call, not the one the sub-app knows itself by.</p>
 <p class="doc"><code>None</code> when nothing is registered under that name, or when <code>params</code> is missing one the path needs or holds one its convertor refuses; only a <code>path</code> parameter takes a <code>/</code>.</p>
-<div class="codewrap ex"><button class="copy" type="button">Copy</button><pre class="sig"><code data-lang="mbt">app.get(&quot;/items/{id}&quot;, handler, name=&quot;get_item&quot;)
-app.url_for(&quot;get_item&quot;, Map([(&quot;id&quot;, &quot;77&quot;)]))   // Some(&quot;/items/77&quot;)</code></pre></div>
+<div class="codewrap ex"><button class="copy" type="button">Copy</button><pre class="sig"><code data-lang="mbt check">test {
+  let app = @moonapi.App::new()
+  app.get(&quot;/items/{id}&quot;, _ctx =&gt; @moonapi.text(200, &quot;item&quot;), name=&quot;get_item&quot;)
+  assert_eq(
+    app.url_for(&quot;get_item&quot;, params=Map([(&quot;id&quot;, &quot;77&quot;)])),
+    Some(&quot;/items/77&quot;),
+  )
+}</code></pre></div>
   <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname '><span class="muted">type only</span></td><td><code>String</code></td><td class=''>required</td></tr><tr><td class='pname opt'>params</td><td><code>Map[String, String]</code></td><td class='opt'>optional</td></tr></tbody></table><p class="returns">Returns <code>String?</code></p>
   
 </section>
@@ -1832,11 +1863,20 @@ app.url_for(&quot;get_item&quot;, Map([(&quot;id&quot;, &quot;77&quot;)]))   // 
   <span class="kind kind-fn">function</span>
   <pre class="sig"><code>pub fn Context::body_json(Self) -&gt; Json?</code></pre>
   <p class="doc">Parse the request body as JSON, returning <code>None</code> for an empty body or one that does not parse — the total counterpart of reading a JSON body.</p>
-<div class="codewrap ex"><button class="copy" type="button">Copy</button><pre class="sig"><code data-lang="mbt">app.post(&quot;/login&quot;, ctx =&gt;
-  match ctx.body_json() {
-    Some(j) =&gt; json(200, j)
-    None =&gt; json(400, Json::object([(&quot;error&quot;, Json::string(&quot;bad json&quot;))]))
-  })</code></pre></div>
+<div class="codewrap ex"><button class="copy" type="button">Copy</button><pre class="sig"><code data-lang="mbt check">test {
+  let request : @moonasgi.Request = {
+    http_method: &quot;POST&quot;,
+    path: &quot;/login&quot;,
+    query_string: b&quot;&quot;,
+    headers: [],
+    body: b&quot;{\&quot;user\&quot;:\&quot;ada\&quot;}&quot;,
+  }
+  assert_eq(@ctx.Context::new(request).body_json(), Some({ &quot;user&quot;: &quot;ada&quot; }))
+  assert_eq(
+    @ctx.Context::new({ ..request, body: b&quot;not json&quot;, }).body_json(),
+    None,
+  )
+}</code></pre></div>
   <p class="returns">Returns <code>Json?</code></p>
   
 </section>
@@ -1910,9 +1950,18 @@ app.url_for(&quot;get_item&quot;, Map([(&quot;id&quot;, &quot;77&quot;)]))   // 
   <span class="kind kind-fn">function</span>
   <pre class="sig"><code>pub fn Context::param(Self, String) -&gt; String?</code></pre>
   <p class="doc">Look up a path parameter by name.</p>
-<div class="codewrap ex"><button class="copy" type="button">Copy</button><pre class="sig"><code data-lang="mbt">app.get(&quot;/users/{id}&quot;, ctx =&gt;
-  text(200, &quot;user &quot; + ctx.param(&quot;id&quot;).unwrap_or(&quot;&quot;)))
-// GET /users/42  -&gt;  &quot;user 42&quot;</code></pre></div>
+<div class="codewrap ex"><button class="copy" type="button">Copy</button><pre class="sig"><code data-lang="mbt check">test {
+  let request : @moonasgi.Request = {
+    http_method: &quot;GET&quot;,
+    path: &quot;/users/42&quot;,
+    query_string: b&quot;&quot;,
+    headers: [],
+    body: b&quot;&quot;,
+  }
+  let ctx = @ctx.Context::new(request, params=Map([(&quot;id&quot;, &quot;42&quot;)]))
+  assert_eq(ctx.param(&quot;id&quot;), Some(&quot;42&quot;))
+  assert_eq(ctx.param(&quot;name&quot;), None)
+}</code></pre></div>
   <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname '><span class="muted">type only</span></td><td><code>String</code></td><td class=''>required</td></tr></tbody></table><p class="returns">Returns <code>String?</code></p>
   
 </section>
@@ -1921,9 +1970,18 @@ app.url_for(&quot;get_item&quot;, Map([(&quot;id&quot;, &quot;77&quot;)]))   // 
   <span class="kind kind-fn">function</span>
   <pre class="sig"><code>pub fn Context::query(Self, String, limits? : @moonurl.Limits) -&gt; String?</code></pre>
   <p class="doc">Look up a query-string parameter by name, e.g. <code>?limit=10&amp;q=cat%20dog</code>. Keys and values are percent/plus-decoded, so <code>q</code> above reads back as <code>cat dog</code>. When a key repeats, the first occurrence wins; use <code>query_all</code> to read every one.</p>
-<div class="codewrap ex"><button class="copy" type="button">Copy</button><pre class="sig"><code data-lang="mbt">app.get(&quot;/search&quot;, ctx =&gt;
-  json(200, Json::object([(&quot;q&quot;, Json::string(ctx.query(&quot;q&quot;).unwrap_or(&quot;&quot;)))])))
-// GET /search?q=cat  -&gt;  {&quot;q&quot;:&quot;cat&quot;}</code></pre></div>
+<div class="codewrap ex"><button class="copy" type="button">Copy</button><pre class="sig"><code data-lang="mbt check">test {
+  let request : @moonasgi.Request = {
+    http_method: &quot;GET&quot;,
+    path: &quot;/search&quot;,
+    query_string: b&quot;q=cat%20dog&amp;q=fish&quot;,
+    headers: [],
+    body: b&quot;&quot;,
+  }
+  let ctx = @ctx.Context::new(request)
+  assert_eq(ctx.query(&quot;q&quot;), Some(&quot;cat dog&quot;))
+  assert_eq(ctx.query_all(&quot;q&quot;), [&quot;cat dog&quot;, &quot;fish&quot;])
+}</code></pre></div>
   <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname '><span class="muted">type only</span></td><td><code>String</code></td><td class=''>required</td></tr><tr><td class='pname opt'>limits</td><td><code>@moonurl.Limits</code></td><td class='opt'>optional</td></tr></tbody></table><p class="returns">Returns <code>String?</code></p>
   
 </section>
@@ -4420,7 +4478,10 @@ app.view(&quot;/articles&quot;, Articles::{ db })</code></pre></div>
   <span class="kind kind-fn">function</span>
   <pre class="sig"><code>pub fn html(Int32, String) -&gt; @http.Response</code></pre>
   <p class="doc">An HTML response — what the documentation pages are served as.</p>
-<div class="codewrap ex"><button class="copy" type="button">Copy</button><pre class="sig"><code data-lang="mbt">app.get(&quot;/page&quot;, _ctx =&gt; html(200, &quot;&lt;h1&gt;Hello&lt;/h1&gt;&quot;))</code></pre></div>
+<div class="codewrap ex"><button class="copy" type="button">Copy</button><pre class="sig"><code data-lang="mbt check">test {
+  let page = @status.html(200, &quot;&lt;h1&gt;Hello&lt;/h1&gt;&quot;)
+  assert_eq(page.header(&quot;content-type&quot;), Some(&quot;text/html; charset=utf-8&quot;))
+}</code></pre></div>
   <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname '><span class="muted">type only</span></td><td><code>Int32</code></td><td class=''>required</td></tr><tr><td class='pname '><span class="muted">type only</span></td><td><code>String</code></td><td class=''>required</td></tr></tbody></table><p class="returns">Returns <code>@http.Response</code></p>
   
 </section>
@@ -4429,8 +4490,11 @@ app.view(&quot;/articles&quot;, Articles::{ db })</code></pre></div>
   <span class="kind kind-fn">function</span>
   <pre class="sig"><code>pub fn json(Int32, Json) -&gt; @http.Response</code></pre>
   <p class="doc">A JSON response serialised from a <code>Json</code> value.</p>
-<div class="codewrap ex"><button class="copy" type="button">Copy</button><pre class="sig"><code data-lang="mbt">app.get(&quot;/me&quot;, _ctx =&gt;
-  json(200, Json::object([(&quot;name&quot;, Json::string(&quot;Ada&quot;))])))</code></pre></div>
+<div class="codewrap ex"><button class="copy" type="button">Copy</button><pre class="sig"><code data-lang="mbt check">test {
+  let reply = @status.json(200, { &quot;name&quot;: &quot;Ada&quot; })
+  assert_eq(reply.header(&quot;content-type&quot;), Some(&quot;application/json&quot;))
+  assert_eq(reply.body, b&quot;{\&quot;name\&quot;:\&quot;Ada\&quot;}&quot;)
+}</code></pre></div>
   <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname '><span class="muted">type only</span></td><td><code>Int32</code></td><td class=''>required</td></tr><tr><td class='pname '><span class="muted">type only</span></td><td><code>Json</code></td><td class=''>required</td></tr></tbody></table><p class="returns">Returns <code>@http.Response</code></p>
   
 </section>
@@ -4441,8 +4505,11 @@ app.view(&quot;/articles&quot;, Articles::{ db })</code></pre></div>
   <p class="doc">A redirect to <code>url</code> .</p>
 <p class="doc"><code>307</code> keeps the method and body, which <code>302</code> historically does not. Use <code>303</code> after a write, <code>301</code> / <code>308</code> for a permanent move.</p>
 <p class="doc">The URL is escaped as a whole URI reference, so an encoded one is not encoded twice and a <code>\r\n</code> cannot open a header of its own.</p>
-<div class="codewrap ex"><button class="copy" type="button">Copy</button><pre class="sig"><code data-lang="mbt">app.get(&quot;/old&quot;, _ctx =&gt; redirect(&quot;/new&quot;))
-// GET /old  -&gt;  307, Location: /new</code></pre></div>
+<div class="codewrap ex"><button class="copy" type="button">Copy</button><pre class="sig"><code data-lang="mbt check">test {
+  let moved = @status.redirect(&quot;/new&quot;)
+  assert_eq(moved.status, 307)
+  assert_eq(moved.header(&quot;location&quot;), Some(&quot;/new&quot;))
+}</code></pre></div>
   <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname '><span class="muted">type only</span></td><td><code>String</code></td><td class=''>required</td></tr><tr><td class='pname opt'>status</td><td><code>Int32</code></td><td class='opt'>optional</td></tr></tbody></table><p class="returns">Returns <code>@http.Response</code></p>
   
 </section>
@@ -4469,7 +4536,11 @@ app.view(&quot;/articles&quot;, Articles::{ db })</code></pre></div>
   <span class="kind kind-fn">function</span>
   <pre class="sig"><code>pub fn text(Int32, String) -&gt; @http.Response</code></pre>
   <p class="doc">A plain-text response.</p>
-<div class="codewrap ex"><button class="copy" type="button">Copy</button><pre class="sig"><code data-lang="mbt">app.get(&quot;/&quot;, _ctx =&gt; text(200, &quot;Hello from moonapi&quot;))</code></pre></div>
+<div class="codewrap ex"><button class="copy" type="button">Copy</button><pre class="sig"><code data-lang="mbt check">test {
+  let reply = @status.text(200, &quot;Hello&quot;)
+  assert_eq(reply.header(&quot;content-type&quot;), Some(&quot;text/plain; charset=utf-8&quot;))
+  assert_eq(reply.body, b&quot;Hello&quot;)
+}</code></pre></div>
   <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname '><span class="muted">type only</span></td><td><code>Int32</code></td><td class=''>required</td></tr><tr><td class='pname '><span class="muted">type only</span></td><td><code>String</code></td><td class=''>required</td></tr></tbody></table><p class="returns">Returns <code>@http.Response</code></p>
   
 </section>

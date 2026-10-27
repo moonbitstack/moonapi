@@ -131,9 +131,15 @@ pub fn App::mount_asgi(
 /// missing one the path needs or holds one its convertor refuses; only a `path`
 /// parameter takes a `/`.
 ///
-/// ```mbt
-/// app.get("/items/{id}", handler, name="get_item")
-/// app.url_for("get_item", Map([("id", "77")]))   // Some("/items/77")
+/// ```mbt check
+/// test {
+///   let app = @moonapi.App::new()
+///   app.get("/items/{id}", _ctx => @moonapi.text(200, "item"), name="get_item")
+///   assert_eq(
+///     app.url_for("get_item", params=Map([("id", "77")])),
+///     Some("/items/77"),
+///   )
+/// }
 /// ```
 pub fn App::url_for(
   self : App,

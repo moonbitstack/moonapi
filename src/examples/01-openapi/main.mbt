@@ -1,7 +1,7 @@
 ///|
-/// Typed routes in, OpenAPI out. Register a text `GET`, a `:param` `GET`, and a
-/// `POST`, let the app `handle` a request, then dump the OpenAPI 3.1 document the
-/// same routes generate an OpenAPI 3.1 document you can serve or hand to a UI.
+/// Typed routes in, OpenAPI out. Register a text `GET`, a `GET` with a path
+/// parameter and a `POST`, let the app `handle` a request, then print the
+/// OpenAPI 3.1 document the same routes generate.
 ///
 ///     moon run src/examples/01-openapi
 #coverage.skip

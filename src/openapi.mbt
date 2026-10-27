@@ -350,8 +350,14 @@ fn App::collect_security_schemes(
 ///|
 /// The app's OpenAPI / Swagger document for `version`, stringified.
 ///
-/// ```mbt
-/// let doc = app.openapi_json()        // a JSON string for OpenAPI 3.1
+/// ```mbt check
+/// test {
+///   let app = @moonapi.App::new()
+///   app.get("/ping", _ctx => @moonapi.text(200, "pong"), summary="health check")
+///   let doc = app.openapi_json()
+///   assert_true(doc.contains("\"openapi\": \"3.1.0\""))
+///   assert_true(doc.contains("\"/ping\""))
+/// }
 /// ```
 pub fn App::openapi_json(
   self : App,

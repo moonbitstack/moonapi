@@ -29,10 +29,21 @@ pub fn App::to_asgi(self : App) -> @moonasgi.AsgiApp {
 /// see it answered: the same ASGI path, layers included (← Starlette's `TestClient`). A
 /// streamed response comes back with its body joined.
 ///
-/// ```mbt
-/// let request = { http_method: "GET", path: "/", query_string: b"", headers: [], body: b"" }
-/// let response = app.handle(request)~
-/// response.status   // 200
+/// ```mbt check
+/// async test {
+///   let app = @moonapi.App::new()
+///   app.get("/users/{id}", ctx => {
+///     @moonapi.text(200, "user " + ctx.param("id").unwrap())
+///   })
+///   let reply = app.handle({
+///     http_method: "GET",
+///     path: "/users/42",
+///     query_string: b"",
+///     headers: [],
+///     body: b"",
+///   })
+///   assert_eq(reply.body, b"user 42")
+/// }
 /// ```
 pub async fn App::handle(
   self : App,

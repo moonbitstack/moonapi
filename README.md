@@ -175,13 +175,14 @@ is not known is a raised error, where the subpackage is named:
 - **Data URLs** — `data_response(url)` serves what a `data:` URL carries, under the media type it names; `data_url(content, media_type=)` writes one. This is what `canvas.toDataURL()` and `FileReader.readAsDataURL()` hand back, and how a client posts an image inside a JSON field. Not a data URL yields `None`, so a handler tells "no picture" from "not a picture" without touching base64.
 - **Cookies** — `set_cookie(resp, name, value, max_age=, expires=, path=, domain=, secure=, http_only=, same_site=)` and `delete_cookie(...)`. Each returns a new response carrying one more `Set-Cookie`, which is the correct wire shape: two cookies are two headers, never one folded field. `expires` is a `@moondate.Moment`, because an expiry is a moment and the format says how to write one; `delete_cookie` expires by both `Max-Age=0` and the epoch. `Context::cookie` reads them back. The cookie itself — both headers, each read and written, and the stripping of the octets RFC 6265 forbids so a value cannot forge an attribute or open a header of its own — is [moonhttp](https://github.com/moonbitstack/moonhttp)'s `cookie` package, which a client uses from the other side.
 - **Status constants** — the `HTTP_*` and `WS_*` names, so a route table shows a deliberate `307` rather than a bare number.
-- **One description, several uses** — `Schema::of_model(model, known=)` takes a [moonmodel](https://github.com/moonbitstack/moonmodel) description and gives back a schema, so the same declaration that produces the SQL columns in moonorm and the SDL in moongql drives validation and the OpenAPI document here. Written once, read four ways. A `Ref` is looked up in `known`; one that is missing, or that leads back into a model already being written, comes back in the second return value with the reason rather than being guessed at — a schema is a finite value, so a cycle cannot be one. Nothing else changes: the hand-written `Schema` tree is still there and still the shorter way to say something small.
+- **One description, several uses** — `Schema::of_model(model, known=)` takes a [moonmodel](https://github.com/moonbitstack/moonmodel) description and gives back a schema, so one model declaration drives both validation and the OpenAPI document. A `Ref` is looked up in `known`; one that is missing, or that leads back into a model already being written, comes back in the second return value with the reason rather than being guessed at — a schema is a finite value, so a cycle cannot be one. Nothing else changes: the hand-written `Schema` tree is still there and still the shorter way to say something small.
 
 ## Configuration
 
 Nothing here decides for you twice. Every bound is an argument with a published
 default, and every default is a sensible one.
 
+<!-- nocheck -->
 ```moonbit
 ctx.query("tag")                                       // the preset bound
 ctx.query("tag", limits=@moonurl.Limits::new(pairs=100000))
@@ -221,29 +222,19 @@ meanings.
 ## Design notes
 
 - **One path for every caller.** `App::to_asgi` is the application; `App::handle`, the test client and a server all go through it, so a test exercises the layers, mounts, lifespan state and disconnect handling a server does, not a shortcut beside them.
-- **Middleware that is not moonapi's lives in moonasgi.** CORS, gzip and the host checks are ASGI layers, so a moonapi app, a moongql endpoint and a hand-written ASGI app share one implementation and one configuration.
+- **Middleware that is not moonapi's lives in moonasgi.** CORS, gzip and the host checks are ASGI layers, so a moonapi app and any other ASGI application share one implementation and one configuration.
 
 ## Roadmap
 
-The descriptor tree (`Endpoint` / `Param` / `Schema`) drives OpenAPI body schemas and validation; on top sit the typed `derive(FromJson)` body extractors, the dependency-injection container, the OAuth2 password-bearer security layer, the `Form` / `File` extractors, and `response_model` filtering. Around them: ASGI layers, exception and per-status handlers, streams, Server-Sent Events, and live WebSocket routes.
-
-**0.9.0 is where moonapi stopped being several libraries at once.** The cryptography went to `mooncrypt`, the token format to `mooncred`, the wire formats to `moonhttp`, the compression to `moonzip`, and the JSON to `moonjson` — out of the framework and into libraries anything can use, with every existing test still passing. What is left is routing, extraction, validation, OpenAPI, injection and middleware, which is what a web framework is.
-
-**0.13.1 finished the file story.** `Context::serve` weighs the conditional fields and the `Range` before answering, so a download resumes and a repeat request costs a header rather than a body. The tags, the fields and the arithmetic are `moonhttp`'s; the four answers and the envelope are here.
-
-**0.17.1 made moonapi ASGI-native.** Handlers are async and a request runs as ASGI events end to end: streams write as they go, a WebSocket handler holds the live connection, background tasks run after the last body event, and CORS and gzip are moonasgi layers. Moving from 0.17.0: `cors(...)` and `gzip(...)` become `app.layer(@mid.Cors::new(...))` and `app.layer(@mid.Gzip::new(...))`; `route_bg` becomes a plain route using `ctx.background`; `sse_response(events)` becomes `sse(e => ...)`; lifespan hooks take the state map; `mount_handler` is `mount_asgi`; `moonapi/mid` is `moonapi/exceptions`. (This section is a changelog for existing users; new projects start at 0.17.2.)
-
-**0.17.2 settled the routing surface.** Paths are templates with convertors (`{id:int}`, `{rest:path}`), a path off by a trailing slash is redirected, WebSocket routes take security, dependencies and a name, routers nest and carry hoops, and a type or a route table can stand in for one call per route. Templates and static files are subpackages of their own; the document gains webhooks, callbacks, examples and tag metadata; `/docs` serves the Scalar reference, with every reader pinned. Moving from 0.17.1: write `{id}` where `:id` was; a router's `/` under a prefix is `/prefix/`; `@socket.WsRoute` is `@route.WsRoute`; build `License`, `Contact` and `Server` with their `new`, and `Param`, `ResponseSpec`, `Endpoint` and `Field` with theirs, since each gained a field; pass `ui=Swagger` to keep Swagger UI at `/docs`, and `App::new(redirect_slashes=false)` to keep the old `404`.
-
 Next: splitting what remains into packages, so a program that wants the router does not link the OpenAPI writer; `regex=` and `glob=` routes; and codegen'd request schemas.
 
-## Documentation site
+## Documentation
 
-The `docs/` directory holds the published site — a homepage, a progressive
-[guide](docs/guide.html), the full [API reference](docs/api.html) generated from the
-package interfaces and source comments, and an interactive
-[showcase](docs/index.html). Open `docs/index.html` after building, or serve the
-directory with any static server.
+The site at [moonbitstack.github.io/moonapi](https://moonbitstack.github.io/moonapi/) has a
+[guide](https://moonbitstack.github.io/moonapi/guide.html), the full
+[API reference](https://moonbitstack.github.io/moonapi/api.html) generated from the package
+interfaces and source comments, an [examples gallery](https://moonbitstack.github.io/moonapi/examples.html)
+and a [request lifecycle showcase](https://moonbitstack.github.io/moonapi/showcase.html).
 
 ## License
 

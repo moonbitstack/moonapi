@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/base.css">
+<link rel="icon" type="image/svg+xml" href="assets/icon.svg">
 </head>
 <body>
 <header class="topbar">
@@ -47,11 +48,10 @@ app.get("/users/{id}", ctx =>
 
   <p>A moonapi application is just a value. You can run a request through it in-process with <code>App::handle</code>, which returns a response you can inspect — useful for tests and for the demos on this page.</p>
 
-  <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="hl"><code>let request = {
-  http_method: "GET", path: "/users/42",
-  query_string: b"", headers: [], body: b"",
-}
-let response = app.handle(request)~
+  <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="hl"><code>let response = app.handle({
+http_method: "GET", path: "/users/42",
+query_string: b"", headers: [], body: b"",
+})
 response.status  // 200</code></pre></div>
 
   <p>When no handler matches the path, you get <code>404</code>; when the path exists but not for that method, you get <code>405</code>. Both are produced by the framework, not written by hand.</p>
@@ -120,7 +120,7 @@ app.url_for("get_item", params=Map([("id", "77")]))
   match ctx.body_json() {
     Some(j) => @moonapi.json(200, j)
     None    => @moonapi.json(400, Json::object(Map([
-                 ("error", Json::string("bad json"))]))
+                 ("error", Json::string("bad json"))])))
   })</code></pre></div>
   <div class="term">
     <div class="term-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="title">recorded · POST /login</span></div>

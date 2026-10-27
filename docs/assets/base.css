@@ -102,11 +102,9 @@ a:hover { text-decoration: underline; }
 p { margin: 0 0 1rem; }
 img, svg { max-width: 100%; }
 
-/* ---- custom scrollbar ----
-   Chrome/Safari use ::-webkit-scrollbar; Firefox uses scrollbar-* via @supports.
-   The standard props live inside @supports so Chrome (which supports
-   ::-webkit-scrollbar) does not drop its webkit styling when it sees
-   scrollbar-color. See the brief. */
+/* ---- scrollbar ----
+   The standard properties sit behind @supports: Chrome drops its
+   ::-webkit-scrollbar styling once it sees scrollbar-color. */
 ::-webkit-scrollbar { width: 12px; height: 12px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
@@ -162,7 +160,7 @@ img, svg { max-width: 100%; }
 }
 .sidebar h4 { font-size: .72rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); margin: 1.3rem 0 .5rem; font-family: var(--font-body); font-weight: 600; }
 .sidebar h4:first-child { margin-top: 0; }
-.sidebar a { display: block; color: var(--ink-soft); font-size: .9rem; padding: .3rem .6rem; border-radius: 8px; border-left: 2px solid transparent; }
+.sidebar a { display: block; color: var(--ink-soft); font-size: .9rem; padding: .3rem .6rem; border-radius: 0 8px 8px 0; border-left: 2px solid transparent; }
 .sidebar a:hover { background: var(--iris-tint); text-decoration: none; color: var(--ink); }
 .sidebar a.active { color: var(--iris-strong); background: var(--iris-tint); border-left-color: var(--iris); font-weight: 600; }
 .content { padding: 3.2rem clamp(1.2rem, 4vw, 3rem) 7rem; min-width: 0; }
@@ -296,7 +294,7 @@ pre code { background: none; border: none; padding: 0; color: inherit; font-size
   border: 1px solid var(--line);
   border-left: 3px solid var(--iris);
   background: var(--panel);
-  border-radius: 0;                 /* no rounded corners */
+  border-radius: 0;
   padding: 1rem 1.2rem;
   margin: 1.2rem 0;
   color: var(--ink-soft);
@@ -360,7 +358,7 @@ footer.site { border-top: 1px solid var(--line); margin-top: 3rem; }
 
 /* sidebar package index */
 .side-nav { display: flex; flex-direction: column; gap: .05rem; }
-.side-nav a { display: flex; align-items: center; gap: .35rem; color: var(--ink-soft); font-size: .9rem; padding: .32rem .55rem; border-radius: 8px; border-left: 2px solid transparent; font-family: var(--font-mono); }
+.side-nav a { display: flex; align-items: center; gap: .35rem; color: var(--ink-soft); font-size: .9rem; padding: .32rem .55rem; border-radius: 0 8px 8px 0; border-left: 2px solid transparent; font-family: var(--font-mono); }
 .side-nav a .at { color: var(--iris); opacity: .7; }
 .side-nav a .cnt { margin-left: auto; font-size: .72rem; color: var(--muted); background: var(--panel-2); border: 1px solid var(--line); border-radius: 999px; padding: 0 .45rem; }
 .side-nav a:hover { background: var(--iris-tint); color: var(--ink); text-decoration: none; }
@@ -409,6 +407,8 @@ footer.site { border-top: 1px solid var(--line); margin-top: 3rem; }
 }
 @media (width <= 520px) {
   .stats { grid-template-columns: 1fr 1fr; }
+  .params { display: block; overflow-x: auto; }
+  .api-item :not(pre) > code { overflow-wrap: anywhere; }
 }
 
 /* =========================================================================
@@ -423,14 +423,14 @@ footer.site { border-top: 1px solid var(--line); margin-top: 3rem; }
 .hero-cta { display: flex; flex-wrap: wrap; gap: .7rem; }
 
 /* hero sits on the iris surface, so its controls invert */
-.hero-cta .btn-primary { background: var(--cream); color: var(--iris-deep); }
-.hero-cta .btn-primary:hover { background: #fff; color: var(--iris-deep); text-decoration: none; }
-.hero-cta .btn-ghost { background: rgba(255,255,255,.14); color: #fff; border-color: rgba(255,255,255,.4); }
-.hero-cta .btn-ghost:hover { background: rgba(255,255,255,.24); color: #fff; text-decoration: none; }
+.hero .hero-cta .btn-primary { background: var(--cream); color: var(--iris-deep); }
+.hero .hero-cta .btn-primary:hover { background: #fff; color: var(--iris-deep); text-decoration: none; }
+.hero .hero-cta .btn-ghost { background: rgba(255,255,255,.14); color: #fff; border-color: rgba(255,255,255,.4); }
+.hero .hero-cta .btn-ghost:hover { background: rgba(255,255,255,.24); color: #fff; text-decoration: none; }
 .hero .install { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.38); color: #fff; }
 .hero .install .pmt { color: var(--cream); }
 .hero .install code { color: #fff; }
-.hero .install .copy { color: #fff; border-color: rgba(255,255,255,.4); }
+.hero .install .copy { background: transparent; color: #fff; border-color: rgba(255,255,255,.4); }
 .hero .install .copy:hover { background: rgba(255,255,255,.2); }
 
 /* keep the hero readable in the dark theme (deep periwinkle, not light) */
@@ -439,8 +439,8 @@ footer.site { border-top: 1px solid var(--line); margin-top: 3rem; }
 [data-theme="dark"] .hero h1 .grad,
 [data-theme="dark"] .hero .eyebrow,
 [data-theme="dark"] .hero .install .pmt { color: var(--cream); }
-[data-theme="dark"] .hero-cta .btn-primary { background: var(--cream); color: #3C3D73; }
-[data-theme="dark"] .hero-cta .btn-primary:hover { background: #fff; color: #3C3D73; }
+[data-theme="dark"] .hero .hero-cta .btn-primary { background: var(--cream); color: #3C3D73; }
+[data-theme="dark"] .hero .hero-cta .btn-primary:hover { background: #fff; color: #3C3D73; }
 
 /* two-pane demo: code on the left, request/response on the right */
 .demo { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin: 2.2rem 0 0; }
@@ -461,9 +461,10 @@ footer.site { border-top: 1px solid var(--line); margin-top: 3rem; }
 .pkg-card .d { color: var(--muted); font-size: .86rem; margin-top: .3rem; }
 
 /* install bar */
-.install { display: flex; align-items: center; gap: .8rem; background: var(--code-bg); border: 1px solid var(--code-line); border-radius: var(--radius-sm); padding: .8rem 1rem; font-family: var(--font-mono); font-size: .95rem; max-width: 520px; }
+.install { margin-top: 1.1rem; display: flex; align-items: center; gap: .8rem; background: var(--code-bg); border: 1px solid var(--code-line); border-radius: var(--radius-sm); padding: .8rem 1rem; font-family: var(--font-mono); font-size: .95rem; max-width: 600px; }
 .install .pmt { color: var(--iris-strong); }
-.install code { color: var(--ink); flex: 1; }
+.install code { color: var(--ink); flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; background: none; border: none; padding: 0; font-size: inherit; }
+.install + .hero-cta { margin-top: 1.1rem; }
 .install .copy { position: static; }
 
 /* ============================ EXAMPLES GALLERY ============================ */

@@ -9,13 +9,14 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/base.css">
+<link rel="icon" type="image/svg+xml" href="assets/icon.svg">
 </head>
 <body>
 <header class="topbar">
   <a class="brand" href="index.html">
     <svg class="mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-      <circle cx="16" cy="16" r="14" fill="#898AC4" stroke="#FFF2E0" stroke-width="2"/>
-      <path d="M11 21c4 3 6 3 10 0M12.5 13.5a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2Zm7 0a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2Z" stroke="#FFF2E0" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="16" cy="16" r="14" fill="#FFF2E0" stroke="#898AC4" stroke-width="2"/>
+      <path d="M11 21c4 3 6 3 10 0M12.5 13.5a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2Zm7 0a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2Z" stroke="#898AC4" stroke-width="2" stroke-linecap="round"/>
     </svg>
     <span class="name">moon<b>api</b></span>
   </a>
@@ -46,15 +47,37 @@
       <span class="tag">01-openapi</span>
       <h3>OpenAPI out of the box</h3>
       <p>Register a few routes, run a request in-process, then emit the OpenAPI 3.1 document the routes describe.</p>
-      <div class="codewrap"><pre><code>let app = @moonapi.App::new() app.get("/", _ctx =&gt; @moonapi.text(200, "Hello from moonapi")) app.get( "/users/{id}", ctx =&gt; @moonapi.text(200, "user " + ctx.param("id").unwrap()), summary="fetch a user", ) app.post( "/users", _ctx =&gt; @moonapi.text(201, "created"), summary="create a user", ) let req : @moonasgi.Request = { http_method: "GET", path: "/users/233", query_string: b"", headers: [], body: b"",</code></pre></div>
-      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/main/src/examples/01-openapi" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+      <div class="codewrap"><pre><code>let app = @moonapi.App::new()
+app.get("/", _ctx =&gt; @moonapi.text(200, "Hello from moonapi"))
+app.get(
+  "/users/{id}",
+  ctx =&gt; @moonapi.text(200, "user " + ctx.param("id").unwrap()),
+  summary="fetch a user",
+)
+app.post(
+  "/users",
+  _ctx =&gt; @moonapi.text(201, "created"),
+  summary="create a user",
+)</code></pre></div>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/01-openapi" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
     </article>
     <article class="ex-card">
       <span class="tag">02-routing</span>
       <h3>Routing, verbs and path parameters</h3>
       <p>Bind every HTTP verb, capture a {id} path parameter, and see the framework return 404 or 405 on its own.</p>
-      <div class="codewrap"><pre><code>let app = @moonapi.App::new() app.get("/items/{id}", ctx =&gt; { @moonapi.text(200, "item " + ctx.param("id").unwrap()) }) app.post("/items", _ctx =&gt; @moonapi.text(201, "created")) app.put("/items/{id}", _ctx =&gt; @moonapi.text(200, "replaced")) app.patch("/items/{id}", _ctx =&gt; @moonapi.text(200, "patched")) app.delete("/items/{id}", _ctx =&gt; @moonapi.text(200, "deleted")) app.route(Head, "/items", _ctx =&gt; @moonapi.text(200, "")) app.route(Options, "/items", _ctx =&gt; @moonapi.text(204, "")) let hit = (verb : String, path : String) =&gt; { let req : @moonasgi.Request = { http_method: verb, path, query_string: b"", headers: [], body: b"", }</code></pre></div>
-      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/main/src/examples/02-routing" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+      <div class="codewrap"><pre><code>let app = @moonapi.App::new()
+app.get("/items/{id}", ctx =&gt; {
+  @moonapi.text(200, "item " + ctx.param("id").unwrap())
+})
+app.post("/items", _ctx =&gt; @moonapi.text(201, "created"))
+app.put("/items/{id}", _ctx =&gt; @moonapi.text(200, "replaced"))
+app.patch("/items/{id}", _ctx =&gt; @moonapi.text(200, "patched"))
+app.delete("/items/{id}", _ctx =&gt; @moonapi.text(200, "deleted"))
+app.route(Head, "/items", _ctx =&gt; @moonapi.text(200, ""))
+app.route(Options, "/items", _ctx =&gt; @moonapi.text(204, ""))
+let hit = (verb : String, path : String) =&gt; {
+  let req : @moonasgi.Request = {</code></pre></div>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/02-routing" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
     </article>
     </div>
   </section>
@@ -66,50 +89,127 @@
       <span class="tag">04-descriptors</span>
       <h3>Validate against a descriptor</h3>
       <p>An endpoint descriptor checks the request; a body that breaks it comes back with located errors.</p>
-      <div class="codewrap"><pre><code>let app = users_app() let json_headers = [("content-type", "application/json")] let hit = (verb : String, path : String, body : String) =&gt; { let req : @moonasgi.Request = { http_method: verb, path, query_string: b"", headers: json_headers, body: @utf8.encode(body), } let r = app.handle(req) println("\{verb} \{path} -&gt; \{r.status} \{@utf8.decode_lossy(r.body[:])}") } // A conforming body validates and deserialises. hit( "POST", "/users", "{\"name\":\"qwq\",\"email\":\"qwq@example.com\",\"age\":23}", ) // Missing the required `name` -&gt; 422 with a located `missing` error.</code></pre></div>
-      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/main/src/examples/04-descriptors" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+      <div class="codewrap"><pre><code>let app = users_app()
+let json_headers = [("content-type", "application/json")]
+let hit = (verb : String, path : String, body : String) =&gt; {
+  let req : @moonasgi.Request = {
+    http_method: verb,
+    path,
+    query_string: b"",
+    headers: json_headers,
+    body: @utf8.encode(body),
+  }
+  let r = app.handle(req)
+  println("\{verb} \{path} -&gt; \{r.status} \{@utf8.decode_lossy(r.body[:])}")</code></pre></div>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/04-descriptors" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
     </article>
     <article class="ex-card">
       <span class="tag">05-constraints</span>
       <h3>Field constraints</h3>
       <p>Constrain fields with patterns, ranges and shapes, then validate the whole request at the boundary.</p>
-      <div class="codewrap"><pre><code>let app = @moonapi.App::new() app.post( "/orders", ctx =&gt; { let errs = ep.validate(ctx) if errs.length() &gt; 0 { @moonapi.unprocessable(errs) } else { @moonapi.text(201, "order accepted") } }, endpoint=ep, ) let hit = (label : String, body : String) =&gt; { let req : @moonasgi.Request = { http_method: "POST", path: "/orders", query_string: b"",</code></pre></div>
-      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/main/src/examples/05-constraints" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+      <div class="codewrap"><pre><code>let app = @moonapi.App::new()
+app.post(
+  "/orders",
+  ctx =&gt; {
+    let errs = ep.validate(ctx)
+    if errs.length() &gt; 0 {
+      @moonapi.unprocessable(errs)
+    } else {
+      @moonapi.text(201, "order accepted")
+    }
+  },
+  endpoint=ep,</code></pre></div>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/05-constraints" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
     </article>
     <article class="ex-card">
       <span class="tag">06-typed-body</span>
       <h3>Typed bodies, two ways</h3>
       <p>Validated extraction returns located errors; unchecked extraction returns a total option. Choose per route.</p>
-      <div class="codewrap"><pre><code>let app = @moonapi.App::new() // Validated extraction: conform, or get located errors. app.post("/greet", ctx =&gt; { match (ctx.body_validated(GreetReq::schema()) : Result[GreetReq, _]) { Ok(g) =&gt; @moonapi.text(200, "Hello, " + g.name) Err(errs) =&gt; @moonapi.unprocessable(errs) } }) // Unchecked extraction: a total `T?`, `None` when the body cannot shape-match. app.post("/echo", ctx =&gt; { let parsed : GreetReq? = ctx.body() match parsed { Some(g) =&gt; @moonapi.text(200, "parsed name=" + g.name) None =&gt; @moonapi.text(200, "unparseable") } }) let hit = (path : String, body : String) =&gt; { let req : @moonasgi.Request = {</code></pre></div>
-      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/main/src/examples/06-typed-body" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+      <div class="codewrap"><pre><code>let app = @moonapi.App::new()
+// Validated extraction: conform, or get located errors.
+app.post("/greet", ctx =&gt; {
+  match (ctx.body_validated(GreetReq::schema()) : Result[GreetReq, _]) {
+    Ok(g) =&gt; @moonapi.text(200, "Hello, " + g.name)
+    Err(errs) =&gt; @moonapi.unprocessable(errs)
+  }
+})
+// Unchecked extraction: a total `T?`, `None` when the body cannot shape-match.
+app.post("/echo", ctx =&gt; {
+  let parsed : GreetReq? = ctx.body()
+  match parsed {</code></pre></div>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/06-typed-body" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
     </article>
     <article class="ex-card">
       <span class="tag">07-request-extractors</span>
       <h3>Typed request extractors</h3>
       <p>Declare a path, query, header and cookie parameter once; the endpoint validates and binds them for you.</p>
-      <div class="codewrap"><pre><code>let app = @moonapi.App::new() let search = @moonapi.Endpoint::new(params=[ @moonapi.Param::new("cat", InPath), @moonapi.Param::new("limit", InQuery, schema=SInt), @moonapi.Param::new("x-trace", InHeader), @moonapi.Param::new("session", InCookie), ]) app.get( "/search/{cat}", ctx =&gt; { let errs = search.validate(ctx) if errs.length() &gt; 0 { @moonapi.unprocessable(errs) } else { let cat = ctx.param("cat").unwrap() let limit = ctx.query("limit").unwrap() let trace = ctx.request.header("x-trace").unwrap_or("-") let sess = ctx.cookie("session").unwrap_or("-")</code></pre></div>
-      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/main/src/examples/07-request-extractors" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+      <div class="codewrap"><pre><code>let app = @moonapi.App::new()
+let search = @moonapi.Endpoint::new(params=[
+  @moonapi.Param::new("cat", InPath),
+  @moonapi.Param::new("limit", InQuery, schema=SInt),
+  @moonapi.Param::new("x-trace", InHeader),
+  @moonapi.Param::new("session", InCookie),
+])
+app.get(
+  "/search/{cat}",
+  ctx =&gt; {
+    let errs = search.validate(ctx)
+    if errs.length() &gt; 0 {</code></pre></div>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/07-request-extractors" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
     </article>
     <article class="ex-card">
       <span class="tag">08-response-model</span>
       <h3>Response models</h3>
       <p>Build a full internal record, then project only the safe fields through a response model.</p>
-      <div class="codewrap"><pre><code>let app = @moonapi.App::new() app.get("/me", _ctx =&gt; { // The handler builds a full record; the model decides what leaves. let internal : Json = { let m : Map[String, Json] = Map([ ("id", Json(233)), ("name", Json("lfanke")), ("password_hash", Json("deadbeef")), ("email", Json("lfanke@example.com")), ]) Json(m) } @moonapi.json_model(200, public_user, internal) }) let req : @moonasgi.Request = { http_method: "GET", path: "/me", query_string: b"",</code></pre></div>
-      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/main/src/examples/08-response-model" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+      <div class="codewrap"><pre><code>let app = @moonapi.App::new()
+app.get("/me", _ctx =&gt; {
+  // The handler builds a full record; the model decides what leaves.
+  let internal : Json = {
+    let m : Map[String, Json] = Map([
+      ("id", Json(233)),
+      ("name", Json("lfanke")),
+      ("password_hash", Json("deadbeef")),
+      ("email", Json("lfanke@example.com")),
+    ])
+    Json(m)
+  }</code></pre></div>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/08-response-model" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
     </article>
     <article class="ex-card">
       <span class="tag">19-json-schema</span>
       <h3>Inspect the emitted JSON schema</h3>
       <p>See exactly what schema a typed body contributes to the generated OpenAPI document.</p>
-      <div class="codewrap"><pre><code>let app = @moonapi.App::new() app.post( "/posts", ctx =&gt; @moonapi.json(201, ctx.body_json().unwrap_or(Json::null())), endpoint=@moonapi.Endpoint::new(request_body=body), ) // The document says exactly what was written. let doc = app.openapi() println( "schema: " + at(doc, ["components", "schemas", "Post", "properties"]).stringify(), ) // And the same schema decides what the endpoint accepts. for instance in ( [</code></pre></div>
-      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/main/src/examples/19-json-schema" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+      <div class="codewrap"><pre><code>let app = @moonapi.App::new()
+app.post(
+  "/posts",
+  ctx =&gt; @moonapi.json(201, ctx.body_json().unwrap_or(Json::null())),
+  endpoint=@moonapi.Endpoint::new(request_body=body),
+)
+
+// The document says exactly what was written.
+let doc = app.openapi()
+println(
+  "schema: " +
+  at(doc, ["components", "schemas", "Post", "properties"]).stringify(),</code></pre></div>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/19-json-schema" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
     </article>
     <article class="ex-card">
       <span class="tag">26-described-model</span>
       <h3>Describe then validate</h3>
       <p>Attach a field-level description to a model and validate the request against it.</p>
-      <div class="codewrap"><pre><code>let app = @moonapi.App::new() app.post( "/orders", ctx =&gt; { let errs = ep.validate(ctx) if errs.length() &gt; 0 { @moonapi.unprocessable(errs) } else { @moonapi.text(201, "order accepted") } }, endpoint=ep, summary="place an order", ) let hit = (label : String, body : String) =&gt; { let req : @moonasgi.Request = { http_method: "POST", path: "/orders",</code></pre></div>
-      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/main/src/examples/26-described-model" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+      <div class="codewrap"><pre><code>let app = @moonapi.App::new()
+app.post(
+  "/orders",
+  ctx =&gt; {
+    let errs = ep.validate(ctx)
+    if errs.length() &gt; 0 {
+      @moonapi.unprocessable(errs)
+    } else {
+      @moonapi.text(201, "order accepted")
+    }
+  },
+  endpoint=ep,</code></pre></div>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/26-described-model" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
     </article>
     </div>
   </section>
@@ -120,12 +220,20 @@
     <article class="ex-card">
       <span class="tag">09-dependency-injection</span>
       <h3>A request-scoped container</h3>
-      <p>Register services by type; the container builds, caches and tears them down once per request.</p>
-      <div class="codewrap"><pre><code>enum Dep { Cfg(String) Conn(String) Repo(String)
-} fn Dep::show(self : Dep) -&gt; String { match self { Cfg(s) =&gt; s Conn(s) =&gt; s Repo(s) =&gt; s }
-} #coverage.skip
-fn main raise { let opens : Array[Int32] = [0] let c : @moonapi.Container[Dep] = @moonapi.Container::new()</code></pre></div>
-      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/main/src/examples/09-dependency-injection" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+      <p>Register services by name; the container builds, caches and tears them down once per request.</p>
+      <div class="codewrap"><pre><code>enum Dep {
+  Cfg(String)
+  Conn(String)
+  Repo(String)
+}
+
+fn Dep::show(self : Dep) -&gt; String {
+  match self {
+    Cfg(s) =&gt; s
+    Conn(s) =&gt; s
+    Repo(s) =&gt; s
+  }</code></pre></div>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/09-dependency-injection" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
     </article>
     </div>
   </section>
@@ -137,22 +245,54 @@ fn main raise { let opens : Array[Int32] = [0] let c : @moonapi.Container[Dep] =
       <span class="tag">10-oauth2-jwt</span>
       <h3>OAuth2 password flow with JWT</h3>
       <p>Accept a password form, mint a signed access token, and return it in the standard token response.</p>
-      <div class="codewrap"><pre><code>let app = @moonapi.App::new() app.post("/token", ctx =&gt; { match ctx.oauth2_password_form() { Some(form) =&gt; if form.username == "lfanke" &amp;&amp; form.password == "qwq" { let tok = @moonapi.create_access_token( form.username, secret, now, scopes=form.scopes, ) @moonapi.token_response(tok) } else { @moonapi.text(401, "bad credentials") } None =&gt; @moonapi.text(400, "not a password form") } })</code></pre></div>
-      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/main/src/examples/10-oauth2-jwt" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+      <div class="codewrap"><pre><code>let app = @moonapi.App::new()
+app.post("/token", ctx =&gt; {
+  match ctx.oauth2_password_form() {
+    Some(form) =&gt;
+      if form.username == "lfanke" &amp;&amp; form.password == "qwq" {
+        let tok = @moonapi.create_access_token(
+          form.username,
+          secret,
+          now,
+          scopes=form.scopes,
+        )
+        @moonapi.token_response(tok)</code></pre></div>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/10-oauth2-jwt" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
     </article>
     <article class="ex-card">
       <span class="tag">11-per-op-security</span>
       <h3>Per-operation security</h3>
       <p>Attach a security requirement to a route so the guard must admit the request before the handler runs.</p>
-      <div class="codewrap"><pre><code>let app = @moonapi.App::new() app.set_clock(() =&gt; now) app.secure_oauth2("OAuth2", bearer, scopes=[ ("items:read", "read items"), ("items:write", "write items"), ]) // The handler is never reached unless the guard admits the request. app.get( "/items", _ctx =&gt; @moonapi.text(200, "the item list"), summary="list items", security=[ @moonapi.SecurityRequirement::new("OAuth2", scopes=["items:read"]), ], ) let good = @moonapi.create_access_token("lfanke", secret, now, scopes=[ "items:read", ])</code></pre></div>
-      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/main/src/examples/11-per-op-security" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+      <div class="codewrap"><pre><code>let app = @moonapi.App::new()
+app.set_clock(() =&gt; now)
+app.secure_oauth2("OAuth2", bearer, scopes=[
+  ("items:read", "read items"),
+  ("items:write", "write items"),
+])
+// The handler is never reached unless the guard admits the request.
+app.get(
+  "/items",
+  _ctx =&gt; @moonapi.text(200, "the item list"),
+  summary="list items",
+  security=[</code></pre></div>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/11-per-op-security" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
     </article>
     <article class="ex-card">
       <span class="tag">12-security-schemes</span>
       <h3>API keys, bearer, basic, OAuth2</h3>
       <p>Declare every scheme the API accepts and read a credential from each carrier in one route.</p>
-      <div class="codewrap"><pre><code>let app = @moonapi.App::new() app.add_security_scheme("BearerJWT", HttpBearer(bearer_format="JWT")) app.add_security_scheme("ApiKeyHeader", ApiKeyHeader(name="X-API-Key")) app.add_security_scheme("ApiKeyQuery", ApiKeyQuery(name="api_key")) app.add_security_scheme("ApiKeyCookie", ApiKeyCookie(name="session")) app.add_security_scheme("Basic", HttpBasic) let bearer = @moonapi.OAuth2PasswordBearer::new("/token", "heke1228") app.add_security_scheme( "OAuth2", bearer.scheme(scopes=[("read", "read access"), ("write", "write access")]), ) // The extraction side: one route reads a credential from each carrier. app.get("/whoami", ctx =&gt; { let h = ctx.api_key_header("X-API-Key").unwrap_or("-") let q = ctx.api_key_query("api_key").unwrap_or("-") let c = ctx.api_key_cookie("session").unwrap_or("-") let who = match ctx.http_basic() {</code></pre></div>
-      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/main/src/examples/12-security-schemes" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+      <div class="codewrap"><pre><code>let app = @moonapi.App::new()
+app.add_security_scheme("BearerJWT", HttpBearer(bearer_format="JWT"))
+app.add_security_scheme("ApiKeyHeader", ApiKeyHeader(name="X-API-Key"))
+app.add_security_scheme("ApiKeyQuery", ApiKeyQuery(name="api_key"))
+app.add_security_scheme("ApiKeyCookie", ApiKeyCookie(name="session"))
+app.add_security_scheme("Basic", HttpBasic)
+let bearer = @moonapi.OAuth2PasswordBearer::new("/token", "heke1228")
+app.add_security_scheme(
+  "OAuth2",
+  bearer.scheme(scopes=[("read", "read access"), ("write", "write access")]),
+)</code></pre></div>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/12-security-schemes" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
     </article>
     </div>
   </section>
@@ -164,51 +304,127 @@ fn main raise { let opens : Array[Int32] = [0] let c : @moonapi.Container[Dep] =
       <span class="tag">13-forms-files</span>
       <h3>Forms and file uploads</h3>
       <p>Parse multipart forms, read individual fields and files, and enforce upload size limits.</p>
-      <div class="codewrap"><pre><code>let app = @moonapi.App::new() app.post("/upload", ctx =&gt; { // A title and three tags is the whole of this form, so more is not it. let form = match ctx.form(limits={ ..@moonmime.limits, parts: 4, }) { Some(f) =&gt; f None =&gt; return @moonapi.text( @moonapi.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "too many form parts", ) } let title = form.field("title").unwrap_or("-") let tags = form.values("tag") match form.file("doc") { Some(f) =&gt; @moonapi.text( 200, "title=\{title} tags=[\{join_csv(tags)}] file=\{f.filename} type=\{f.content_type} bytes=\{f.content.length()} body=\{@utf8.decode_lossy(f.content[:])}",</code></pre></div>
-      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/main/src/examples/13-forms-files" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+      <div class="codewrap"><pre><code>let app = @moonapi.App::new()
+app.post("/upload", ctx =&gt; {
+  // A title and three tags is the whole of this form, so more is not it.
+  let form = match ctx.form(limits={ ..@moonmime.limits, parts: 4, }) {
+    Some(f) =&gt; f
+    None =&gt;
+      return @moonapi.text(
+        @moonapi.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+        "too many form parts",
+      )
+  }
+  let title = form.field("title").unwrap_or("-")</code></pre></div>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/13-forms-files" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
     </article>
     <article class="ex-card">
       <span class="tag">14-background-tasks</span>
       <h3>Work after the response</h3>
       <p>A wrapping layer runs a task once the response body has been sent to the client.</p>
-      <div class="codewrap"><pre><code>let app = @moonapi.App::new() app.layer( @mid.Wrap(inner =&gt; { async fn(scope, receive, send) { inner(scope, receive, event =&gt; { send(event) if event is HttpResponseBody(more_body=false, ..) { log.push("response sent") } }) } }), ) app.post("/notify", ctx =&gt; { let who = ctx.query("to").unwrap_or("nobody") ctx.background.add_task(() =&gt; log.push("email sent to \{who}")) ctx.background.add_task(() =&gt; log.push("audit row written for \{who}")) log.push("handler answered")</code></pre></div>
-      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/main/src/examples/14-background-tasks" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+      <div class="codewrap"><pre><code>let app = @moonapi.App::new()
+app.layer(
+  @mid.Wrap(inner =&gt; {
+    async fn(scope, receive, send) {
+      inner(scope, receive, event =&gt; {
+        send(event)
+        if event is HttpResponseBody(more_body=false, ..) {
+          log.push("response sent")
+        }
+      })
+    }
+  }),</code></pre></div>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/14-background-tasks" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
     </article>
     <article class="ex-card">
       <span class="tag">15-mounting</span>
       <h3>Mount sub-applications</h3>
       <p>Build a small admin app and an API app, then mount them at their own prefixes under one root.</p>
-      <div class="codewrap"><pre><code>let admin = @moonapi.App::new() admin.get( "/stats", _ctx =&gt; @moonapi.text(200, "admin stats"), summary="stats", ) // The API sub-app. let api = @moonapi.App::new() api.get( "/items", _ctx =&gt; @moonapi.text(200, "the items"), summary="list items", ) api.get( "/items/{id}", ctx =&gt; @moonapi.text(200, "item " + ctx.param("id").unwrap()), summary="get item",</code></pre></div>
-      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/main/src/examples/15-mounting" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+      <div class="codewrap"><pre><code>let admin = @moonapi.App::new()
+admin.get(
+  "/stats",
+  _ctx =&gt; @moonapi.text(200, "admin stats"),
+  summary="stats",
+)
+
+// The API sub-app.
+let api = @moonapi.App::new()
+api.get(
+  "/items",
+  _ctx =&gt; @moonapi.text(200, "the items"),</code></pre></div>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/15-mounting" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
     </article>
     <article class="ex-card">
       <span class="tag">16-middleware</span>
       <h3>CORS, gzip and custom middleware</h3>
       <p>Add CORS and gzip as layers and slip a custom middleware into the request/response chain.</p>
-      <div class="codewrap"><pre><code>let app = @moonapi.App::new() app.layer( @mid.Cors::new(origins=["https://app.example.com"], credentials=true, expose=[ "X-Total", ]), ) app.layer(@mid.Gzip::new(minimum=100)) app.middleware((req, call_next) =&gt; { let resp = call_next(req) @moonasgi.Response::new( resp.status, [("x-handled-by", "moonapi"), ..resp.headers], resp.body, ) }) app.exception_handler((_ctx, err) =&gt; { match err { OutOfStock(item) =&gt;</code></pre></div>
-      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/main/src/examples/16-middleware" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+      <div class="codewrap"><pre><code>let app = @moonapi.App::new()
+app.layer(
+  @mid.Cors::new(origins=["https://app.example.com"], credentials=true, expose=[
+    "X-Total",
+  ]),
+)
+app.layer(@mid.Gzip::new(minimum=100))
+app.middleware((req, call_next) =&gt; {
+  let resp = call_next(req)
+  @moonasgi.Response::new(
+    resp.status,
+    [("x-handled-by", "moonapi"), ..resp.headers],</code></pre></div>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/16-middleware" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
     </article>
     <article class="ex-card">
       <span class="tag">23-lifespan</span>
       <h3>Startup and shutdown hooks</h3>
       <p>Run code when the server starts and stops, and share state across the lifespan.</p>
-      <div class="codewrap"><pre><code>let app = @moonapi.App::new() app.on_startup(state =&gt; { state["db"] = "pool-1" log.push("connect db") }) app.on_startup(_ =&gt; log.push("warm cache")) app.on_shutdown(_ =&gt; log.push("close db")) app.on_shutdown(_ =&gt; log.push("drop cache")) app.get("/db", ctx =&gt; { @moonapi.json(200, ctx.state().get("db").unwrap_or(Json::null())) }) let client = @testing.Client::new(app.to_asgi()) client.lifespan(() =&gt; log.push("request saw \{client.get("/db").text()}")) println(log.join(" -&gt; "))
-}</code></pre></div>
-      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/main/src/examples/23-lifespan" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+      <div class="codewrap"><pre><code>let app = @moonapi.App::new()
+app.on_startup(state =&gt; {
+  state["db"] = "pool-1"
+  log.push("connect db")
+})
+app.on_startup(_ =&gt; log.push("warm cache"))
+app.on_shutdown(_ =&gt; log.push("close db"))
+app.on_shutdown(_ =&gt; log.push("drop cache"))
+app.get("/db", ctx =&gt; {
+  @moonapi.json(200, ctx.state().get("db").unwrap_or(Json::null()))
+})
+let client = @testing.Client::new(app.to_asgi())</code></pre></div>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/23-lifespan" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
     </article>
     <article class="ex-card">
       <span class="tag">24-files</span>
       <h3>Serve files and data URLs</h3>
       <p>Stream a file with an etag and turn an inline data URL into a served response.</p>
-      <div class="codewrap"><pre><code>let app = @moonapi.App::new() let report = b"a quarterly report, ten times longer than it needs to be" let tag = @conditional.hash(report[:], digest=@sha2.Hasher::new()) app.get("/report.txt", ctx =&gt; { ctx.serve(report, filename="report.txt", etag=tag) }) // A client posts back what `canvas.toDataURL()` gave it; the server serves // what is inside, under the media type the URL itself names. app.post("/thumbnail", ctx =&gt; { match ctx.body_json() { Some(String(url)) =&gt; match @moonapi.data_response(url, filename="thumb") { Some(resp) =&gt; resp None =&gt; @moonapi.text(400, "not a data URL") } _ =&gt; @moonapi.text(400, "expected a JSON string") } })</code></pre></div>
-      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/main/src/examples/24-files" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+      <div class="codewrap"><pre><code>let app = @moonapi.App::new()
+let report = b"a quarterly report, ten times longer than it needs to be"
+let tag = @conditional.hash(report[:], digest=@sha2.Hasher::new())
+app.get("/report.txt", ctx =&gt; {
+  ctx.serve(report, filename="report.txt", etag=tag)
+})
+// A client posts back what `canvas.toDataURL()` gave it; the server serves
+// what is inside, under the media type the URL itself names.
+app.post("/thumbnail", ctx =&gt; {
+  match ctx.body_json() {
+    Some(String(url)) =&gt;
+      match @moonapi.data_response(url, filename="thumb") {</code></pre></div>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/24-files" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
     </article>
     <article class="ex-card">
       <span class="tag">27-annotations</span>
       <h3>Annotation routes and routers</h3>
       <p>Write routes as annotations, group them in a router, and include the router under a prefix.</p>
-      <div class="codewrap"><pre><code>let app = @moonapi.App::new() register(app) let account = @moonapi.Router::new() register_router(account) app.include_router(account, prefix="/account") let hit = (verb : String, path : String) =&gt; { let req : @moonasgi.Request = { http_method: verb, path, query_string: b"", headers: [], body: b"", } let r = app.handle(req) println("\{verb} \{path} -&gt; \{r.status} \{@utf8.decode_lossy(r.body[:])}") } hit("GET", "/items/7") hit("POST", "/items")</code></pre></div>
-      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/main/src/examples/27-annotations" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+      <div class="codewrap"><pre><code>let app = @moonapi.App::new()
+register(app)
+let account = @moonapi.Router::new()
+register_router(account)
+app.include_router(account, prefix="/account")
+let hit = (verb : String, path : String) =&gt; {
+  let req : @moonasgi.Request = {
+    http_method: verb,
+    path,
+    query_string: b"",
+    headers: [],
+    body: b"",</code></pre></div>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/27-annotations" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
     </article>
     </div>
   </section>
@@ -220,15 +436,37 @@ fn main raise { let opens : Array[Int32] = [0] let c : @moonapi.Container[Dep] =
       <span class="tag">17-sse</span>
       <h3>Server-sent events</h3>
       <p>Stream events to the client and honour the Last-Event-ID header for a clean resume.</p>
-      <div class="codewrap"><pre><code>let app = @moonapi.App::new() app.stream("/events", ctx =&gt; { let resumed = ctx.last_event_id() is Some(_) @moonapi.sse(e =&gt; { if resumed { e.send(@sse.Event::of("resumed")) } for ev in events { e.send(ev) } }) }) // The wire form: the head, one body event per frame, then the end of the body. let scope = @moonasgi.Scope::Http( @moonasgi.HttpScope::new(http_method="GET", path="/events"), ) @testing.communicate(app.to_asgi(), scope, c =&gt; { c.send(HttpRequest(body=b"", more_body=false))</code></pre></div>
-      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/main/src/examples/17-sse" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+      <div class="codewrap"><pre><code>let app = @moonapi.App::new()
+app.stream("/events", ctx =&gt; {
+  let resumed = ctx.last_event_id() is Some(_)
+  @moonapi.sse(e =&gt; {
+    if resumed {
+      e.send(@sse.Event::of("resumed"))
+    }
+    for ev in events {
+      e.send(ev)
+    }
+  })
+})</code></pre></div>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/17-sse" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
     </article>
     <article class="ex-card">
       <span class="tag">18-websocket</span>
       <h3>WebSockets</h3>
       <p>Hold a live WebSocket connection in a room route and a streaming sum route.</p>
-      <div class="codewrap"><pre><code>let app = @moonapi.App::new() app.websocket("/ws/{room}", room) app.websocket("/sum", sum) let client = @testing.Client::new(app.to_asgi()) println("room /ws/233:") client.websocket(path="/ws/233", subprotocols=["chat", "superchat"], s =&gt; { println(" subprotocol: \{s.subprotocol.unwrap_or("-")}") println(" " + s.receive_text()) s.send_text("hi") println(" " + s.receive_text()) s.send_bytes(b"\x02\x33\x33") println(" bytes back: \{s.receive_bytes().length()}") }) println("sum /sum:") client.websocket(path="/sum", s =&gt; { s.send_json([1, 2, 3.5]) println(" total: \{s.receive_json().stringify()}") })</code></pre></div>
-      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/main/src/examples/18-websocket" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+      <div class="codewrap"><pre><code>let app = @moonapi.App::new()
+app.websocket("/ws/{room}", room)
+app.websocket("/sum", sum)
+let client = @testing.Client::new(app.to_asgi())
+println("room /ws/233:")
+client.websocket(path="/ws/233", subprotocols=["chat", "superchat"], s =&gt; {
+  println("  subprotocol: \{s.subprotocol.unwrap_or("-")}")
+  println("  " + s.receive_text())
+  s.send_text("hi")
+  println("  " + s.receive_text())
+  s.send_bytes(b"\x02\x33\x33")
+  println("  bytes back: \{s.receive_bytes().length()}")</code></pre></div>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/18-websocket" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
     </article>
     </div>
   </section>
@@ -240,8 +478,19 @@ fn main raise { let opens : Array[Int32] = [0] let c : @moonapi.Container[Dep] =
       <span class="tag">28-templates</span>
       <h3>Render HTML templates</h3>
       <p>Render pages with the template engine, extend a base layout, and build URLs by name.</p>
-      <div class="codewrap"><pre><code>let app = @moonapi.App::new() let pages = @templates.Templates::new( @moonpug.Env::new(load=name =&gt; { match name { "base.html" =&gt; Some( "&lt;link rel=\"stylesheet\" href=\"/static/site.css\"&gt;&lt;h1&gt;{% block title %}{% endblock %}&lt;/h1&gt;{% block body %}{% endblock %}", ) "user.html" =&gt; Some( "{% extends 'base.html' %}{% block title %}{{ name }}{% endblock %}{% block body %}&lt;a href=\"{{ url_for('user', id=id|int + 1) }}\"&gt;next&lt;/a&gt; from {{ request.path }}{% endblock %}", ) _ =&gt; None } }), url_for=(name, params) =&gt; app.url_for(name, params~), ) app.get(</code></pre></div>
-      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/main/src/examples/28-templates" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+      <div class="codewrap"><pre><code>let app = @moonapi.App::new()
+let pages = @templates.Templates::new(
+  @moonpug.Env::new(load=name =&gt; {
+    match name {
+      "base.html" =&gt;
+        Some(
+          "&lt;link rel=\"stylesheet\" href=\"/static/site.css\"&gt;&lt;h1&gt;{% block title %}{% endblock %}&lt;/h1&gt;{% block body %}{% endblock %}",
+        )
+      "user.html" =&gt;
+        Some(
+          "{% extends 'base.html' %}{% block title %}{{ name }}{% endblock %}{% block body %}&lt;a href=\"{{ url_for('user', id=id|int + 1) }}\"&gt;next&lt;/a&gt; from {{ request.path }}{% endblock %}",
+        )</code></pre></div>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/28-templates" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
     </article>
     </div>
   </section>
@@ -253,15 +502,37 @@ fn main raise { let opens : Array[Int32] = [0] let c : @moonapi.Container[Dep] =
       <span class="tag">03-openapi-versions</span>
       <h3>Three spec versions from one app</h3>
       <p>The same routes serialise as Swagger 2.0, OpenAPI 3.0 and OpenAPI 3.1 — pick the dialect a tool expects.</p>
-      <div class="codewrap"><pre><code>let app = widget_app() app.get( "/legacy", _ctx =&gt; @moonapi.text(200, "old"), summary="the legacy list", tags=["misc"], deprecated=true, ) println("--- Swagger 2.0 (definitions) ---") println(app.openapi_json(version=Swagger20)) println("--- OpenAPI 3.0.3 (components/schemas) ---") println(app.openapi_json(version=OpenApi30)) println("--- OpenAPI 3.1.0 with full info metadata ---") let doc = app.openapi( version=OpenApi31, title="Widget API", api_version="2.3.0", description="a comprehensive moonapi example",</code></pre></div>
-      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/main/src/examples/03-openapi-versions" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+      <div class="codewrap"><pre><code>let app = widget_app()
+app.get(
+  "/legacy",
+  _ctx =&gt; @moonapi.text(200, "old"),
+  summary="the legacy list",
+  tags=["misc"],
+  deprecated=true,
+)
+println("--- Swagger 2.0 (definitions) ---")
+println(app.openapi_json(version=Swagger20))
+println("--- OpenAPI 3.0.3 (components/schemas) ---")
+println(app.openapi_json(version=OpenApi30))</code></pre></div>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/03-openapi-versions" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
     </article>
     <article class="ex-card">
       <span class="tag">22-docs-ui</span>
       <h3>Serve the docs UI</h3>
       <p>Enable the bundled UI and hit /openapi.json, /docs and /redoc for the live specification.</p>
-      <div class="codewrap"><pre><code>let app = @moonapi.App::new() app.get( "/greet", _ctx =&gt; @moonapi.text(200, "hello, heke1228"), summary="greet a user", ) app.describe( title="greet api", description="One route, documented three ways.", api_version="1.0.0", ) app.enable_docs() for path in ["/openapi.json", "/docs", "/redoc"] { let resp = app.handle({ http_method: "GET", path, query_string: b"", headers: [],</code></pre></div>
-      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/main/src/examples/22-docs-ui" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+      <div class="codewrap"><pre><code>let app = @moonapi.App::new()
+app.get(
+  "/greet",
+  _ctx =&gt; @moonapi.text(200, "hello, heke1228"),
+  summary="greet a user",
+)
+app.describe(
+  title="greet api",
+  description="One route, documented three ways.",
+  api_version="1.0.0",
+)
+app.enable_docs()</code></pre></div>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/22-docs-ui" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
     </article>
     </div>
   </section>
@@ -273,9 +544,13 @@ fn main raise { let opens : Array[Int32] = [0] let c : @moonapi.Container[Dep] =
       <span class="tag">25-full-example</span>
       <h3>One service, every feature</h3>
       <p>An integrated application: routers, auth, typed bodies, layers, DI, files, tasks, SSE, WebSockets and OpenAPI.</p>
-      <div class="codewrap"><pre><code>let app = @application.build() println("moonapi serving on http://127.0.0.1:12000") @mooncat.serve(app.to_asgi()) catch { err =&gt; println("mooncat stopped: \{err}") }
+      <div class="codewrap"><pre><code>  let app = @application.build()
+  println("moonapi serving on http://127.0.0.1:12000")
+  @mooncat.serve(app.to_asgi()) catch {
+    err =&gt; println("mooncat stopped: \{err}")
+  }
 }</code></pre></div>
-      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/main/src/examples/25-full-example" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/25-full-example" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
     </article>
     </div>
   </section>
