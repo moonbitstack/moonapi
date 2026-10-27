@@ -336,11 +336,11 @@ fn unresolved_dep(key : String) -> Error {
 /// then close the scope — handing whatever error the body raised to the
 /// teardowns before re-raising it, so a `yield` dependency's cleanup sees the
 /// failure. A route with no dependencies never opens a scope.
-async fn App::run_with_deps(
+async fn[T] App::run_with_deps(
   self : App,
   keys : Array[String],
-  body : async () -> @route.Reply,
-) -> @route.Reply {
+  body : async () -> T,
+) -> T {
   if keys.is_empty() {
     return body()
   }
@@ -354,9 +354,7 @@ async fn App::run_with_deps(
     (scope.close)(Some(err))
     raise err
   }
-  let outcome : Result[@route.Reply, Error] = Ok(body()) catch {
-    err => Err(err)
-  }
+  let outcome : Result[T, Error] = Ok(body()) catch { err => Err(err) }
   match outcome {
     Ok(reply) => {
       (scope.close)(None)
@@ -486,12 +484,28 @@ async fn App::serve_websocket(
   mounted : Array[(String, @moonasgi.AsgiApp)],
 ) -> Unit {
   for route in self.router.ws_routes {
-    guard @route.Pattern::parse(route.path).bind(ws.path) is Some(params) else {
-      continue
+    guard route.pattern.bind(ws.path) is Some(params) else { continue }
+    let socket = @socket.WebSocket::new(ws, receive, send, params~)
+    let hs = handshake(ws)
+    let ctx = @ctx.Context::new(request_of(hs, b""), params~, scope=hs)
+    if self.enforce_security(ctx, route.security) is Some(denied) {
+      socket.deny(self.apply_status(ctx, denied))
+      return
     }
-    (route.handler)(@socket.WebSocket::new(ws, receive, send, params~)) catch {
+    // A failure before the handler is called is the handshake's to report; one after it belongs
+    // to the connection the handler already holds.
+    let mut called = false
+    self.run_with_deps(route.dependencies, () => {
+      called = true
+      (route.handler)(socket)
+    }) catch {
       @socket.Disconnected(..) => ()
-      e => raise e
+      e =>
+        if called {
+          raise e
+        } else {
+          socket.deny(self.dispatch_exception(ctx, e))
+        }
     }
     return
   }
@@ -506,6 +520,27 @@ async fn App::serve_websocket(
     return
   }
   send(WebSocketClose(code=1000, reason=""))
+}
+
+///|
+/// The HTTP request a WebSocket handshake is: a `GET` with the connection's headers and query,
+/// which is what a security scheme reads its credentials from.
+fn handshake(ws : @moonasgi.WebSocketScope) -> @moonasgi.HttpScope {
+  {
+    http_version: ws.http_version,
+    http_method: "GET",
+    scheme: ws.scheme,
+    path: ws.path,
+    raw_path: ws.raw_path,
+    query_string: ws.query_string,
+    root_path: ws.root_path,
+    headers: ws.headers,
+    client: ws.client,
+    server: ws.server,
+    asgi: ws.asgi,
+    extensions: ws.extensions,
+    state: ws.state,
+  }
 }
 
 ///|

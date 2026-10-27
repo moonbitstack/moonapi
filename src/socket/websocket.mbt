@@ -181,12 +181,31 @@ pub async fn WebSocket::close(
 }
 
 ///|
-/// A WebSocket route's handler (← FastAPI's `@app.websocket` endpoint).
-pub type WsHandler = async (WebSocket) -> Unit
+/// Decline the handshake with `response` (← Starlette's `send_denial_response`): the client gets
+/// its status, headers and body instead of a WebSocket. That takes ASGI's
+/// `websocket.http.response` extension; a server without it is sent close code 1008 instead,
+/// which it answers with `403`. After `accept` there is no handshake left to decline, and the
+/// connection is closed with 1008.
+pub async fn WebSocket::deny(
+  self : WebSocket,
+  response : @moonasgi.Response,
+) -> Unit {
+  guard self.phase is Connecting &&
+    self.scope.extensions.websocket_http_response else {
+    self.close(code=1008)
+    return
+  }
+  self.phase = Closed
+  (self.sender)(
+    WebSocketHttpResponseStart(
+      status=response.status,
+      headers=response.headers,
+      trailers=false,
+    ),
+  )
+  (self.sender)(WebSocketHttpResponseBody(body=response.body, more_body=false))
+}
 
 ///|
-/// A registered WebSocket route.
-pub(all) struct WsRoute {
-  path : String
-  handler : WsHandler
-}
+/// A WebSocket route's handler (← FastAPI's `@app.websocket` endpoint).
+pub type WsHandler = async (WebSocket) -> Unit

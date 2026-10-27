@@ -131,3 +131,46 @@ test "ws: the scope's headers and offered subprotocols are readable" {
   assert_eq(ws.offered_subprotocols(), ["v2", "v1"])
   assert_eq(ws.param("room"), Some("7"))
 }
+
+///|
+async test "ws: deny sends the response where the server allows it" {
+  let handler : WsHandler = ws => {
+    ws.deny(
+      @moonasgi.Response::new(401, [("www-authenticate", "Bearer")], b"no"),
+    )
+    ws.close()
+  }
+  let scope = @moonasgi.Scope::WebSocket(
+    @moonasgi.WebSocketScope::new(path="/ws", extensions={
+      ..@moonasgi.Extensions::none(),
+      websocket_http_response: true,
+    }),
+  )
+  @testing.communicate(served(handler), scope, c => {
+    assert_true(c.receive() is WebSocketHttpResponseStart(status=401, ..))
+    assert_true(
+      c.receive() is WebSocketHttpResponseBody(body=b"no", more_body=false),
+    )
+    c.wait()
+    assert_true(c.receive_nothing())
+  })
+}
+
+///|
+async test "ws: deny closes with 1008 without the extension, and after accept" {
+  let refused : WsHandler = ws => ws.deny(@moonasgi.Response::new(403, [], b""))
+  @testing.communicate(served(refused), ws_scope(), c => {
+    assert_true(c.receive() is WebSocketClose(code=1008, ..))
+    c.wait()
+  })
+  let late : WsHandler = ws => {
+    ws.accept()
+    ws.deny(@moonasgi.Response::new(403, [], b""))
+  }
+  @testing.communicate(served(late), ws_scope(), c => {
+    c.send(WebSocketConnect)
+    assert_true(c.receive() is WebSocketAccept(..))
+    assert_true(c.receive() is WebSocketClose(code=1008, ..))
+    c.wait()
+  })
+}

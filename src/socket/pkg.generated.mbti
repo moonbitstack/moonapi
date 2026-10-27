@@ -3,6 +3,7 @@ package "moonbitstack/moonapi/socket"
 
 import {
   "moonbitlang/core/debug",
+  "moonbitstack/moonasgi/http",
   "moonbitstack/moonasgi/spec",
 }
 
@@ -24,6 +25,7 @@ pub struct WebSocket {
 }
 pub async fn WebSocket::accept(Self, subprotocol? : String, headers? : Array[(String, String)]) -> Unit
 pub async fn WebSocket::close(Self, code? : Int32, reason? : String) -> Unit
+pub async fn WebSocket::deny(Self, @http.Response) -> Unit
 pub fn WebSocket::header(Self, String) -> String?
 pub fn WebSocket::new(@spec.WebSocketScope, async () -> @spec.Event, async (@spec.Event) -> Unit, params? : Map[String, String]) -> Self
 pub fn WebSocket::offered_subprotocols(Self) -> Array[String]
@@ -44,11 +46,6 @@ pub(all) enum WsMessage {
 pub fn WsMessage::equal(Self, Self) -> Bool
 pub fn WsMessage::not_equal(Self, Self) -> Bool
 pub fn WsMessage::to_repr(Self) -> @debug.Repr
-
-pub(all) struct WsRoute {
-  path : String
-  handler : async (WebSocket) -> Unit
-}
 
 // Type aliases
 pub type WsHandler = async (WebSocket) -> Unit

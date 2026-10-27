@@ -285,7 +285,7 @@ pub fn App::stream(Self, String, async (@ctx.Context) -> @status.Stream, summary
 pub fn App::to_asgi(Self) -> async (@spec.Scope, async () -> @spec.Event, async (@spec.Event) -> Unit) -> Unit
 pub fn App::trace(Self, String, async (@ctx.Context) -> @http.Response, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
 pub fn App::url_for(Self, String, params? : Map[String, String]) -> String?
-pub fn App::websocket(Self, String, async (@socket.WebSocket) -> Unit) -> Unit
+pub fn App::websocket(Self, String, async (@socket.WebSocket) -> Unit, name? : String, security? : Array[@security.SecurityRequirement], dependencies? : Array[String]) -> Unit
 
 type Mount
 

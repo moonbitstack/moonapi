@@ -16,7 +16,7 @@
 /// documentation and lifespan belong to the application that includes it.
 pub struct Router {
   routes : Array[Route]
-  ws_routes : Array[@socket.WsRoute]
+  ws_routes : Array[WsRoute]
 }
 
 ///|
@@ -29,12 +29,24 @@ pub fn Router::new() -> Router {
 
 ///|
 /// Register a WebSocket route on the router (← `APIRouter.websocket`). It takes
-/// the including prefix like any other route; the operation attributes do not
-/// apply, since a WebSocket route is not an OpenAPI operation.
+/// the including prefix like any other route. `security` and `dependencies` are
+/// checked before the handler runs, as on an HTTP route, and a refusal declines
+/// the handshake; `name` is the handle `App::url_for` resolves. The OpenAPI
+/// attributes do not apply, since a WebSocket route is not an operation.
 pub fn Router::websocket(
   self : Router,
   path : String,
   handler : @socket.WsHandler,
+  name~ : String = "",
+  security~ : Array[@security.SecurityRequirement] = [],
+  dependencies~ : Array[String] = [],
 ) -> Unit {
-  self.ws_routes.push({ path, handler, })
+  self.ws_routes.push({
+    path,
+    pattern: Pattern::parse(path),
+    handler,
+    name,
+    security,
+    dependencies,
+  })
 }

@@ -70,6 +70,23 @@ test "a route names any method, an extension one as Other" {
 }
 
 ///|
+test "a websocket annotation takes a name and dependencies" {
+  let source =
+    #|#app.websocket("/room/{id}", name="room", dependencies="db", dependencies="auth")
+    #|async fn room(ws : @moonapi.WebSocket) -> Unit {
+    #|  ignore(ws)
+    #|}
+  let code = generate(source)
+  assert_eq(
+    code.contains("app.websocket(") &&
+    code.contains("ws => room(ws),") &&
+    code.contains("name=\"room\",") &&
+    code.contains("dependencies=[\"db\", \"auth\"]"),
+    true,
+  )
+}
+
+///|
 test "router annotations go to register_router, websockets and shapes too" {
   let source =
     #|#router.put("/items/{id}")
@@ -93,7 +110,7 @@ test "router annotations go to register_router, websockets and shapes too" {
     code.contains("pub fn register(app : @moonapi.App) -> Unit {"),
     true,
   )
-  assert_eq(code.contains("app.websocket(\"/ws\", chat)"), true)
+  assert_eq(code.contains("app.websocket(\"/ws\", ws => chat(ws))"), true)
   assert_eq(
     code.contains("pub fn register_router(router : @moonapi.Router) -> Unit {"),
     true,

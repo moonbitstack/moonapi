@@ -89,11 +89,27 @@ pub fn App::url_for(
   if name == "" {
     return None
   }
-  let all : Array[(String, @route.Route)] = []
-  self.collect_routes("", all)
-  for entry in all {
-    if entry.1.name == name {
-      return @route.Pattern::parse(entry.0).fill(params)
+  self.named(name, "").bind(path => @route.Pattern::parse(path).fill(params))
+}
+
+///|
+/// The full path of the route or WebSocket route called `name`, searching this app, then its
+/// mounted sub-applications in mount order.
+fn App::named(self : App, name : String, prefix : String) -> String? {
+  for r in self.router.routes {
+    if r.name == name {
+      return Some(join_prefix(prefix, r.path))
+    }
+  }
+  for w in self.router.ws_routes {
+    if w.name == name {
+      return Some(join_prefix(prefix, w.path))
+    }
+  }
+  for entry in self.mounts {
+    if entry.1 is Sub(sub) &&
+      sub.named(name, join_prefix(prefix, entry.0)) is Some(path) {
+      return Some(path)
     }
   }
   None
@@ -138,17 +154,33 @@ pub fn App::include_router(
     })
   }
   for w in router.ws_routes {
-    self.router.ws_routes.push({ ..w, path: join_prefix(prefix, w.path), })
+    let path = join_prefix(prefix, w.path)
+    self.router.ws_routes.push({
+      ..w,
+      path,
+      pattern: @route.Pattern::parse(path),
+      security: [..security, ..w.security],
+      dependencies: [..dependencies, ..w.dependencies],
+    })
   }
 }
 
 ///|
 /// Register a WebSocket route (← FastAPI's `@app.websocket(path)`). The path is a template with
 /// the same parameters and convertors as an HTTP route's.
+///
+/// `security` is enforced and `dependencies` resolved before the handler is called. A refusal
+/// declines the handshake with the response an HTTP route would have answered — through ASGI's
+/// `websocket.http.response` extension where the server offers it, and with close code 1008
+/// otherwise. The dependencies are torn down when the handler returns. `name` is the handle
+/// `App::url_for` resolves.
 pub fn App::websocket(
   self : App,
   path : String,
   handler : @socket.WsHandler,
+  name~ : String = "",
+  security~ : Array[@security.SecurityRequirement] = [],
+  dependencies~ : Array[String] = [],
 ) -> Unit {
-  self.router.ws_routes.push({ path, handler, })
+  self.router.websocket(path, handler, name~, security~, dependencies~)
 }

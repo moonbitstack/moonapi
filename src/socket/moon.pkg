@@ -1,5 +1,4 @@
-// WebSocket handling: the connection, its messages, and the route a handler is
-// mounted on.
+// WebSocket handling: the connection and its messages.
 import {
   "moonbitstack/moonasgi",
   "moonbitlang/core/encoding/utf8",

@@ -72,6 +72,20 @@ pub(all) struct Route {
 }
 
 ///|
+/// One registered WebSocket route (← Starlette's `WebSocketRoute`). `security` and
+/// `dependencies` are settled before the handler is called, so a connection they turn away is
+/// declined at the handshake rather than accepted and dropped.
+pub(all) struct WsRoute {
+  path : String
+  pattern : Pattern
+  handler : @socket.WsHandler
+  // The handle `App::url_for` looks the route up by; empty is unnamed.
+  name : String
+  security : Array[@security.SecurityRequirement]
+  dependencies : Array[String]
+}
+
+///|
 /// Split a path into its non-empty segments.
 pub fn segments(path : String) -> Array[String] {
   let out : Array[String] = []

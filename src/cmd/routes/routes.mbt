@@ -39,7 +39,7 @@ fn spec(name : String, kind : String) -> @attr.Spec {
   let base = if kind == "route" { base.positional("method", Str) } else { base }
   let base = base.positional("path", Str)
   if kind == "websocket" {
-    return base
+    return base.optional("name", Str).many("dependencies", Str)
   }
   base
   .optional("summary", Str)
@@ -132,7 +132,15 @@ fn statement(
   guard! args.str("path") is Some(path)
   let path = @quote.string(path).to_string()
   if kind == "websocket" {
-    return "\{target}.websocket(\{path}, \{handler})"
+    let parts = [path, "ws => \{handler}(ws)"]
+    if args.str("name") is Some(v) {
+      parts.push("name=" + @quote.string(v).to_string())
+    }
+    let deps = args.strs("dependencies")
+    if !deps.is_empty() {
+      parts.push("dependencies=" + quoted(deps))
+    }
+    return "\{target}.websocket(\{parts.join(", ")})"
   }
   let m = match verb {
     Some(m) => m
