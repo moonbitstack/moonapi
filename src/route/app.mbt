@@ -34,6 +34,9 @@ pub(all) enum Reply {
 pub(all) struct Route {
   verb : Method
   path : String
+  // `path` read once at registration, so a request is matched without reading
+  // the template again.
+  pattern : Pattern
   run : async (@ctx.Context) -> Reply
   summary : String
   description : String

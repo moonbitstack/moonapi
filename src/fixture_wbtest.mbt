@@ -121,7 +121,7 @@ impl @schema.ToSchema for User with fn to_schema(_self) {
 
 ///|
 /// A demo application exercising the descriptor tree end to end: `POST /users`
-/// takes a typed `NewUser` body and returns a `User`; `GET /users/:id` takes a
+/// takes a typed `NewUser` body and returns a `User`; `GET /users/{id}` takes a
 /// typed integer path param and returns a `User`. Both validate off their
 /// descriptor and both surface fully-typed bodies (with `components/schemas`
 /// `$ref`s) in `openapi.json`.
@@ -166,7 +166,7 @@ fn demo_app() -> App {
     ],
   )
   app.get(
-    "/users/:id",
+    "/users/{id}",
     ctx => {
       let errs = get_one.validate(ctx)
       if errs.length() > 0 {

@@ -6,7 +6,7 @@ fn generate(source : String) -> String raise {
 ///|
 test "each verb registers its handler on the app" {
   let source =
-    #|#app.get("/users/:id", summary="Get a user", tags="users", tags="read")
+    #|#app.get("/users/{id}", summary="Get a user", tags="users", tags="read")
     #|pub fn get_user(ctx : @moonapi.Context) -> @moonasgi.Response raise {
     #|  ignore(ctx)
     #|  @moonapi.text(200, "user")
@@ -26,7 +26,7 @@ test "each verb registers its handler on the app" {
       #|pub fn register(app : @moonapi.App) -> Unit {
       #|  app.route(
       #|    Get,
-      #|    "/users/:id",
+      #|    "/users/{id}",
       #|    ctx => get_user(ctx),
       #|    summary="Get a user",
       #|    tags=["users", "read"],
@@ -72,7 +72,7 @@ test "a route names any method, an extension one as Other" {
 ///|
 test "router annotations go to register_router, websockets and shapes too" {
   let source =
-    #|#router.put("/items/:id")
+    #|#router.put("/items/{id}")
     #|fn put_item(ctx : @moonapi.Context, tasks : @moonapi.BackgroundTasks) -> @moonasgi.Response raise {
     #|  ignore((ctx, tasks))
     #|  @moonapi.text(200, "ok")

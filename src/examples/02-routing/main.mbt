@@ -1,7 +1,7 @@
 ///|
-/// Routing across every HTTP verb, `:param` path extraction, and the 404-vs-405
+/// Routing across every HTTP verb, path parameters, and the 404-vs-405
 /// distinction. `App::get/post/put/patch/delete` bind a method to a path;
-/// `App::route` binds an explicit `Method`; a `:name` segment lands in
+/// `App::route` binds an explicit `Method`; a `{name}` piece lands in
 /// `Context::param`. A path that exists under another verb answers 405, an
 /// unknown path answers 404.
 ///
@@ -9,13 +9,13 @@
 #coverage.skip
 async fn main {
   let app = @moonapi.App::new()
-  app.get("/items/:id", ctx => {
+  app.get("/items/{id}", ctx => {
     @moonapi.text(200, "item " + ctx.param("id").unwrap())
   })
   app.post("/items", _ctx => @moonapi.text(201, "created"))
-  app.put("/items/:id", _ctx => @moonapi.text(200, "replaced"))
-  app.patch("/items/:id", _ctx => @moonapi.text(200, "patched"))
-  app.delete("/items/:id", _ctx => @moonapi.text(200, "deleted"))
+  app.put("/items/{id}", _ctx => @moonapi.text(200, "replaced"))
+  app.patch("/items/{id}", _ctx => @moonapi.text(200, "patched"))
+  app.delete("/items/{id}", _ctx => @moonapi.text(200, "deleted"))
   app.route(Head, "/items", _ctx => @moonapi.text(200, ""))
   app.route(Options, "/items", _ctx => @moonapi.text(204, ""))
   let hit = (verb : String, path : String) => {

@@ -216,7 +216,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 """
 
 CONTRACT = """let app = @moonapi.App::new()
-app.get("/users/:id", ctx => @moonapi.text(200, "user " + ctx.param("id").unwrap()))
+app.get("/users/{id}", ctx => @moonapi.text(200, "user " + ctx.param("id").unwrap()))
 
 let spec = app.openapi_json(version=@moonapi.OpenApi31)   // also @moonapi.OpenApi30 / @moonapi.Swagger20
 @mooncat.serve(app.to_asgi())                              // 127.0.0.1:12000"""

@@ -2,368 +2,6 @@
 // included routers, mounts, the documentation routes, and the reverse lookup `url_for`.
 
 ///|
-/// Register a route for an explicit method. An optional `endpoint` descriptor
-/// makes the route fully typed (its parameters, request body, and responses
-/// surface in the OpenAPI document and drive validation); `security` attaches
-/// per-operation requirements (emitted as OpenAPI `security` and enforced before
-/// the handler when their scheme has an enforcer); `dependencies` names provider
-/// keys resolved through the app's container (`App::depends`) before the handler
-/// and torn down after it, whatever the handler did.
-///
-/// The rest describe the operation: `summary` and `description` are its prose,
-/// `operation_id` the stable handle client generators name their method after,
-/// `status_code` the status its success response is documented under,
-/// `responses` further documented responses, `name` the handle `App::url_for`
-/// resolves, and `openapi_extra` a fragment merged over the generated operation
-/// object — the same keyword arguments FastAPI's path operations take.
-pub fn App::route(
-  self : App,
-  verb : @route.Method,
-  path : String,
-  handler : @route.ApiHandler,
-  summary~ : String = "",
-  description~ : String = "",
-  tags~ : Array[String] = [],
-  deprecated~ : Bool = false,
-  operation_id~ : String = "",
-  status_code? : Int32,
-  responses~ : Array[@endpoint.ResponseSpec] = [],
-  name~ : String = "",
-  endpoint? : @endpoint.Endpoint,
-  security~ : Array[@security.SecurityRequirement] = [],
-  dependencies~ : Array[String] = [],
-  include_in_schema~ : Bool = true,
-  validate~ : Bool = true,
-  openapi_extra? : Json,
-) -> Unit {
-  self.router.routes.push({
-    verb,
-    path,
-    run: ctx => @route.Buffered(handler(ctx)),
-    summary,
-    description,
-    tags,
-    deprecated,
-    operation_id,
-    status_code,
-    responses,
-    name,
-    openapi_extra,
-    endpoint,
-    security,
-    dependencies,
-    include_in_schema,
-    validate,
-  })
-}
-
-///|
-/// Register a streaming route (← a FastAPI path operation returning a
-/// `StreamingResponse`). The handler's chunks reach the client as separate body
-/// events, so a long or open-ended reply starts arriving before it is finished.
-///
-/// A stream is only streamed as far as the app can honestly keep it one: moonasgi
-/// types a middleware as buffered response in, buffered response out, so a
-/// middleware that rewrites the body — `gzip` does — collapses the reply to a
-/// single chunk. Everything else about the route is ordinary; it documents,
-/// validates and enforces security exactly as `route` does.
-pub fn App::route_stream(
-  self : App,
-  verb : @route.Method,
-  path : String,
-  handler : @route.StreamHandler,
-  summary~ : String = "",
-  description~ : String = "",
-  tags~ : Array[String] = [],
-  deprecated~ : Bool = false,
-  operation_id~ : String = "",
-  status_code? : Int32,
-  responses~ : Array[@endpoint.ResponseSpec] = [],
-  name~ : String = "",
-  endpoint? : @endpoint.Endpoint,
-  security~ : Array[@security.SecurityRequirement] = [],
-  dependencies~ : Array[String] = [],
-  include_in_schema~ : Bool = true,
-  validate~ : Bool = true,
-  openapi_extra? : Json,
-) -> Unit {
-  self.router.routes.push({
-    verb,
-    path,
-    run: ctx => @route.Streamed(handler(ctx)),
-    summary,
-    description,
-    tags,
-    deprecated,
-    operation_id,
-    status_code,
-    responses,
-    name,
-    openapi_extra,
-    endpoint,
-    security,
-    dependencies,
-    include_in_schema,
-    validate,
-  })
-}
-
-///|
-/// Register a streaming `GET` route — the verb a stream is nearly always read
-/// over, and what an SSE endpoint is. A shorthand for `route_stream(Get, ...)`.
-pub fn App::stream(
-  self : App,
-  path : String,
-  handler : @route.StreamHandler,
-  summary~ : String = "",
-  description~ : String = "",
-  tags~ : Array[String] = [],
-  deprecated~ : Bool = false,
-  operation_id~ : String = "",
-  status_code? : Int32,
-  responses~ : Array[@endpoint.ResponseSpec] = [],
-  name~ : String = "",
-  endpoint? : @endpoint.Endpoint,
-  security~ : Array[@security.SecurityRequirement] = [],
-  dependencies~ : Array[String] = [],
-  include_in_schema~ : Bool = true,
-  validate~ : Bool = true,
-  openapi_extra? : Json,
-) -> Unit {
-  self.route_stream(
-    Get,
-    path,
-    handler,
-    summary~,
-    description~,
-    tags~,
-    deprecated~,
-    operation_id~,
-    status_code?,
-    responses~,
-    name~,
-    endpoint?,
-    security~,
-    dependencies~,
-    include_in_schema~,
-    validate~,
-    openapi_extra?,
-  )
-}
-
-///|
-/// Register a `GET` route. A shorthand for `route(Get, ...)` carrying the same
-/// documentation and security arguments.
-pub fn App::get(
-  self : App,
-  path : String,
-  handler : @route.ApiHandler,
-  summary~ : String = "",
-  description~ : String = "",
-  tags~ : Array[String] = [],
-  deprecated~ : Bool = false,
-  operation_id~ : String = "",
-  status_code? : Int32,
-  responses~ : Array[@endpoint.ResponseSpec] = [],
-  name~ : String = "",
-  endpoint? : @endpoint.Endpoint,
-  security~ : Array[@security.SecurityRequirement] = [],
-  dependencies~ : Array[String] = [],
-  include_in_schema~ : Bool = true,
-  validate~ : Bool = true,
-  openapi_extra? : Json,
-) -> Unit {
-  self.route(
-    Get,
-    path,
-    handler,
-    summary~,
-    description~,
-    tags~,
-    deprecated~,
-    operation_id~,
-    status_code?,
-    responses~,
-    name~,
-    endpoint?,
-    security~,
-    dependencies~,
-    include_in_schema~,
-    validate~,
-    openapi_extra?,
-  )
-}
-
-///|
-/// Register a `POST` route — the verb that carries a request body, so this is the
-/// one most often given an `endpoint` describing that body.
-pub fn App::post(
-  self : App,
-  path : String,
-  handler : @route.ApiHandler,
-  summary~ : String = "",
-  description~ : String = "",
-  tags~ : Array[String] = [],
-  deprecated~ : Bool = false,
-  operation_id~ : String = "",
-  status_code? : Int32,
-  responses~ : Array[@endpoint.ResponseSpec] = [],
-  name~ : String = "",
-  endpoint? : @endpoint.Endpoint,
-  security~ : Array[@security.SecurityRequirement] = [],
-  dependencies~ : Array[String] = [],
-  include_in_schema~ : Bool = true,
-  validate~ : Bool = true,
-  openapi_extra? : Json,
-) -> Unit {
-  self.route(
-    Post,
-    path,
-    handler,
-    summary~,
-    description~,
-    tags~,
-    deprecated~,
-    operation_id~,
-    status_code?,
-    responses~,
-    name~,
-    endpoint?,
-    security~,
-    dependencies~,
-    include_in_schema~,
-    validate~,
-    openapi_extra?,
-  )
-}
-
-///|
-/// Register a `PUT` route: replace the addressed resource wholesale.
-pub fn App::put(
-  self : App,
-  path : String,
-  handler : @route.ApiHandler,
-  summary~ : String = "",
-  description~ : String = "",
-  tags~ : Array[String] = [],
-  deprecated~ : Bool = false,
-  operation_id~ : String = "",
-  status_code? : Int32,
-  responses~ : Array[@endpoint.ResponseSpec] = [],
-  name~ : String = "",
-  endpoint? : @endpoint.Endpoint,
-  security~ : Array[@security.SecurityRequirement] = [],
-  dependencies~ : Array[String] = [],
-  include_in_schema~ : Bool = true,
-  validate~ : Bool = true,
-  openapi_extra? : Json,
-) -> Unit {
-  self.route(
-    Put,
-    path,
-    handler,
-    summary~,
-    description~,
-    tags~,
-    deprecated~,
-    operation_id~,
-    status_code?,
-    responses~,
-    name~,
-    endpoint?,
-    security~,
-    dependencies~,
-    include_in_schema~,
-    validate~,
-    openapi_extra?,
-  )
-}
-
-///|
-/// Register a `PATCH` route: change part of the addressed resource.
-pub fn App::patch(
-  self : App,
-  path : String,
-  handler : @route.ApiHandler,
-  summary~ : String = "",
-  description~ : String = "",
-  tags~ : Array[String] = [],
-  deprecated~ : Bool = false,
-  operation_id~ : String = "",
-  status_code? : Int32,
-  responses~ : Array[@endpoint.ResponseSpec] = [],
-  name~ : String = "",
-  endpoint? : @endpoint.Endpoint,
-  security~ : Array[@security.SecurityRequirement] = [],
-  dependencies~ : Array[String] = [],
-  include_in_schema~ : Bool = true,
-  validate~ : Bool = true,
-  openapi_extra? : Json,
-) -> Unit {
-  self.route(
-    Patch,
-    path,
-    handler,
-    summary~,
-    description~,
-    tags~,
-    deprecated~,
-    operation_id~,
-    status_code?,
-    responses~,
-    name~,
-    endpoint?,
-    security~,
-    dependencies~,
-    include_in_schema~,
-    validate~,
-    openapi_extra?,
-  )
-}
-
-///|
-/// Register a `DELETE` route.
-pub fn App::delete(
-  self : App,
-  path : String,
-  handler : @route.ApiHandler,
-  summary~ : String = "",
-  description~ : String = "",
-  tags~ : Array[String] = [],
-  deprecated~ : Bool = false,
-  operation_id~ : String = "",
-  status_code? : Int32,
-  responses~ : Array[@endpoint.ResponseSpec] = [],
-  name~ : String = "",
-  endpoint? : @endpoint.Endpoint,
-  security~ : Array[@security.SecurityRequirement] = [],
-  dependencies~ : Array[String] = [],
-  include_in_schema~ : Bool = true,
-  validate~ : Bool = true,
-  openapi_extra? : Json,
-) -> Unit {
-  self.route(
-    Delete,
-    path,
-    handler,
-    summary~,
-    description~,
-    tags~,
-    deprecated~,
-    operation_id~,
-    status_code?,
-    responses~,
-    name~,
-    endpoint?,
-    security~,
-    dependencies~,
-    include_in_schema~,
-    validate~,
-    openapi_extra?,
-  )
-}
-
-///|
 /// Serve the app's own documentation, the way FastAPI does out of the box: the
 /// OpenAPI document at `openapi_url`, Swagger UI at `docs_url`, and ReDoc at
 /// `redoc_url`. Pass `None` for any of the three to leave it off. The three routes
@@ -434,36 +72,14 @@ pub fn App::mount_asgi(
 }
 
 ///|
-/// Fill a route pattern's `:name` segments from `params`, the inverse of
-/// `match_path`. `None` when the pattern needs a parameter `params` does not
-/// carry — half a URL is worse than none.
-fn render_path(pattern : String, params : Map[String, String]) -> String? {
-  let sb = StringBuilder()
-  for seg in @route.segments(pattern) {
-    sb.write_string("/")
-    if seg.length() > 0 && seg[0] == ':' {
-      match params.get(seg[1:].to_owned()) {
-        Some(v) => sb.write_string(v)
-        None => return None
-      }
-    } else {
-      sb.write_string(seg)
-    }
-  }
-  let rendered = sb.to_string()
-  Some(if rendered == "" { "/" } else { rendered })
-}
-
-///|
-/// The path of the route registered under `name`, with its `:name` segments
+/// The path of the route registered under `name`, with its parameters
 /// filled from `params` (← FastAPI's `url_path_for`). Mounted sub-applications
 /// are searched too, so what comes back already carries the mount prefix — the
 /// path a client would call, not the one the sub-app knows itself by.
 ///
 /// `None` when nothing is registered under that name, or when `params` is
-/// missing one the path needs. Values are substituted as given: a value with a
-/// `/` in it lands as extra path segments, so encode before calling if that
-/// matters.
+/// missing one the path needs or holds one its convertor refuses; only a `path`
+/// parameter takes a `/`.
 pub fn App::url_for(
   self : App,
   name : String,
@@ -477,7 +93,7 @@ pub fn App::url_for(
   self.collect_routes("", all)
   for entry in all {
     if entry.1.name == name {
-      return render_path(entry.0, params)
+      return @route.Pattern::parse(entry.0).fill(params)
     }
   }
   None
@@ -508,9 +124,11 @@ pub fn App::include_router(
   include_in_schema~ : Bool = true,
 ) -> Unit {
   for r in router.routes {
+    let path = join_prefix(prefix, r.path)
     self.router.routes.push({
       ..r,
-      path: join_prefix(prefix, r.path),
+      path,
+      pattern: @route.Pattern::parse(path),
       tags: [..tags, ..r.tags],
       security: [..security, ..r.security],
       dependencies: [..dependencies, ..r.dependencies],
@@ -525,8 +143,8 @@ pub fn App::include_router(
 }
 
 ///|
-/// Register a WebSocket route (← FastAPI's `@app.websocket(path)`). The path matches with the
-/// same `:name` segment rules as HTTP routes.
+/// Register a WebSocket route (← FastAPI's `@app.websocket(path)`). The path is a template with
+/// the same parameters and convertors as an HTTP route's.
 pub fn App::websocket(
   self : App,
   path : String,

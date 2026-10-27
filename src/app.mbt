@@ -46,13 +46,19 @@ pub struct App {
   mut clock : () -> Int64
   // The container a route's declared `dependencies` are resolved through.
   mut deps : @di.Deps?
+  redirect_slashes : Bool
 }
 
 ///|
 /// Create an empty application. The verification clock defaults to `0` (Unix
 /// epoch); a server sets a real one with `App::set_clock`, and tests inject a
 /// fixed time so token expiry is deterministic.
-pub fn App::new() -> App {
+///
+/// `redirect_slashes` answers a path that matches no route, but would with its
+/// trailing slash added or removed, with a `307` to that other path, the query
+/// kept (← FastAPI's and Starlette's `redirect_slashes`, on by default in both).
+/// `/` itself is never redirected, nor is a WebSocket connection.
+pub fn App::new(redirect_slashes~ : Bool = true) -> App {
   {
     router: @route.Router::new(),
     layers: [],
@@ -66,6 +72,7 @@ pub fn App::new() -> App {
     info: @openapi.ApiInfo::new(),
     clock: () => 0L,
     deps: None,
+    redirect_slashes,
   }
 }
 

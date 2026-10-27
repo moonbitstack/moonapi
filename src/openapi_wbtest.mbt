@@ -13,7 +13,7 @@ fn root_version(doc : Json, key : String) -> String {
 ///|
 test "openapi emits path parameters" {
   let app = App::new()
-  app.get("/users/:id", _ctx => @status.text(200, "u"))
+  app.get("/users/{id}", _ctx => @status.text(200, "u"))
   let doc = app.openapi(version=OpenApi31)
   let params = match doc {
     Object(m) =>
@@ -247,10 +247,9 @@ test "openapi richer info: description/contact/license + servers" {
 ///|
 /// A path parameter's `name` has to correspond to a template expression in the path
 /// key, or the document is invalid and Swagger UI has nothing to substitute into.
-/// The router keeps its own `:id` syntax; only the emitted document is templated.
 async test "openapi keys paths by their template form" {
   let app = App::new()
-  app.get("/users/:id/posts/:slug", _ctx => @status.text(200, "hhh"))
+  app.get("/users/{id}/posts/{slug}", _ctx => @status.text(200, "hhh"))
   let doc = app.openapi()
   let keys = match doc {
     Object(m) =>
@@ -423,7 +422,6 @@ test "openapi 3.1: response body is a typed $ref, with full component schemas" {
 test "openapi 3.1: typed path parameter carries an integer schema" {
   let app = demo_app()
   let doc = app.openapi(version=OpenApi31)
-  // The document keys paths by OpenAPI's template form, not the router's `:id`.
   let params = dig_arr(doc, ["paths", "/users/{id}", "get", "parameters"])
   assert_eq(params.length(), 1)
   assert_eq(json_str(params[0], "name"), "id")
@@ -630,4 +628,29 @@ async test "openid connect: described in 3.x, absent from a 2.0 document" {
     app.handle(mkreq_auth("GET", "/vault", "Bearer " + token)).status,
     200,
   )
+}
+
+///|
+test "openapi types an untyped route's path parameters by their convertor" {
+  let app = App::new()
+  app.get("/a/{n:int}/{x:float}/{id:uuid}/{rest:path}", _ctx => {
+    @status.text(200, "a")
+  })
+  let key = "/a/{n}/{x}/{id}/{rest}"
+  let v3 = dig_arr(app.openapi(version=OpenApi31), [
+    "paths", key, "get", "parameters",
+  ])
+  let schema = (i : Int32) => dig(v3[i], ["schema"]).unwrap()
+  assert_eq(json_str(schema(0), "type"), "integer")
+  assert_eq(json_str(schema(1), "type"), "number")
+  assert_eq(json_str(schema(2), "type"), "string")
+  assert_eq(json_str(schema(2), "format"), "uuid")
+  assert_eq(json_str(schema(3), "type"), "string")
+  // Swagger 2.0 writes the type on the parameter itself.
+  let v2 = dig_arr(app.openapi(version=Swagger20), [
+    "paths", key, "get", "parameters",
+  ])
+  assert_eq(json_str(v2[0], "type"), "integer")
+  assert_eq(json_str(v2[2], "format"), "uuid")
+  assert_eq(dig(v2[0], ["schema"]), None)
 }

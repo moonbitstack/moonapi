@@ -45,7 +45,7 @@ The integrated service exposes these routes:
 | `POST` | `/api/v1/catalog/orders` | Queue a background task |
 | `GET` | `/api/v1/catalog/large` | Return a gzip-compressible response |
 | `GET` | `/api/v1/catalog/events` | Stream a server-sent event |
-| `WS` | `/api/v1/catalog/ws/:room` | WebSocket text echo |
+| `WS` | `/api/v1/catalog/ws/{room}` | WebSocket text echo |
 | `GET` | `/reject` | Demonstrate the custom exception handler |
 
 The documentation routes are `/docs`, `/redoc` and `/openapi.json`; they are

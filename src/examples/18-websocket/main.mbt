@@ -39,7 +39,7 @@ async fn sum(ws : @moonapi.WebSocket) -> Unit {
 #coverage.skip
 async fn main {
   let app = @moonapi.App::new()
-  app.websocket("/ws/:room", room)
+  app.websocket("/ws/{room}", room)
   app.websocket("/sum", sum)
   let client = @testing.Client::new(app.to_asgi())
   println("room /ws/233:")

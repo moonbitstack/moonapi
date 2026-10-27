@@ -62,7 +62,7 @@ fn User::schema() -> @moonapi.Schema {
 
 ///|
 /// `POST /users` takes a typed `NewUser` body and returns a `User`; `GET
-/// /users/:id` takes a typed integer path parameter and returns a `User`. Both
+/// /users/{id}` takes a typed integer path parameter and returns a `User`. Both
 /// validate off their descriptor, and both show typed bodies with `$ref`s in the
 /// OpenAPI document.
 fn users_app() -> @moonapi.App {
@@ -106,7 +106,7 @@ fn users_app() -> @moonapi.App {
     ],
   )
   app.get(
-    "/users/:id",
+    "/users/{id}",
     ctx => {
       let errs = get_one.validate(ctx)
       if errs.length() > 0 {

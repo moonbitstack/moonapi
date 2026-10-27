@@ -381,7 +381,7 @@ fn nav_op_security(doc : Json, path : String, verb : String) -> Array[Json] {
 async test "routing: static, param, 404, 405" {
   let app = App::new()
   app.get("/hello", _ctx => @status.text(200, "hi"))
-  app.get("/users/:id", ctx => {
+  app.get("/users/{id}", ctx => {
     @status.text(200, "user " + ctx.param("id").unwrap())
   })
   app.post("/users", _ctx => @status.text(201, "created"))
@@ -397,7 +397,7 @@ async test "routing: static, param, 404, 405" {
 ///|
 async test "path param extraction" {
   let app = App::new()
-  app.get("/a/:x/b/:y", ctx => {
+  app.get("/a/{x}/b/{y}", ctx => {
     let x = ctx.param("x").unwrap()
     let y = ctx.param("y").unwrap()
     @status.text(200, x + "," + y)
@@ -643,7 +643,7 @@ async test "a declared endpoint is enforced with a 422 before the handler" {
     @endpoint.Param::new("q", InQuery, required=false),
   ])
   app.get(
-    "/items/:id",
+    "/items/{id}",
     ctx => {
       reached.push(ctx.param("id").unwrap())
       @status.text(200, "ok")
@@ -669,7 +669,7 @@ async test "validate=false leaves the descriptor to the handler" {
     @endpoint.Param::new("id", InPath, schema=SInt),
   ])
   app.get(
-    "/items/:id",
+    "/items/{id}",
     _ctx => @status.text(200, "handler ran"),
     endpoint=ep,
     validate=false,
@@ -1198,7 +1198,9 @@ async test "query param: an exclusive bound takes each dialect's form" {
 async test "include_router: the router's tags and security reach every route" {
   let items = @route.Router::new()
   items.get("/", _ctx => @status.text(200, "list"), tags=["listing"])
-  items.get("/:id", ctx => @status.text(200, "item " + ctx.param("id").unwrap()))
+  items.get("/{id}", ctx => {
+    @status.text(200, "item " + ctx.param("id").unwrap())
+  })
   let app = App::new()
   app.set_clock(() => 1000L)
   app.secure_oauth2(
@@ -1209,27 +1211,29 @@ async test "include_router: the router's tags and security reach every route" {
   app.include_router(items, prefix="/items", tags=["items"], security=[
     @security.SecurityRequirement::new("OAuth2", scopes=["items"]),
   ])
-  // Both routes answer under the prefix, as the app's own.
+  // Both routes answer under the prefix, as the app's own; the router's `/` is
+  // `/items/`, and `/items` is sent there.
   let tok = @security.create_access_token("alice", "s3cret", 1000L, scopes=[
     "items",
   ])
   assert_eq(
-    app.handle(mkreq_auth("GET", "/items", "Bearer " + tok)).body,
+    app.handle(mkreq_auth("GET", "/items/", "Bearer " + tok)).body,
     @utf8.encode("list"),
   )
+  assert_eq(app.handle(mkreq("GET", "/items")).status, 307)
   assert_eq(
     app.handle(mkreq_auth("GET", "/items/233", "Bearer " + tok)).body,
     @utf8.encode("item 233"),
   )
   // The router-level requirement is enforced on every one of them, including the
   // route that declared no security of its own.
-  assert_eq(app.handle(mkreq("GET", "/items")).status, 401)
+  assert_eq(app.handle(mkreq("GET", "/items/")).status, 401)
   assert_eq(app.handle(mkreq("GET", "/items/233")).status, 401)
   // And both carry it in the document, the router's tag ahead of the route's own.
   let doc = app.openapi()
-  assert_eq(op_tags(doc, "/items", "get"), ["items", "listing"])
+  assert_eq(op_tags(doc, "/items/", "get"), ["items", "listing"])
   assert_eq(op_tags(doc, "/items/{id}", "get"), ["items"])
-  assert_eq(nav_op_security(doc, "/items", "get").length(), 1)
+  assert_eq(nav_op_security(doc, "/items/", "get").length(), 1)
   assert_eq(nav_op_security(doc, "/items/{id}", "get").length(), 1)
 }
 
@@ -1271,9 +1275,13 @@ async test "mount_asgi: a foreign ASGI application answers under its prefix" {
 ///|
 test "url_for renders a named route's path, mount prefix included" {
   let blog = App::new()
-  blog.get("/posts/:slug", _ctx => @status.text(200, "p"), name="post")
+  blog.get("/posts/{slug}", _ctx => @status.text(200, "p"), name="post")
   let app = App::new()
-  app.get("/users/:id/cards/:card", _ctx => @status.text(200, "c"), name="card")
+  app.get(
+    "/users/{id}/cards/{card}",
+    _ctx => @status.text(200, "c"),
+    name="card",
+  )
   app.get("/health", _ctx => @status.text(200, "ok"))
   app.mount("/blog", blog)
   assert_eq(

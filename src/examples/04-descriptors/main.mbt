@@ -1,7 +1,7 @@
 ///|
 /// The descriptor tree drives validation and OpenAPI from one source of truth.
 /// The `users_app` in `models.mbt`: its `Endpoint` / `Param` / `Schema` / `ResponseSpec` descriptors
-/// validate an inbound `POST /users` body and a typed `:id` path param, and the
+/// validate an inbound `POST /users` body and a typed `{id}` path param, and the
 /// same tree emits the request/response body schemas — objects, arrays, and a
 /// nested `Address` hoisted into `components/schemas` behind a `$ref`. A body
 /// that violates the descriptor comes back as a FastAPI-shaped `422`.

@@ -58,7 +58,7 @@ pub fn App::openapi(
       // A typed route: walk its descriptor once for parameters, request body,
       // responses, and any hoisted component schemas.
       Some(ep) => emit_endpoint(op, ep, defs, version, ok_status)
-      // An untyped route: the `:name` path params and a default response.
+      // An untyped route: the path's own parameters and a default response.
       None => {
         let params = path_parameters(full_path, version)
         if params.length() > 0 {
@@ -502,23 +502,11 @@ fn version_field(v : @schema.OpenApiVersion) -> (String, String) {
 }
 
 ///|
-/// Rewrite a route's `:name` segments into OpenAPI's `{name}` template expressions.
+/// A route path as OpenAPI's template expression: every parameter as `{name}`.
 /// The spec requires a path parameter's `name` to correspond to a template
-/// expression in the path itself, so emitting the route string as written produces a
-/// document validators reject and Swagger UI cannot substitute values into.
+/// expression in the path itself, and Swagger UI substitutes values into it.
 fn path_template(path : String) -> String {
-  let out = StringBuilder()
-  for seg in @route.segments(path) {
-    out.write_char('/')
-    if seg.length() > 0 && seg[0] == ':' {
-      out.write_char('{')
-      out.write_string(seg[1:].to_owned())
-      out.write_char('}')
-    } else {
-      out.write_string(seg)
-    }
-  }
-  let rendered = out.to_string()
+  let rendered = @route.Pattern::parse(path).template()
   if rendered == "" {
     "/"
   } else {
@@ -527,57 +515,69 @@ fn path_template(path : String) -> String {
 }
 
 ///|
-/// The `:name` parameters of a route path, in order, as OpenAPI parameter
-/// objects — the faithful equivalent of FastAPI reading them off the signature.
+/// The parameters of a route path, in order, as OpenAPI parameter objects typed
+/// by their convertor — the faithful equivalent of FastAPI reading them off the
+/// signature.
 fn path_parameters(
   path : String,
   version : @schema.OpenApiVersion,
 ) -> Array[Json] {
-  let out : Array[Json] = []
-  for seg in @route.segments(path) {
-    if seg.length() > 0 && seg[0] == ':' {
-      out.push(path_parameter(seg[1:].to_owned(), version))
-    }
-  }
-  out
+  @route.Pattern::parse(path)
+  .params()
+  .map(p => path_parameter(p.0, p.1, version))
 }
 
 ///|
-/// Join a mount `prefix` and a route `path` into one path by concatenating their
-/// segments, so `("/sub", "/items")` becomes `/sub/items` and a root path stays
-/// under the prefix. An all-empty result is the root `"/"`.
+/// A route `path` under `prefix`, written as FastAPI writes it: the prefix with
+/// its trailing slashes dropped, then the path as given, so `("/sub", "/items/")`
+/// is `/sub/items/` and `("/sub", "/")` is `/sub/`. A path keeps its own trailing
+/// slash because a trailing slash is part of what a route matches.
 fn join_prefix(prefix : String, path : String) -> String {
-  let segs = @route.segments(prefix)
-  for s in @route.segments(path) {
-    segs.push(s)
+  let head = prefix.trim_end(chars="/").to_owned()
+  let head = if head.is_empty() || head.has_prefix("/") {
+    head
+  } else {
+    "/" + head
   }
-  if segs.is_empty() {
-    return "/"
+  let joined = if path.is_empty() || path.has_prefix("/") {
+    head + path
+  } else {
+    head + "/" + path
   }
-  let sb = StringBuilder()
-  for s in segs {
-    sb.write_string("/")
-    sb.write_string(s)
+  if joined.is_empty() {
+    "/"
+  } else {
+    joined
   }
-  sb.to_string()
 }
 
 ///|
-/// A `:name` path parameter as an OpenAPI parameter object for `version`. In
-/// Swagger 2.0 the type sits inline; in OpenAPI 3.x it lives under `schema`,
-/// which is the one structural difference between the two shapes.
-fn path_parameter(name : String, version : @schema.OpenApiVersion) -> Json {
-  let param : Map[String, Json] = Map([
-    ("name", Json(name)),
-    ("in", Json("path")),
-    ("required", Json(true)),
-  ])
+/// A path parameter as an OpenAPI parameter object for `version`, its type taken
+/// from the convertor. In Swagger 2.0 the type sits inline; in OpenAPI 3.x it
+/// lives under `schema`, which is the one structural difference between the two
+/// shapes.
+fn path_parameter(
+  name : String,
+  convertor : @route.Convertor,
+  version : @schema.OpenApiVersion,
+) -> Json {
+  let typed : Map[String, Json] = match convertor {
+    Int => { "type": "integer" }
+    Float => { "type": "number" }
+    Uuid => { "type": "string", "format": "uuid" }
+    Str | Path => { "type": "string" }
+  }
+  let param : Map[String, Json] = {
+    "name": Json(name),
+    "in": "path",
+    "required": true,
+  }
   match version {
-    Swagger20 => param["type"] = Json("string")
-    _ => {
-      let schema : Map[String, Json] = Map([("type", Json("string"))])
-      param["schema"] = Json(schema)
-    }
+    Swagger20 =>
+      for k, v in typed {
+        param[k] = v
+      }
+    _ => param["schema"] = Json(typed)
   }
   Json(param)
 }

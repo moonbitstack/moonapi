@@ -32,7 +32,7 @@ native or wasm:
 async fn main {
   let app = @moonapi.App::new()
   app.get("/", _ctx => @moonapi.text(200, "Hello from moonapi!"))
-  app.get("/users/:id", ctx => @moonapi.text(
+  app.get("/users/{id}", ctx => @moonapi.text(
     200,
     "user " + ctx.param("id").unwrap(),
   ), summary="fetch a user")
@@ -79,7 +79,7 @@ provides Swagger UI at `http://127.0.0.1:12000/docs`, ReDoc at
 FastAPI's `@app.get` is `#app.get` here. Annotate free functions and the generator writes the registration:
 
 ```moonbit
-#app.get("/items/:id", summary="Read an item", tags="items")
+#app.get("/items/{id}", summary="Read an item", tags="items")
 fn read_item(ctx : @moonapi.Context) -> @moonasgi.Response {
   @moonapi.text(200, "item " + ctx.param("id").unwrap_or(""))
 }
@@ -158,7 +158,7 @@ is not known is a raised error, where the subpackage is named:
 
 ## What's here
 
-- **Routing** — `App::get/post/put/patch/delete/route`, `:param` path segments extracted into `Context::param`, correct `404` (no path) vs `405` (path but not method). A route takes the operation arguments FastAPI's path operations take — `summary`, `description`, `tags`, `deprecated`, `operation_id`, `status_code`, `responses`, `name`, `include_in_schema`, and an `openapi_extra` fragment merged over the generated operation object — and `App::url_for(name, params)` resolves a named route back to its path (← `url_path_for`), mount prefix included.
+- **Routing** — `App::get/post/put/patch/delete/route` on path templates: `{name}` binds one segment or part of one, `{id:int}`, `{x:float}` and `{id:uuid}` bind only what fits, `{rest:path}` binds the rest slashes included, and the result lands in `Context::param`. The convertor also types the parameter in the OpenAPI document. Correct `404` (no path) vs `405` (path but not method), and a path off by a trailing slash answers `307` to the one that exists. A route takes the operation arguments FastAPI's path operations take — `summary`, `description`, `tags`, `deprecated`, `operation_id`, `status_code`, `responses`, `name`, `include_in_schema`, and an `openapi_extra` fragment merged over the generated operation object — and `App::url_for(name, params)` resolves a named route back to its path (← `url_path_for`), mount prefix included.
 - **Routers** — `Router` collects routes away from any application, and `App::include_router(router, prefix=, tags=, security=, dependencies=, responses=, deprecated=, include_in_schema=)` folds them in as the app's own (← FastAPI's `APIRouter` / `include_router`). The arguments given at the join reach every route in the group: tags, security requirements and dependencies lead the route's own, group responses are documented under it, and `deprecated` / `include_in_schema` mark or hide the whole set. A router is a value, so the same one can be included twice under different prefixes.
 - **Descriptor tree** — a runtime `Schema` / `Param` / `Endpoint` tree (a one-first-class-value substitute for FastAPI's from-signature reflection) that a typed route carries. Walked **once** to (a) emit **complete** OpenAPI request/response body schemas — objects, arrays, scalars, `required`, nullable (`type: [t, "null"]` in 3.1, `nullable` in 3.0, `x-nullable` in 2.0), a `Map[String, T]` as `additionalProperties`, `Any` as the empty schema, a `format` such as `binary`, and defaults, with named models hoisted under `components/schemas` and referenced by `$ref` — and (b) drive request validation off the same tree. A `Param` carries the same constraints a `Field` does, plus a `default` and an `alias`, so a query parameter's bounds are both documented and enforced, and a `422` points at the name the client actually sent. User structs describe themselves with `derive(ToJson)` + a `T::schema()` associated function + a one-line `ToSchema` bridge (the mctl-friendly shape).
 - **Multi-version OpenAPI** — `App::openapi` / `openapi_json` emit **Swagger 2.0, OpenAPI 3.0.3, and OpenAPI 3.1.0** from the same routes and descriptors (3.x `requestBody` + `components/schemas`; 2.0 body-parameter + `definitions`), because a good FastAPI is not pinned to one spec version.
@@ -208,6 +208,7 @@ ctx.form(limits=@moonmime.Limits::new(part_size=8 << 20))  // an upload endpoint
 | `form`'s `limits` | `@moonmime.limits` | Starlette's `max_files` and `max_fields`, with python-multipart's part size |
 | `expires_in_secs` | 3600 | The hour every OAuth2 example issues |
 | `space` on a stream | on | The space after a colon is universal on the wire and stripped by every reader |
+| `redirect_slashes` | on | A link written with or without its trailing slash still arrives |
 
 ### Where a setting can arrive twice
 

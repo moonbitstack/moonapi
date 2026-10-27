@@ -54,6 +54,12 @@ jobs:
       - name: moon test (all backends)
         run: moon test --target all
 
+      - name: generated verbs are fresh
+        if: runner.os == 'Linux'
+        run: |
+          python3 scripts/gen_verbs.py && moon fmt
+          git -c core.autocrlf=false diff --ignore-cr-at-eol --exit-code -- src/verbs.mbt src/route/verbs.mbt
+
       - name: generated routes are fresh
         run: moon run src/cmd/routes --target native -- -C . src/examples/27-annotations/routes.mbt -o src/examples/27-annotations/routes.g.mbt --check
 

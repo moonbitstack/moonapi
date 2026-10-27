@@ -4,7 +4,7 @@
 pub fn register(app : @moonapi.App) -> Unit {
   app.route(
     Get,
-    "/items/:id",
+    "/items/{id}",
     ctx => read_item(ctx),
     summary="Read an item",
     tags=["items"],
@@ -16,7 +16,7 @@ pub fn register(app : @moonapi.App) -> Unit {
     tags=["items"],
     status_code=201,
   )
-  app.route(Delete, "/items/:id", ctx => delete_item(ctx), tags=["items"])
+  app.route(Delete, "/items/{id}", ctx => delete_item(ctx), tags=["items"])
   app.route(
     Other("PURGE"),
     "/cache",

@@ -1,6 +1,6 @@
 ///|
 /// The per-request context handed to a handler: the request with its body read, the path
-/// parameters the matched route extracted (`:name` segments), the ASGI scope it arrived on
+/// parameters the matched route extracted (its `{name}` pieces), the ASGI scope it arrived on
 /// (`root_path`, the peer, the lifespan `state`, the extensions), and the request's background
 /// tasks.
 pub(all) struct Context {

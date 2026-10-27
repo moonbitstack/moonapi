@@ -58,25 +58,6 @@ fn parse_method(s : String) -> @route.Method? {
 }
 
 ///|
-/// Match a route pattern against a request path, extracting `:name` params.
-fn match_path(pattern : String, path : String) -> Map[String, String]? {
-  let pp = @route.segments(pattern)
-  let ph = @route.segments(path)
-  if pp.length() != ph.length() {
-    return None
-  }
-  let params : Map[String, String] = Map([])
-  for i, seg in pp {
-    if seg.length() > 0 && seg[0] == ':' {
-      params[seg[1:].to_owned()] = ph[i]
-    } else if seg != ph[i] {
-      return None
-    }
-  }
-  Some(params)
-}
-
-///|
 /// Strip a mount `prefix` off `path` by whole segments, returning the sub-app's
 /// path (`"/"` when the request hits the mount root). `None` when `path` does not
 /// lie under `prefix` — the comparison is segment-wise, so `/sub` does not match
@@ -232,7 +213,7 @@ async fn App::serve_http(
   let verb = parse_method(hs.http_method)
   let allowed : Array[String] = []
   for route in self.router.routes {
-    guard match_path(route.path, hs.path) is Some(params) else { continue }
+    guard route.pattern.bind(hs.path) is Some(params) else { continue }
     // A GET route answers HEAD too, as Starlette's does.
     if verb is Some(v) && (route.verb == v || (v is Head && route.verb is Get)) {
       self.answer(route, params, hs, receive, send, head=verb is Some(Head))
@@ -253,6 +234,16 @@ async fn App::serve_http(
     app(Http(scope), receive, send)
     return
   }
+  if allowed.is_empty() &&
+    self.redirect_slashes &&
+    self.slash_twin(hs.path) is Some(twin) {
+    let query = @utf8.decode_lossy(hs.query_string)
+    let location = hs.root_path +
+      twin +
+      (if query.is_empty() { "" } else { "?" + query })
+    send_response(send, @status.redirect(location))
+    return
+  }
   let ctx = @ctx.Context::new(request_of(hs, b""), scope=hs)
   let resp = if allowed.length() > 0 {
     // RFC 9110 §15.5.6 requires the Allow header on a 405; a client that probes
@@ -264,6 +255,27 @@ async fn App::serve_http(
     http_exception_response(404, Json("Not Found"), [])
   }
   send_response(send, self.apply_status(ctx, resp))
+}
+
+///|
+/// `path` with its trailing slashes removed, or with one added, when a route
+/// matches that form; Starlette strips every trailing slash the same way.
+fn App::slash_twin(self : App, path : String) -> String? {
+  if path == "/" {
+    return None
+  }
+  let twin = if path.has_suffix("/") {
+    path.trim_end(chars="/").to_owned()
+  } else {
+    path + "/"
+  }
+  guard !twin.is_empty() else { return None }
+  for route in self.router.routes {
+    if route.pattern.bind(twin) is Some(_) {
+      return Some(twin)
+    }
+  }
+  None
 }
 
 ///|
@@ -474,7 +486,9 @@ async fn App::serve_websocket(
   mounted : Array[(String, @moonasgi.AsgiApp)],
 ) -> Unit {
   for route in self.router.ws_routes {
-    guard match_path(route.path, ws.path) is Some(params) else { continue }
+    guard @route.Pattern::parse(route.path).bind(ws.path) is Some(params) else {
+      continue
+    }
     (route.handler)(@socket.WebSocket::new(ws, receive, send, params~)) catch {
       @socket.Disconnected(..) => ()
       e => raise e

@@ -30,7 +30,7 @@ async fn ws_session(
 async test "include_router: a WebSocket route joins under the prefix" {
   let joined : Array[String] = []
   let live = @route.Router::new()
-  live.websocket("/feed/:room", ws => {
+  live.websocket("/feed/{room}", ws => {
     ws.accept()
     joined.push(ws.param("room").unwrap_or("?"))
     ws.close()
@@ -48,7 +48,7 @@ async test "include_router: a WebSocket route joins under the prefix" {
 async test "ws: matched path params reach the handler, an unmatched path is declined" {
   let app = App::new()
   let captured : Array[String] = []
-  app.websocket("/room/:id", ws => {
+  app.websocket("/room/{id}", ws => {
     ws.accept()
     captured.push(ws.param("id").unwrap_or("?"))
     ws.close()

@@ -1,5 +1,4 @@
-// Routes and routers: the method, the path, the handler, and how a path is cut
-// into segments.
+// Routes and routers: the method, the path template, and the handler.
 import {
   "moonbitstack/moonapi/socket",
   "moonbitstack/moonapi/ctx",

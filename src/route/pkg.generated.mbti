@@ -2,6 +2,7 @@
 package "moonbitstack/moonapi/route"
 
 import {
+  "moonbitlang/core/debug",
   "moonbitstack/moonapi/ctx",
   "moonbitstack/moonapi/endpoint",
   "moonbitstack/moonapi/security",
@@ -17,6 +18,39 @@ pub fn segments(String) -> Array[String]
 // Errors
 
 // Types and methods
+pub(all) enum Convertor {
+  Str
+  Int
+  Float
+  Uuid
+  Path
+} derive(Eq, @debug.Debug)
+pub fn Convertor::equal(Self, Self) -> Bool
+pub fn Convertor::not_equal(Self, Self) -> Bool
+pub fn Convertor::of(StringView) -> Self?
+pub fn Convertor::to_repr(Self) -> @debug.Repr
+
+pub(all) struct Pattern {
+  source : String
+  pieces : Array[Piece]
+} derive(Eq, @debug.Debug)
+pub fn Pattern::bind(Self, StringView) -> Map[String, String]?
+pub fn Pattern::equal(Self, Self) -> Bool
+pub fn Pattern::fill(Self, Map[String, String]) -> String?
+pub fn Pattern::not_equal(Self, Self) -> Bool
+pub fn Pattern::params(Self) -> Array[(String, Convertor)]
+pub fn Pattern::parse(String) -> Self
+pub fn Pattern::template(Self) -> String
+pub fn Pattern::to_repr(Self) -> @debug.Repr
+
+pub(all) enum Piece {
+  Literal(String)
+  Param(name~ : String, convertor~ : Convertor)
+} derive(Eq, @debug.Debug)
+pub fn Piece::equal(Self, Self) -> Bool
+pub fn Piece::not_equal(Self, Self) -> Bool
+pub fn Piece::to_repr(Self) -> @debug.Repr
+
 pub(all) enum Reply {
   Buffered(@http.Response)
   Streamed(@status.Stream)
@@ -25,6 +59,7 @@ pub(all) enum Reply {
 pub(all) struct Route {
   verb : @method.Method
   path : String
+  pattern : Pattern
   run : async (@ctx.Context) -> Reply
   summary : String
   description : String
@@ -48,13 +83,16 @@ pub struct Router {
 }
 pub fn Router::delete(Self, String, async (@ctx.Context) -> @http.Response, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
 pub fn Router::get(Self, String, async (@ctx.Context) -> @http.Response, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn Router::head(Self, String, async (@ctx.Context) -> @http.Response, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
 pub fn Router::new() -> Self
+pub fn Router::options(Self, String, async (@ctx.Context) -> @http.Response, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
 pub fn Router::patch(Self, String, async (@ctx.Context) -> @http.Response, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
 pub fn Router::post(Self, String, async (@ctx.Context) -> @http.Response, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
 pub fn Router::put(Self, String, async (@ctx.Context) -> @http.Response, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
 pub fn Router::route(Self, @method.Method, String, async (@ctx.Context) -> @http.Response, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
 pub fn Router::route_stream(Self, @method.Method, String, async (@ctx.Context) -> @status.Stream, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
 pub fn Router::stream(Self, String, async (@ctx.Context) -> @status.Stream, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
+pub fn Router::trace(Self, String, async (@ctx.Context) -> @http.Response, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : Json) -> Unit
 pub fn Router::websocket(Self, String, async (@socket.WebSocket) -> Unit) -> Unit
 
 // Type aliases

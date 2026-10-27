@@ -25,7 +25,7 @@ async fn main {
     summary="list items",
   )
   api.get(
-    "/items/:id",
+    "/items/{id}",
     ctx => @moonapi.text(200, "item " + ctx.param("id").unwrap()),
     summary="get item",
   )

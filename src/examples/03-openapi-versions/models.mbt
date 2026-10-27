@@ -43,7 +43,7 @@ fn widget_app() -> @moonapi.App {
     ],
   )
   app.get(
-    "/widgets/:id",
+    "/widgets/{id}",
     _ctx => {
       let widget : Widget = {
         id: 1,

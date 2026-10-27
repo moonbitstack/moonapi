@@ -1,5 +1,5 @@
 ///|
-#app.get("/items/:id", summary="Read an item", tags="items")
+#app.get("/items/{id}", summary="Read an item", tags="items")
 fn read_item(ctx : @moonapi.Context) -> @moonasgi.Response {
   @moonapi.text(200, "item " + ctx.param("id").unwrap_or(""))
 }
@@ -11,7 +11,7 @@ fn create_item(_ctx : @moonapi.Context) -> @moonasgi.Response {
 }
 
 ///|
-#app.delete("/items/:id", tags="items")
+#app.delete("/items/{id}", tags="items")
 fn delete_item(_ctx : @moonapi.Context) -> @moonasgi.Response {
   @moonapi.text(200, "deleted")
 }

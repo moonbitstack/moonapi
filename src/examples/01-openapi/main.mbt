@@ -9,7 +9,7 @@ async fn main {
   let app = @moonapi.App::new()
   app.get("/", _ctx => @moonapi.text(200, "moonapi <- FastAPI"))
   app.get(
-    "/users/:id",
+    "/users/{id}",
     ctx => @moonapi.text(200, "user " + ctx.param("id").unwrap()),
     summary="fetch a user",
   )

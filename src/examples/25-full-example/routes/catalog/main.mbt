@@ -31,7 +31,7 @@ pub fn make_router(log : Array[String]) -> @moonapi.Router {
     _ctx => @moonapi.sse(e => e.send(@sse.Event::of("catalog-ready"))),
     summary="Stream a server-sent event",
   )
-  router.websocket("/ws/:room", echo_once)
+  router.websocket("/ws/{room}", echo_once)
   router
 }
 

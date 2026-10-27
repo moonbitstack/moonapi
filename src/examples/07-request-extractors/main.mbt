@@ -17,7 +17,7 @@ async fn main {
     @moonapi.Param::new("session", InCookie),
   ])
   app.get(
-    "/search/:cat",
+    "/search/{cat}",
     ctx => {
       let errs = search.validate(ctx)
       if errs.length() > 0 {
