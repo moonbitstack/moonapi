@@ -1,0 +1,21 @@
+// Static files served under a mount. A package of its own so an app that serves
+// none does not carry the file system.
+import {
+  "moonbitstack/moonapi/ctx",
+  "moonbitstack/moonasgi",
+  "moonbitstack/moonhttp/conditional",
+  "moonbitstack/moonmime",
+  "moonbitstack/moondate",
+  "moonbitlang/core/encoding/utf8",
+  "moonbitlang/async/fs",
+  "moonbitlang/async/io",
+}
+
+import {
+  "moonbitstack/moonasgi/testing",
+  "moonbitlang/async",
+} for "wbtest"
+
+// The directory source is native; on other targets `fs` and `io` are unused.
+
+warnings = "-29"

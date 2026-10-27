@@ -1,6 +1,6 @@
-/// `enable_docs` puts the three pages FastAPI serves on the app: the OpenAPI
-/// document, Swagger UI for trying calls out, and ReDoc for reading. All three stay
-/// out of the document they describe, so a client sees only the real API.
+/// `enable_docs` puts three pages on the app: the OpenAPI document, an API
+/// reference for trying calls out, and ReDoc for reading. All three stay out of
+/// the document they describe, so a client sees only the real API.
 ///
 ///     moon run src/examples/22-docs-ui
 

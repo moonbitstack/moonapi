@@ -1,0 +1,27 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonapi/templates"
+
+import {
+  "moonbitstack/moonapi/ctx",
+  "moonbitstack/moonasgi/http",
+  "moonbitstack/mooncred/jwt",
+  "moonbitstack/moonpug",
+  "moonbitstack/moonpug/spec",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub struct Templates {
+  env : @moonpug.Env
+  // private fields
+}
+pub fn Templates::new(@moonpug.Env, processors? : Array[(@ctx.Context) -> Map[String, Json]], url_for? : (String, Map[String, String]) -> String?) -> Self
+pub fn Templates::response(Self, @ctx.Context, String, context? : Map[String, Json], status? : Int32, media_type? : String, wins? : @jwt.Wins, clash? : @jwt.OnClash[Map[String, Json]]) -> @http.Response raise @spec.Refused
+
+// Type aliases
+pub type Processor = (@ctx.Context) -> Map[String, Json]
+
+// Traits

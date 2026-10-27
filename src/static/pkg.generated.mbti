@@ -1,0 +1,34 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonapi/static"
+
+import {
+  "moonbitstack/moonasgi/spec",
+  "moonbitstack/moondate",
+}
+
+// Values
+pub fn serve(&Source, html? : Bool, ranges? : Bool) -> async (@spec.Scope, async () -> @spec.Event, async (@spec.Event) -> Unit) -> Unit
+
+// Errors
+
+// Types and methods
+pub(all) struct Asset {
+  content : Bytes
+  modified : @moondate.Moment?
+} derive(Eq)
+pub fn Asset::equal(Self, Self) -> Bool
+pub fn Asset::not_equal(Self, Self) -> Bool
+
+pub struct Memory {
+  files : Map[String, Asset]
+}
+pub fn Memory::new(Map[String, Bytes], modified? : @moondate.Moment) -> Self
+pub async fn Memory::read(Self, String) -> Asset?
+pub impl Source for Memory
+
+// Type aliases
+
+// Traits
+pub(open) trait Source {
+  async fn read(Self, String) -> Asset?
+}

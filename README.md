@@ -132,12 +132,15 @@ An annotation takes the arguments that can be written as strings or booleans: `s
 
 Each concern is its own subpackage, so a program links the parts it uses. The
 root re-exports all of them, so `@moonapi.App`, `@moonapi.text` and the rest work
-as they always did.
+as they always did. `templates` and `static` are the exception: they bring
+dependencies of their own, so a program imports them by name.
 
 |  Package  | What it holds | Depends on |
 |:--:|:--|:--|
 | `moonapi` | `App` and its methods, the façade | everything below |
-| `moonapi/route` | `Route`, `Router`, path matching; `Method` from moonhttp | `ctx`, `endpoint`, `security`, `socket` |
+| `moonapi/templates` | `Templates`: pages rendered into responses, with `request` and `url_for`; `load_directory` (native) | moonpug, `ctx` |
+| `moonapi/static` | `serve`, a `Source` trait, `Memory` and `Directory` (native) | `ctx` |
+| `moonapi/route` | `Route`, `WsRoute`, `Router`, path templates; `Method` from moonhttp | `ctx`, `endpoint`, `security`, `socket` |
 | `moonapi/cmd/routes` | The `#app.get` generator, run by moonx as a dev_build rule | moonast |
 | `moonapi/openapi` | the document's info block, routes as operations | `route`, `schema` |
 | `moonapi/security` | schemes, guards, per-operation requirements, tokens | `ctx`, `schema`, `status` |
@@ -145,7 +148,7 @@ as they always did.
 | `moonapi/endpoint` | `Param`, `ResponseSpec`, `Endpoint` and its validation | `ctx`, `schema` |
 | `moonapi/ctx` | `Context` and every extractor, background tasks | `schema`, `status` |
 | `moonapi/schema` | `Schema`, constraints, `ValidationError`, `of_model` | `status` |
-| `moonapi/socket` | the live WebSocket connection and its routes | nothing |
+| `moonapi/socket` | the live WebSocket connection | nothing |
 | `moonapi/status` | response helpers, streams, SSE, cookies, status constants | nothing |
 | `moonapi/di` | dependency injection | nothing |
 
@@ -176,6 +179,8 @@ is not known is a raised error, where the subpackage is named:
 - **WebSocket routes** — `App::websocket(path, handler)` over the moonasgi WebSocket protocol. The async handler holds the live connection: `accept` (with a subprotocol and headers), `receive` / `receive_text` / `receive_bytes` / `receive_json`, the matching `send_*`, and `close`. It can speak first and answer as messages arrive; a client that leaves raises `Disconnected(code~, reason~)` out of `receive`, which ends the handler quietly unless it catches it. A route takes `security`, `dependencies` and a `name` like an HTTP route; a refused connection is declined at the handshake with the HTTP answer where the server allows it, or close code 1008. The moonasgi test client's `websocket` drives a route in-process.
 - **Security schemes** — the six OpenAPI shapes (OAuth2 password and authorization-code flows, HTTP bearer / basic / digest, an API key in a header / query / cookie, and OpenID Connect) are emitted in each dialect's form: `components/securitySchemes` in 3.x, `securityDefinitions` in 2.0, where an `http` scheme becomes the standard `apiKey`-in-`Authorization` workaround and OpenID Connect — which 2.0 cannot express — is left out rather than described as something it is not.
 - **Documentation UI** — `App::enable_docs()` mounts `/openapi.json`, `/docs` and `/redoc`, all three with `include_in_schema=false` so turning documentation on does not change the document. `/docs` is the Scalar reference by default and Swagger UI with `ui=Swagger` (with its OAuth2 redirect page and `init_oauth`); every reader is loaded at a pinned version, and behind a proxy the pages and the document's servers follow the ASGI `root_path`. `scalar_ui()`, `swagger_ui()` and `redoc_ui()` return the pages alone, for an app that serves them under its own paths or behind its own guard.
+- **Templates** — `moonapi/templates` renders moonpug templates into responses (← `Jinja2Templates`): every page sees `request`, `url_for` resolves named routes, context processors add names to every page, and where the call's `context` and a processor name the same thing the rule is published (`wins`, `clash`). `load_directory` reads a template tree once on native.
+- **Static files** — `moonapi/static` serves a `Source` under a mount (← `StaticFiles`) with the same conditional and range handling as `Context::serve`, a `405` for anything but `GET` and `HEAD`, no way out of the source, and an `html` mode with indexes, the trailing-slash redirect and a `404.html`. `Memory` works on every target, `Directory` reads the disk on native, and a source of your own is one trait implementation.
 - **Lifespan hooks** — `App::on_startup` / `App::on_shutdown` (← FastAPI's `lifespan`), driven over the ASGI lifespan protocol. Startup in registration order, shutdown in reverse, so a resource is released before whatever opened it. A hook gets the lifespan state, and what it stores there reaches every request as `ctx.state()`. The moonasgi test client's `lifespan` runs the same thing in-process.
 - **Responses** — `text`, `html`, `json` and `json_model` helpers over `moonasgi.Response`, plus `redirect(url, status=307)` (← `RedirectResponse`; the URL is encoded over the characters a URI reserves for structure, so an already-encoded URL passes through and a smuggled `CRLF` cannot open a header) and `file_response(content, filename=, media_type=, inline=)` (← `FileResponse`: a media type guessed from the extension, `Content-Length`, and a `Content-Disposition` that falls back to RFC 6266's `filename*` when the name will not survive quoting). It takes bytes rather than a path because moonapi has no filesystem — the same app runs on wasm, js and native.
 - **Conditional and partial serving** — `Context::serve(content, ...)` is `file_response` with the request weighed: `304` when the client's copy is current, `412` when a precondition fails, `206` for a range (one `Content-Range`, or `multipart/byteranges` for several), `416` for a range that is not there. This is what makes a download resumable. The entity-tags, the five precondition fields and the range arithmetic are [moonhttp](https://github.com/moonbitstack/moonhttp)'s `conditional` and `range`, so it is RFC 9110 §13 and §14 rather than a guess. Everything turns on `etag=`; left out, one is hashed from the content, which costs a pass over the body — pass `@conditional.stamp(length~, modified~)` for one stat's worth instead.

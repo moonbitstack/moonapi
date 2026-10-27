@@ -1,0 +1,21 @@
+// Templates rendered into responses. A package of its own because of what it
+// costs to carry: an app that renders no templates does not link moonpug.
+import {
+  "moonbitstack/moonapi/ctx",
+  "moonbitstack/moonasgi",
+  "moonbitstack/moonpug",
+  "moonbitstack/moonpug/spec",
+  "moonbitstack/mooncred/jwt",
+  "moonbitstack/moonurl",
+  "moonbitlang/core/encoding/utf8",
+  "moonbitlang/async/fs",
+  "moonbitlang/async/io",
+}
+
+import {
+  "moonbitlang/async",
+} for "wbtest"
+
+// Reading a template directory is native; on other targets `fs` is unused.
+
+warnings = "-29"

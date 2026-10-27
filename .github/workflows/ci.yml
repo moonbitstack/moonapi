@@ -66,6 +66,9 @@ jobs:
       - name: annotated example runs
         run: moon run src/examples/27-annotations | grep -q "PURGE /cache -> 200 purged"
 
+      - name: templates example runs
+        run: moon run src/examples/28-templates | grep -q 'href="/users/8"'
+
       - name: lint (fmt is clean)
         run: |
           moon fmt && git -c core.autocrlf=false diff --ignore-cr-at-eol --exit-code

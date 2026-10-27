@@ -9,7 +9,7 @@ moon run src/examples/25-full-example --target native
 ```
 
 Mooncat's native server runs on Windows, macOS and Linux. It listens on
-`127.0.0.1:12000`. Open `/docs` for Swagger UI, `/redoc` for ReDoc, or
+`127.0.0.1:12000`. Open `/docs` for the API reference, `/redoc` for ReDoc, or
 `/openapi.json` for the OpenAPI 3.0.3 document.
 
 This integrated app keeps root endpoints and composes two routers, then exercises
@@ -76,12 +76,13 @@ same ASGI application `25-full-example` serves over Mooncat.
 | 17 | [`sse`](17-sse/) | Server-Sent Event framing (`data`/`event`/`id`/`retry`/multi-line/comment) streamed one body event per frame | `@sse.Event::of/new/ping`, `sse`, `App::stream`, `@testing.communicate` |
 | 18 | [`websocket`](18-websocket/) | A chat room that speaks first and echoes, and a JSON request-reply, driven by the test client | `App::websocket`, `WebSocket::accept/receive/send_text/send_json/close`, `@testing.Client::websocket` |
 | 19 | [`json-schema`](19-json-schema/) | A body written as JSON Schema — a `pattern` and a closed set the constructors cannot say — emitted into the document and validated against | `Schema::json`, `Endpoint::new`, `validate_schema` |
-| 22 | [`docs-ui`](22-docs-ui/) | The three documentation pages FastAPI serves — the spec, Swagger UI, ReDoc — and how to leave one off | `App::enable_docs`, `swagger_ui`, `redoc_ui`, `html` |
+| 22 | [`docs-ui`](22-docs-ui/) | The three documentation pages — the spec, the API reference, ReDoc — and how to leave one off | `App::enable_docs`, `scalar_ui`, `swagger_ui`, `redoc_ui`, `html` |
 | 23 | [`lifespan`](23-lifespan/) | Startup and shutdown hooks in order, and the lifespan state a request reads, driven by the test client | `App::on_startup`, `App::on_shutdown`, `Context::state`, `@testing.Client::lifespan` |
 | 24 | [`files`](24-files/) | Serving a file the way RFC 9110 asks: a 304 for a repeat, a 206 for a resumed download, a 416 for a range that is not there, and the `data:` URL a browser hands back | `Context::serve`, `data_response`, `data_url`, `@conditional.hash` |
 | 25 | [`full-example`](25-full-example/) | Root endpoints plus two included routers in a multi-package layout, composed with auth, validation, middleware, forms, files, background tasks, SSE, WebSockets, lifecycle and OpenAPI | `App`, `Router`, `include_router`, `secure_oauth2`, `App::layer`, `stream`, `sse`, `websocket` |
 | 26 | [`described-model`](26-described-model/) | One moonmodel description driving both the validation and the document, a reference looked up in `known`, and the report for one that is not there | `Schema::of_model`, `Unresolved`, `Endpoint::validate`, `App::openapi_json` |
 | 27 | [`annotations`](27-annotations/) | Routes declared as `#app.get`, `#app.post`, `#app.delete`, `#app.route("PURGE", ...)` and `#router.get`, registered by the generated `routes.g.mbt` | `#app.*`, `#router.*`, `register`, `register_router`, `Other` |
+| 28 | [`templates`](28-templates/) | Pages rendered from templates that extend a base, see the request and link by route name, beside a stylesheet served from a static source | `@templates.Templates`, `url_for`, `@static.serve`, `@static.Memory`, `App::mount_asgi` |
 
 The complete application serves OpenAPI 3.0.3 at `/openapi.json`. Other examples
 can emit Swagger 2.0, OpenAPI 3.0.3 or 3.1.0 by passing the corresponding version
