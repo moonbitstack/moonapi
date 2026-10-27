@@ -534,7 +534,7 @@ async test "a raising shutdown hook still lets the rest run" {
 /// `enable_docs` serves the three pages FastAPI serves — the spec, Swagger UI and
 /// ReDoc — and keeps all three out of the spec they describe, so turning docs on
 /// does not change what a client reads.
-async test "enable_docs serves the spec, Swagger UI and ReDoc without joining the spec" {
+async test "enable_docs serves the spec, the reference and ReDoc without joining the spec" {
   let app = App::new()
   app.get("/hello", _ctx => @status.text(200, "hhh"), summary="greet")
   app.describe(title="qwq api")
@@ -546,13 +546,19 @@ async test "enable_docs serves the spec, Swagger UI and ReDoc without joining th
   assert_eq(docs.status, 200)
   assert_eq(docs.header("content-type"), Some("text/html; charset=utf-8"))
   let docs_body = @utf8.decode_lossy(docs.body)
-  assert_eq(docs_body.contains("swagger-ui"), true)
-  assert_eq(docs_body.contains("/openapi.json"), true)
-  assert_eq(docs_body.contains("qwq api"), true)
+  assert_eq(docs_body.contains("Scalar.createApiReference"), true)
+  assert_eq(docs_body.contains(@openapi.scalar_js), true)
+  assert_eq(docs_body.contains("{\"url\":\"/openapi.json\"}"), true)
+  assert_eq(docs_body.contains("<title>qwq api</title>"), true)
   let redoc = app.handle(mkreq("GET", "/redoc"))
   assert_eq(redoc.status, 200)
   let redoc_body = @utf8.decode_lossy(redoc.body)
-  assert_eq(redoc_body.contains("<redoc spec-url=\"/openapi.json\">"), true)
+  assert_eq(
+    redoc_body.contains(
+      "<redoc spec-url=\"/openapi.json\" disable-telemetry=\"true\">",
+    ),
+    true,
+  )
   // The documented surface is still just the one route.
   let paths = match app.openapi() {
     Object(m) =>
@@ -2287,4 +2293,65 @@ async test "status handler: a 405 method-mismatch can be customised too" {
   let resp = app.handle(mkreq("POST", "/only-get"))
   assert_eq(resp.status, 405)
   assert_eq(resp.body, @utf8.encode("no such method"))
+}
+
+///|
+async test "enable_docs: Swagger UI with its OAuth2 redirect page and initOAuth" {
+  let app = App::new()
+  app.enable_docs(
+    ui=Swagger,
+    init_oauth={ "clientId": "web" },
+    ui_extra=Map([("deepLinking", Json(false))]),
+  )
+  let page = @utf8.decode_lossy(app.handle(mkreq("GET", "/docs")).body)
+  assert_eq(page.contains(@openapi.swagger_js), true)
+  assert_eq(page.contains("\"deepLinking\":false"), true)
+  assert_eq(
+    page.contains(
+      "config.oauth2RedirectUrl = window.location.origin + \"/docs/oauth2-redirect\";",
+    ),
+    true,
+  )
+  assert_eq(page.contains("ui.initOAuth({\"clientId\":\"web\"});"), true)
+  let back = app.handle(mkreq("GET", "/docs/oauth2-redirect"))
+  assert_eq(back.status, 200)
+  assert_eq(
+    @utf8.decode_lossy(back.body).contains(@openapi.swagger_redirect_js),
+    true,
+  )
+  // The default reader has its own OAuth2 handling, so no redirect page is added.
+  let plain = App::new()
+  plain.enable_docs()
+  assert_eq(plain.handle(mkreq("GET", "/docs/oauth2-redirect")).status, 404)
+}
+
+///|
+async test "enable_docs: under a root_path the pages and the servers follow it" {
+  let sub = App::new()
+  sub.enable_docs()
+  let app = App::new()
+  app.mount("/api", sub)
+  let page = @utf8.decode_lossy(app.handle(mkreq("GET", "/api/docs")).body)
+  assert_eq(page.contains("{\"url\":\"/api/openapi.json\"}"), true)
+  let redoc = @utf8.decode_lossy(app.handle(mkreq("GET", "/api/redoc")).body)
+  assert_eq(redoc.contains("spec-url=\"/api/openapi.json\""), true)
+  let spec = resp_json(app.handle(mkreq("GET", "/api/openapi.json")))
+  assert_eq(json_str(dig_arr(spec, ["servers"])[0], "url"), "/api")
+  // Turned off, the document names only the servers it was given.
+  let quiet = App::new()
+  quiet.enable_docs(root_path_in_servers=false)
+  let app2 = App::new()
+  app2.mount("/api", quiet)
+  let spec2 = resp_json(app2.handle(mkreq("GET", "/api/openapi.json")))
+  assert_eq(dig(spec2, ["servers"]), None)
+}
+
+///|
+test "doc pages escape what they are given" {
+  let page = @openapi.scalar_ui(title="<b>&", spec_url="/x</script>")
+  assert_eq(page.contains("<title>&lt;b&gt;&amp;</title>"), true)
+  assert_eq(page.contains("/x</script>"), false)
+  assert_eq(page.contains("/x\\u003c/script>"), true)
+  let redoc = @openapi.redoc_ui(spec_url="/a\"b", telemetry=true)
+  assert_eq(redoc.contains("spec-url=\"/a&quot;b\">"), true)
 }

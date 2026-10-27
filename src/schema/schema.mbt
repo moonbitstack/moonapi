@@ -59,8 +59,9 @@ pub(all) struct ObjectSchema {
 
 ///|
 /// One field of an object schema: its `name`, its `schema`, whether it is
-/// `required`, an optional `description`, its value `constraints`, and the
-/// `default` that stands in when a body leaves it out.
+/// `required`, an optional `description`, its value `constraints`, the
+/// `default` that stands in when a body leaves it out, and `examples` of its
+/// value for the reader.
 pub(all) struct Field {
   name : String
   schema : Schema
@@ -68,6 +69,7 @@ pub(all) struct Field {
   description : String
   constraints : Array[Constraint]
   default : Json?
+  examples : Array[Json]
 } derive(Eq, Debug)
 
 ///|
@@ -84,8 +86,9 @@ pub fn Field::new(
   description~ : String = "",
   constraints~ : Array[Constraint] = [],
   default? : Json,
+  examples~ : Array[Json] = [],
 ) -> Field {
-  { name, schema, required, description, constraints, default, }
+  { name, schema, required, description, constraints, default, examples, }
 }
 
 ///|
@@ -330,6 +333,13 @@ fn object_body(
     )
     if f.default is Some(d) {
       fs = with_key(fs, "default", d)
+    }
+    // JSON Schema 2020-12 takes a list; the older dialects take one `example`.
+    if f.examples is [first, ..] {
+      fs = match version {
+        OpenApi31 => with_key(fs, "examples", Json(f.examples))
+        _ => with_key(fs, "example", first)
+      }
     }
     props[f.name] = if f.description != "" {
       with_description(fs, f.description)

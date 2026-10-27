@@ -47,6 +47,10 @@ pub struct App {
   // The container a route's declared `dependencies` are resolved through.
   mut deps : @di.Deps?
   redirect_slashes : Bool
+  // Requests this API sends to its subscribers (← FastAPI's `app.webhooks`):
+  // documented under OpenAPI 3.1's `webhooks`, never served. A route's path is
+  // the webhook's name.
+  webhooks : @route.Router
 }
 
 ///|
@@ -73,6 +77,7 @@ pub fn App::new(redirect_slashes~ : Bool = true) -> App {
     clock: () => 0L,
     deps: None,
     redirect_slashes,
+    webhooks: @route.Router::new(),
   }
 }
 
@@ -93,28 +98,36 @@ pub fn App::depends(self : App, deps : @di.Deps) -> Unit {
 
 ///|
 /// Set what the OpenAPI document says about this API (← FastAPI's `FastAPI(title=…,
-/// description=…, contact=…, license_info=…, servers=…)`). `App::openapi` and the
-/// `/openapi.json` route `enable_docs` registers both read it, so the document a
-/// client fetches and the one a test builds cannot describe different APIs.
+/// summary=…, description=…, contact=…, license_info=…, servers=…, openapi_tags=…,
+/// openapi_external_docs=…)`). `App::openapi` and the `/openapi.json` route
+/// `enable_docs` registers both read it, so the document a client fetches and the
+/// one a test builds cannot describe different APIs. An argument left out keeps
+/// what was set before.
 pub fn App::describe(
   self : App,
   title? : String,
+  summary? : String,
   api_version? : String,
   description? : String,
   terms_of_service? : String,
   contact? : @openapi.Contact?,
   license? : @openapi.License?,
   servers? : Array[@openapi.Server],
+  tags? : Array[@openapi.Tag],
+  external_docs? : @openapi.ExternalDocs?,
 ) -> Unit {
   let cur = self.info
   self.info = {
     title: title.unwrap_or(cur.title),
+    summary: summary.unwrap_or(cur.summary),
     api_version: api_version.unwrap_or(cur.api_version),
     description: description.unwrap_or(cur.description),
     terms_of_service: terms_of_service.unwrap_or(cur.terms_of_service),
     contact: contact.unwrap_or(cur.contact),
     license: license.unwrap_or(cur.license),
     servers: servers.unwrap_or(cur.servers),
+    tags: tags.unwrap_or(cur.tags),
+    external_docs: external_docs.unwrap_or(cur.external_docs),
   }
 }
 

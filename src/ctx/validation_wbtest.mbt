@@ -69,6 +69,23 @@ test "the query bound is public and reaches both extractors" {
 }
 
 ///|
+test "last_event_id: a reconnect carries it, a first connection does not" {
+  let with_id = (headers : Array[(String, String)]) => {
+    let req : @moonasgi.Request = {
+      http_method: "GET",
+      path: "/events",
+      query_string: b"",
+      headers,
+      body: b"",
+    }
+    Context::new(req)
+  }
+  assert_eq(with_id([("last-event-id", "233")]).last_event_id(), Some("233"))
+  assert_eq(with_id([]).last_event_id(), None)
+  assert_eq(with_id([("last-event-id", "")]).last_event_id(), None)
+}
+
+///|
 test "cookie extraction off the Cookie header" {
   let req : @moonasgi.Request = {
     http_method: "GET",

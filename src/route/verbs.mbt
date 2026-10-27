@@ -13,8 +13,10 @@
 /// `operation_id` the stable handle client generators name their method after,
 /// `status_code` the status its success response is documented under,
 /// `responses` further documented responses, `name` the handle `App::url_for`
-/// resolves, and `openapi_extra` a fragment merged over the generated operation
-/// object — the same keyword arguments FastAPI's path operations take.
+/// resolves, `openapi_extra` a fragment merged over the generated operation
+/// object, and `callbacks` the requests this operation makes back to its caller,
+/// written as routes whose paths are runtime expressions — the same keyword
+/// arguments FastAPI's path operations take.
 pub fn Router::route(
   self : Router,
   verb : Method,
@@ -34,6 +36,7 @@ pub fn Router::route(
   include_in_schema~ : Bool = true,
   validate~ : Bool = true,
   openapi_extra? : Json,
+  callbacks~ : Array[Route] = [],
 ) -> Unit {
   self.routes.push({
     verb,
@@ -54,6 +57,7 @@ pub fn Router::route(
     include_in_schema,
     validate,
     openapi_extra,
+    callbacks,
   })
 }
 
@@ -85,6 +89,7 @@ pub fn Router::route_stream(
   include_in_schema~ : Bool = true,
   validate~ : Bool = true,
   openapi_extra? : Json,
+  callbacks~ : Array[Route] = [],
 ) -> Unit {
   self.routes.push({
     verb,
@@ -105,6 +110,7 @@ pub fn Router::route_stream(
     include_in_schema,
     validate,
     openapi_extra,
+    callbacks,
   })
 }
 
@@ -129,6 +135,7 @@ pub fn Router::stream(
   include_in_schema~ : Bool = true,
   validate~ : Bool = true,
   openapi_extra? : Json,
+  callbacks~ : Array[Route] = [],
 ) -> Unit {
   self.route_stream(
     Get,
@@ -148,6 +155,7 @@ pub fn Router::stream(
     include_in_schema~,
     validate~,
     openapi_extra?,
+    callbacks~,
   )
 }
 
@@ -171,6 +179,7 @@ pub fn Router::get(
   include_in_schema~ : Bool = true,
   validate~ : Bool = true,
   openapi_extra? : Json,
+  callbacks~ : Array[Route] = [],
 ) -> Unit {
   self.route(
     Get,
@@ -190,6 +199,7 @@ pub fn Router::get(
     include_in_schema~,
     validate~,
     openapi_extra?,
+    callbacks~,
   )
 }
 
@@ -213,6 +223,7 @@ pub fn Router::post(
   include_in_schema~ : Bool = true,
   validate~ : Bool = true,
   openapi_extra? : Json,
+  callbacks~ : Array[Route] = [],
 ) -> Unit {
   self.route(
     Post,
@@ -232,6 +243,7 @@ pub fn Router::post(
     include_in_schema~,
     validate~,
     openapi_extra?,
+    callbacks~,
   )
 }
 
@@ -255,6 +267,7 @@ pub fn Router::put(
   include_in_schema~ : Bool = true,
   validate~ : Bool = true,
   openapi_extra? : Json,
+  callbacks~ : Array[Route] = [],
 ) -> Unit {
   self.route(
     Put,
@@ -274,6 +287,7 @@ pub fn Router::put(
     include_in_schema~,
     validate~,
     openapi_extra?,
+    callbacks~,
   )
 }
 
@@ -297,6 +311,7 @@ pub fn Router::patch(
   include_in_schema~ : Bool = true,
   validate~ : Bool = true,
   openapi_extra? : Json,
+  callbacks~ : Array[Route] = [],
 ) -> Unit {
   self.route(
     Patch,
@@ -316,6 +331,7 @@ pub fn Router::patch(
     include_in_schema~,
     validate~,
     openapi_extra?,
+    callbacks~,
   )
 }
 
@@ -339,6 +355,7 @@ pub fn Router::delete(
   include_in_schema~ : Bool = true,
   validate~ : Bool = true,
   openapi_extra? : Json,
+  callbacks~ : Array[Route] = [],
 ) -> Unit {
   self.route(
     Delete,
@@ -358,6 +375,7 @@ pub fn Router::delete(
     include_in_schema~,
     validate~,
     openapi_extra?,
+    callbacks~,
   )
 }
 
@@ -381,6 +399,7 @@ pub fn Router::options(
   include_in_schema~ : Bool = true,
   validate~ : Bool = true,
   openapi_extra? : Json,
+  callbacks~ : Array[Route] = [],
 ) -> Unit {
   self.route(
     Options,
@@ -400,6 +419,7 @@ pub fn Router::options(
     include_in_schema~,
     validate~,
     openapi_extra?,
+    callbacks~,
   )
 }
 
@@ -423,6 +443,7 @@ pub fn Router::head(
   include_in_schema~ : Bool = true,
   validate~ : Bool = true,
   openapi_extra? : Json,
+  callbacks~ : Array[Route] = [],
 ) -> Unit {
   self.route(
     Head,
@@ -442,6 +463,7 @@ pub fn Router::head(
     include_in_schema~,
     validate~,
     openapi_extra?,
+    callbacks~,
   )
 }
 
@@ -465,6 +487,7 @@ pub fn Router::trace(
   include_in_schema~ : Bool = true,
   validate~ : Bool = true,
   openapi_extra? : Json,
+  callbacks~ : Array[Route] = [],
 ) -> Unit {
   self.route(
     Trace,
@@ -484,5 +507,6 @@ pub fn Router::trace(
     include_in_schema~,
     validate~,
     openapi_extra?,
+    callbacks~,
   )
 }

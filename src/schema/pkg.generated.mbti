@@ -65,10 +65,11 @@ pub(all) struct Field {
   description : String
   constraints : Array[Constraint]
   default : Json?
+  examples : Array[Json]
 } derive(Eq, @debug.Debug)
 pub fn Field::equal(Self, Self) -> Bool
 pub fn Field::is_required(Self) -> Bool
-pub fn Field::new(String, Schema, required? : Bool, description? : String, constraints? : Array[Constraint], default? : Json) -> Self
+pub fn Field::new(String, Schema, required? : Bool, description? : String, constraints? : Array[Constraint], default? : Json, examples? : Array[Json]) -> Self
 pub fn Field::not_equal(Self, Self) -> Bool
 pub fn Field::to_repr(Self) -> @debug.Repr
 

@@ -216,8 +216,8 @@ test "openapi richer info: description/contact/license + servers" {
     version=OpenApi31,
     title="Greet",
     description="qwq api",
-    contact=Some({ name: "heke1228", url: "", email: "emm@qq.com", }),
-    license=Some({ name: "Apache-2.0", url: "https://apache.org", }),
+    contact=Some(@openapi.Contact::new(name="heke1228", email="emm@qq.com")),
+    license=Some(@openapi.License::new("Apache-2.0", url="https://apache.org")),
     servers=[{ url: "https://api.example.com", description: "prod", }],
   )
   guard doc is Object(m) else { fail("doc should be an object") }
@@ -653,4 +653,181 @@ test "openapi types an untyped route's path parameters by their convertor" {
   assert_eq(json_str(v2[0], "type"), "integer")
   assert_eq(json_str(v2[2], "format"), "uuid")
   assert_eq(dig(v2[0], ["schema"]), None)
+}
+
+///|
+test "openapi: tag descriptions and external docs sit at the top in every dialect" {
+  let app = App::new()
+  app.get("/users", _ctx => @status.text(200, "u"), tags=["users"])
+  app.describe(
+    tags=[
+      @openapi.Tag::new(
+        "users",
+        description="Who signs in",
+        external_docs=@openapi.ExternalDocs::new("https://example.com/users"),
+      ),
+    ],
+    external_docs=Some(
+      @openapi.ExternalDocs::new("https://example.com", description="Guide"),
+    ),
+  )
+  for version in [@schema.Swagger20, OpenApi30, OpenApi31] {
+    let doc = app.openapi(version~)
+    let tags = dig_arr(doc, ["tags"])
+    assert_eq(tags.length(), 1)
+    assert_eq(json_str(tags[0], "name"), "users")
+    assert_eq(json_str(tags[0], "description"), "Who signs in")
+    assert_eq(
+      json_str(dig(tags[0], ["externalDocs"]).unwrap(), "url"),
+      "https://example.com/users",
+    )
+    assert_eq(
+      json_str(dig(doc, ["externalDocs"]).unwrap(), "description"),
+      "Guide",
+    )
+  }
+}
+
+///|
+test "openapi: summary and a license identifier are 3.1's" {
+  let app = App::new()
+  app.describe(
+    summary="Widgets, briefly",
+    license=Some(
+      @openapi.License::new(
+        "Apache 2.0",
+        url="https://www.apache.org/licenses/LICENSE-2.0",
+        identifier="Apache-2.0",
+      ),
+    ),
+  )
+  let v31 = app.openapi(version=OpenApi31)
+  assert_eq(
+    json_str(dig(v31, ["info"]).unwrap(), "summary"),
+    "Widgets, briefly",
+  )
+  let license = dig(v31, ["info", "license"]).unwrap()
+  assert_eq(json_str(license, "identifier"), "Apache-2.0")
+  assert_eq(dig(license, ["url"]), None)
+  let v30 = app.openapi(version=OpenApi30)
+  assert_eq(dig(v30, ["info", "summary"]), None)
+  let license = dig(v30, ["info", "license"]).unwrap()
+  assert_eq(dig(license, ["identifier"]), None)
+  assert_eq(
+    json_str(license, "url"),
+    "https://www.apache.org/licenses/LICENSE-2.0",
+  )
+}
+
+///|
+async test "openapi: webhooks are documented in 3.1 and never served" {
+  let app = App::new()
+  app.webhooks.post(
+    "new-subscription",
+    _ctx => @status.text(200, ""),
+    summary="A user subscribed",
+  )
+  let v31 = app.openapi(version=OpenApi31)
+  assert_eq(
+    json_str(
+      dig(v31, ["webhooks", "new-subscription", "post"]).unwrap(),
+      "summary",
+    ),
+    "A user subscribed",
+  )
+  assert_eq(dig(app.openapi(version=OpenApi30), ["webhooks"]), None)
+  assert_eq(app.handle(mkreq("POST", "new-subscription")).status, 404)
+  assert_eq(app.handle(mkreq("POST", "/new-subscription")).status, 404)
+}
+
+///|
+test "openapi: callbacks sit under their operation, keyed by name then expression" {
+  let events = @route.Router::new()
+  events.post(
+    "{$request.body#/callback_url}/invoices/{$request.body#/id}",
+    _ctx => @status.text(200, ""),
+    name="invoice_paid",
+    summary="Invoice paid",
+  )
+  let app = App::new()
+  app.post("/invoices", _ctx => @status.text(201, ""), callbacks=events.routes)
+  let expr = "{$request.body#/callback_url}/invoices/{$request.body#/id}"
+  for version in [@schema.OpenApi30, OpenApi31] {
+    let cb = dig(app.openapi(version~), [
+      "paths", "/invoices", "post", "callbacks", "invoice_paid", expr, "post",
+    ]).unwrap()
+    assert_eq(json_str(cb, "summary"), "Invoice paid")
+    // A runtime expression is not a request path, so it names no parameters.
+    assert_eq(dig(cb, ["parameters"]), None)
+  }
+  assert_eq(
+    dig(app.openapi(version=Swagger20), [
+      "paths", "/invoices", "post", "callbacks",
+    ]),
+    None,
+  )
+}
+
+///|
+test "openapi: named examples on a parameter, a body and a response" {
+  let ex = (v : Json, summary : String) => {
+    @endpoint.Example::new(value=v, summary~)
+  }
+  let ep = @endpoint.Endpoint::new(
+    params=[
+      @endpoint.Param::new(
+        "q",
+        InQuery,
+        examples=Map([("short", ex("ab", "Short"))]),
+      ),
+    ],
+    request_body=@schema.Schema::object("Item", [
+      @schema.Field::new("name", SStr, examples=["lamp", "desk"]),
+    ]),
+    request_examples=Map([("lamp", ex({ "name": "lamp" }, "A lamp"))]),
+    responses=[
+      @endpoint.ResponseSpec::new(
+        200,
+        examples=Map([
+          ("ok", ex({ "id": 1 }, "Made")),
+          ("other", @endpoint.Example::new(external_value="https://e.x/1.json")),
+        ]),
+      ),
+    ],
+  )
+  let app = App::new()
+  app.post("/items", _ctx => @status.text(200, ""), endpoint=ep)
+  let v31 = app.openapi(version=OpenApi31)
+  let op = dig(v31, ["paths", "/items", "post"]).unwrap()
+  let param = dig_arr(op, ["parameters"])[0]
+  assert_eq(
+    json_str(dig(param, ["examples", "short"]).unwrap(), "summary"),
+    "Short",
+  )
+  assert_eq(dig(param, ["examples", "short", "value"]), Some(Json("ab")))
+  assert_eq(
+    dig(op, [
+      "requestBody", "content", "application/json", "examples", "lamp", "value",
+    ]),
+    Some({ "name": "lamp" }),
+  )
+  let media = ["responses", "200", "content", "application/json", "examples"]
+  assert_eq(dig(op, [..media, "ok", "value"]), Some({ "id": 1 }))
+  assert_eq(
+    dig(op, [..media, "other", "externalValue"]),
+    Some(Json("https://e.x/1.json")),
+  )
+  // JSON Schema 2020-12 lists a field's examples; 3.0 takes the first one.
+  let field = ["components", "schemas", "Item", "properties", "name"]
+  assert_eq(dig(v31, [..field, "examples"]), Some(Json(["lamp", "desk"])))
+  let v30 = app.openapi(version=OpenApi30)
+  assert_eq(dig(v30, [..field, "example"]), Some(Json("lamp")))
+  // Swagger 2.0: no parameter examples, one example per response media type.
+  let v20 = app.openapi(version=Swagger20)
+  let op20 = dig(v20, ["paths", "/items", "post"]).unwrap()
+  assert_eq(dig(dig_arr(op20, ["parameters"])[0], ["examples"]), None)
+  assert_eq(
+    dig(op20, ["responses", "200", "examples", "application/json"]),
+    Some({ "id": 1 }),
+  )
 }

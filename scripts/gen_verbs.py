@@ -21,6 +21,7 @@ OPTIONS = [
     ("include_in_schema", "Bool", "true"),
     ("validate", "Bool", "true"),
     ("openapi_extra", "Json", None),
+    ("callbacks", "Array[@route.Route]", "[]"),
 ]
 
 VERBS = [
@@ -48,8 +49,10 @@ ROUTE_DOC = """/// Register a route for an explicit method. An optional `endpoin
 /// `operation_id` the stable handle client generators name their method after,
 /// `status_code` the status its success response is documented under,
 /// `responses` further documented responses, `name` the handle `App::url_for`
-/// resolves, and `openapi_extra` a fragment merged over the generated operation
-/// object — the same keyword arguments FastAPI's path operations take."""
+/// resolves, `openapi_extra` a fragment merged over the generated operation
+/// object, and `callbacks` the requests this operation makes back to its caller,
+/// written as routes whose paths are runtime expressions — the same keyword
+/// arguments FastAPI's path operations take."""
 
 STREAM_DOC = """/// Register a streaming route (← a FastAPI path operation returning a
 /// `StreamingResponse`). The handler's chunks reach the client as separate body
@@ -61,9 +64,11 @@ STREAM_DOC = """/// Register a streaming route (← a FastAPI path operation ret
 /// validates and enforces security exactly as `route` does."""
 
 
-def params():
+def params(owner):
     out = []
     for name, typ, default in OPTIONS:
+        if owner == "Router":
+            typ = typ.replace("@route.", "")
         out.append(f"  {name}? : {typ}," if default is None else f"  {name}~ : {typ} = {default},")
     return "\n".join(out)
 
@@ -83,7 +88,7 @@ pub fn {owner}::{name}(
   self : {owner},
 {extra_params}
   handler : {handler_type},
-{params()}
+{params(owner)}
 ) -> Unit {{
 {body}
 }}

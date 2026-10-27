@@ -16,12 +16,24 @@ pub(all) struct Endpoint {
   params : Array[Param]
   request_body : @schema.Schema?
   request_required : Bool
+  request_examples : Map[String, Example]
   responses : Array[ResponseSpec]
 } derive(Eq)
 pub fn Endpoint::equal(Self, Self) -> Bool
-pub fn Endpoint::new(params? : Array[Param], request_body? : @schema.Schema, request_required? : Bool, responses? : Array[ResponseSpec]) -> Self
+pub fn Endpoint::new(params? : Array[Param], request_body? : @schema.Schema, request_required? : Bool, request_examples? : Map[String, Example], responses? : Array[ResponseSpec]) -> Self
 pub fn Endpoint::not_equal(Self, Self) -> Bool
 pub fn Endpoint::validate(Self, @ctx.Context) -> Array[@schema.ValidationError]
+
+pub(all) struct Example {
+  summary : String
+  description : String
+  value : Json?
+  external_value : String
+} derive(Eq)
+pub fn Example::equal(Self, Self) -> Bool
+pub fn Example::new(value? : Json, summary? : String, description? : String, external_value? : String) -> Self
+pub fn Example::not_equal(Self, Self) -> Bool
+pub fn Example::to_json(Self) -> Json
 
 pub(all) struct Param {
   name : String
@@ -32,11 +44,12 @@ pub(all) struct Param {
   constraints : Array[@schema.Constraint]
   default : Json?
   alias_ : String
+  examples : Map[String, Example]
 } derive(Eq)
 pub fn Param::equal(Self, Self) -> Bool
 pub fn Param::is_required(Self) -> Bool
 pub fn Param::key(Self) -> String
-pub fn Param::new(String, ParamLoc, schema? : @schema.Schema, required? : Bool, description? : String, constraints? : Array[@schema.Constraint], default? : Json, alias_? : String) -> Self
+pub fn Param::new(String, ParamLoc, schema? : @schema.Schema, required? : Bool, description? : String, constraints? : Array[@schema.Constraint], default? : Json, alias_? : String, examples? : Map[String, Example]) -> Self
 pub fn Param::not_equal(Self, Self) -> Bool
 
 pub(all) enum ParamLoc {
@@ -52,9 +65,10 @@ pub(all) struct ResponseSpec {
   status : Int32
   description : String
   body : @schema.Schema?
+  examples : Map[String, Example]
 } derive(Eq)
 pub fn ResponseSpec::equal(Self, Self) -> Bool
-pub fn ResponseSpec::new(Int32, description? : String, body? : @schema.Schema) -> Self
+pub fn ResponseSpec::new(Int32, description? : String, body? : @schema.Schema, examples? : Map[String, Example]) -> Self
 pub fn ResponseSpec::not_equal(Self, Self) -> Bool
 
 // Type aliases

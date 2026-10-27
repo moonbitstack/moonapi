@@ -144,6 +144,7 @@ pub using @ctx {
 ///|
 pub using @endpoint {
   type Endpoint,
+  type Example,
   type Param,
   type ParamLoc,
   type ResponseSpec,
@@ -175,8 +176,13 @@ pub using @route {type ApiHandler, type Method, type Router, type StreamHandler}
 pub using @openapi {
   type ApiInfo,
   type Contact,
+  type ExternalDocs,
   type License,
   type Server,
+  type Tag,
+  type Ui,
   redoc_ui,
+  scalar_ui,
+  swagger_redirect,
   swagger_ui,
 }

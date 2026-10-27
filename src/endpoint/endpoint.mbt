@@ -20,6 +20,49 @@ pub fn loc_str(l : ParamLoc) -> String {
 }
 
 ///|
+/// A named example of a value (the OpenAPI Example Object, ← FastAPI's
+/// `openapi_examples`): a `summary` and a `description` for the reader, and
+/// either the `value` itself or an `external_value` URL where it can be fetched.
+/// Documentation viewers offer the examples of a parameter or a body by name.
+pub(all) struct Example {
+  summary : String
+  description : String
+  value : Json?
+  external_value : String
+} derive(Eq)
+
+///|
+pub fn Example::new(
+  value? : Json,
+  summary~ : String = "",
+  description~ : String = "",
+  external_value~ : String = "",
+) -> Example {
+  { summary, description, value, external_value, }
+}
+
+///|
+/// The Example Object for `example`. `value` and `externalValue` exclude each
+/// other, so a value given in both forms is written as the value.
+pub fn Example::to_json(self : Example) -> Json {
+  let m : Map[String, Json] = Map([])
+  if self.summary != "" {
+    m["summary"] = Json(self.summary)
+  }
+  if self.description != "" {
+    m["description"] = Json(self.description)
+  }
+  match self.value {
+    Some(v) => m["value"] = v
+    None =>
+      if self.external_value != "" {
+        m["externalValue"] = Json(self.external_value)
+      }
+  }
+  Json(m)
+}
+
+///|
 /// A single request parameter descriptor: its `name`, `loc`ation, scalar
 /// `schema`, whether it is `required`, an optional `description`, its value
 /// `constraints`, the `default` that stands in when the request omits it, and
@@ -35,6 +78,7 @@ pub(all) struct Param {
   constraints : Array[@schema.Constraint]
   default : Json?
   alias_ : String
+  examples : Map[String, Example]
 } derive(Eq)
 
 ///|
@@ -44,7 +88,8 @@ pub(all) struct Param {
 /// *and* enforced on the inbound value. `default` is emitted and makes the
 /// parameter optional, since a value that has one is never missing. `alias` is
 /// the name the parameter travels under when that differs from the one the code
-/// calls it (← `Query(alias="item-query")`).
+/// calls it (← `Query(alias="item-query")`). `examples` are offered by name in
+/// the documentation (← `Query(openapi_examples=…)`).
 pub fn Param::new(
   name : String,
   loc : ParamLoc,
@@ -54,8 +99,19 @@ pub fn Param::new(
   constraints~ : Array[@schema.Constraint] = [],
   default? : Json,
   alias_~ : String = "",
+  examples~ : Map[String, Example] = Map([]),
 ) -> Param {
-  { name, loc, schema, required, description, constraints, default, alias_, }
+  {
+    name,
+    loc,
+    schema,
+    required,
+    description,
+    constraints,
+    default,
+    alias_,
+    examples,
+  }
 }
 
 ///|
@@ -80,12 +136,14 @@ pub fn Param::is_required(self : Param) -> Bool {
 }
 
 ///|
-/// A single response descriptor: the HTTP `status`, a human `description`, and an
-/// optional body `schema` (`None` for an empty body, e.g. `204`).
+/// A single response descriptor: the HTTP `status`, a human `description`, an
+/// optional body `schema` (`None` for an empty body, e.g. `204`), and named
+/// `examples` of that body.
 pub(all) struct ResponseSpec {
   status : Int32
   description : String
   body : @schema.Schema?
+  examples : Map[String, Example]
 } derive(Eq)
 
 ///|
@@ -95,8 +153,9 @@ pub fn ResponseSpec::new(
   status : Int32,
   description~ : String = "OK",
   body? : @schema.Schema,
+  examples~ : Map[String, Example] = Map([]),
 ) -> ResponseSpec {
-  { status, description, body, }
+  { status, description, body, examples, }
 }
 
 ///|
@@ -108,6 +167,8 @@ pub(all) struct Endpoint {
   params : Array[Param]
   request_body : @schema.Schema?
   request_required : Bool
+  // Named examples of the request body (← `Body(openapi_examples=…)`).
+  request_examples : Map[String, Example]
   responses : Array[ResponseSpec]
 } derive(Eq)
 
@@ -119,12 +180,16 @@ pub fn Endpoint::new(
   params~ : Array[Param] = [],
   request_body? : @schema.Schema,
   request_required~ : Bool = true,
+  request_examples~ : Map[String, Example] = Map([]),
   responses~ : Array[ResponseSpec] = [],
 ) -> Endpoint {
-  { params, request_body, request_required, responses, }
+  { params, request_body, request_required, request_examples, responses, }
 }
 
 // -- OpenAPI emission for an endpoint -----------------------------------------
+
+///|
+pub extend Example with Eq::{not_equal, equal}
 
 ///|
 pub extend ParamLoc with Eq::{not_equal, equal}

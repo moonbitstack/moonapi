@@ -62,6 +62,10 @@ pub(all) struct Route {
   // and torn down after it (← FastAPI's `dependencies=[Depends(...)]`, whose
   // values the handler never sees).
   dependencies : Array[String]
+  // The requests the operation makes back to its caller (← FastAPI's
+  // `callbacks`): documented under the operation, never served. Each one's
+  // path is a runtime expression such as `{$request.body#/url}`.
+  callbacks : Array[Route]
   // FastAPI's `include_in_schema`: a route that serves the documentation itself has
   // no business appearing in the document it serves.
   include_in_schema : Bool

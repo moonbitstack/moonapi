@@ -4,7 +4,8 @@
 /// splits into several `data:` lines, and `ping` is a comment line that dispatches nothing.
 /// `sse` builds the `text/event-stream` response around a body that sends frames for as long as
 /// it likes — one chunk per frame, which is what makes it an event stream rather than a file
-/// shaped like one. The app cancels the body when the client goes.
+/// shaped like one. The app cancels the body when the client goes. A client that reconnects
+/// sends the last id it saw, and `ctx.last_event_id()` lets the stream pick up after it.
 ///
 ///     moon run src/examples/17-sse --target native
 #coverage.skip
@@ -20,8 +21,12 @@ async fn main {
     @sse.Event::ping(comment="ping"),
   ]
   let app = @moonapi.App::new()
-  app.stream("/events", _ctx => {
+  app.stream("/events", ctx => {
+    let resumed = ctx.last_event_id() is Some(_)
     @moonapi.sse(e => {
+      if resumed {
+        e.send(@sse.Event::of("resumed"))
+      }
       for ev in events {
         e.send(ev)
       }

@@ -46,6 +46,7 @@ pub fn Context::digest_credentials(Self) -> String?
 pub fn Context::form(Self, limits? : @moonmime.Limits) -> @moonmime.Form?
 pub fn Context::http_basic(Self) -> HttpBasicCredentials?
 pub fn Context::json_field(Self, String) -> Json?
+pub fn Context::last_event_id(Self) -> String?
 pub fn Context::new(@http.Request, params? : Map[String, String], scope? : @spec.HttpScope, background? : BackgroundTasks) -> Self
 pub fn Context::oauth2_password_form(Self) -> OAuth2PasswordRequestForm?
 pub fn Context::param(Self, String) -> String?

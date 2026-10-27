@@ -27,12 +27,13 @@ fn main {
     title="Widget API",
     api_version="2.3.0",
     description="a comprehensive moonapi example",
-    contact=Some({ name: "lfanke", url: "", email: "heke1228@example.com", }),
-    license=Some({
-      name: "Apache-2.0",
-      url: "https://www.apache.org/licenses/LICENSE-2.0",
-    }),
-    servers=[{ url: "https://api.example.com", description: "production", }],
+    contact=Some(
+      @moonapi.Contact::new(name="lfanke", email="heke1228@example.com"),
+    ),
+    license=Some(@moonapi.License::new("Apache-2.0", identifier="Apache-2.0")),
+    servers=[
+      @moonapi.Server::new("https://api.example.com", description="production"),
+    ],
   )
   println(doc.stringify(indent=2))
   println("swagger_ui page: \{@moonapi.swagger_ui().length()} bytes")

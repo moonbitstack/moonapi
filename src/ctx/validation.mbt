@@ -56,6 +56,17 @@ pub fn Context::cookie(self : Context, name : String) -> String? {
 }
 
 ///|
+/// The id of the last event the client received, from the `Last-Event-ID` header an event
+/// source sends when it reconnects, so a stream can resume after it. `None` on a first
+/// connection; an empty value is one too, since a client with no id sends no header.
+pub fn Context::last_event_id(self : Context) -> String? {
+  match self.request.header("last-event-id") {
+    Some("") | None => None
+    id => id
+  }
+}
+
+///|
 /// Decode a `Bytes` request field to text, replacing any malformed UTF-8 rather
 /// than raising — inbound bytes are attacker-controlled, so extraction stays
 /// total.

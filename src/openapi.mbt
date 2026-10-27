@@ -4,29 +4,40 @@
 /// paths, methods and operations. `version` picks the dialect: Swagger 2.0,
 /// OpenAPI 3.0.3 or 3.1.0 off the identical routes. Routes registered with
 /// `include_in_schema=false` are left out.
+///
+/// The webhooks go under `webhooks`, which only 3.1 has; callbacks go under
+/// their operation in both 3.x dialects. Swagger 2.0 can express neither and
+/// leaves them out. The named arguments override what `App::describe` set, for
+/// this one document.
 pub fn App::openapi(
   self : App,
   version~ : @schema.OpenApiVersion = OpenApi31,
   title? : String,
+  summary? : String,
   api_version? : String,
   description? : String,
   terms_of_service? : String,
   contact? : @openapi.Contact?,
   license? : @openapi.License?,
   servers? : Array[@openapi.Server],
+  tags? : Array[@openapi.Tag],
+  external_docs? : @openapi.ExternalDocs?,
 ) -> Json {
-  // An explicit argument wins; otherwise the app's own metadata, so the served
-  // document and a hand-built one agree.
-  let title = title.unwrap_or(self.info.title)
-  let api_version = api_version.unwrap_or(self.info.api_version)
-  let description = description.unwrap_or(self.info.description)
-  let terms_of_service = terms_of_service.unwrap_or(self.info.terms_of_service)
-  let contact = contact.unwrap_or(self.info.contact)
-  let license = license.unwrap_or(self.info.license)
-  let servers = servers.unwrap_or(self.info.servers)
+  let cur = self.info
+  let info : @openapi.ApiInfo = {
+    title: title.unwrap_or(cur.title),
+    summary: summary.unwrap_or(cur.summary),
+    api_version: api_version.unwrap_or(cur.api_version),
+    description: description.unwrap_or(cur.description),
+    terms_of_service: terms_of_service.unwrap_or(cur.terms_of_service),
+    contact: contact.unwrap_or(cur.contact),
+    license: license.unwrap_or(cur.license),
+    servers: servers.unwrap_or(cur.servers),
+    tags: tags.unwrap_or(cur.tags),
+    external_docs: external_docs.unwrap_or(cur.external_docs),
+  }
   let paths : Map[String, Json] = Map([])
   let defs : Map[String, Json] = Map([])
-  // Own routes plus every mounted sub-app's routes, each under its prefix.
   let all_routes : Array[(String, @route.Route)] = []
   self.collect_routes("", all_routes)
   for entry in all_routes {
@@ -35,135 +46,41 @@ pub fn App::openapi(
       operation_key(route.verb, version) is Some(key) else {
       continue
     }
-    let op : Map[String, Json] = Map([])
-    if route.summary != "" {
-      op["summary"] = Json(route.summary)
-    }
-    if route.description != "" {
-      op["description"] = Json(route.description)
-    }
-    // FastAPI omits `tags` entirely when empty rather than emitting `[]`.
-    if !route.tags.is_empty() {
-      op["tags"] = Json(route.tags)
-    }
-    // FastAPI omits `deprecated` unless the route is actually deprecated.
-    if route.deprecated {
-      op["deprecated"] = Json(true)
-    }
-    if route.operation_id != "" {
-      op["operationId"] = Json(route.operation_id)
-    }
-    let ok_status = route.status_code.unwrap_or(200)
-    match route.endpoint {
-      // A typed route: walk its descriptor once for parameters, request body,
-      // responses, and any hoisted component schemas.
-      Some(ep) => emit_endpoint(op, ep, defs, version, ok_status)
-      // An untyped route: the path's own parameters and a default response.
-      None => {
-        let params = path_parameters(full_path, version)
-        if params.length() > 0 {
-          op["parameters"] = Json(params)
-        }
-        let ok : Map[String, Json] = Map([("description", Json("OK"))])
-        let responses : Map[String, Json] = Map([
-          (ok_status.to_string(), Json(ok)),
-        ])
-        op["responses"] = Json(responses)
-      }
-    }
-    // The route's own `responses` are written after the descriptor's, so on a
-    // status both name, the one declared at the route stands.
-    if !route.responses.is_empty() {
-      let responses : Map[String, Json] = match op.get("responses") {
-        Some(Object(m)) => m
-        _ => Map([])
-      }
-      for rs in route.responses {
-        responses[rs.status.to_string()] = response_json(rs, defs, version)
-      }
-      op["responses"] = Json(responses)
-    }
-    // Per-operation security requirements (← FastAPI's `Security(...)`).
-    match security_json(route.security) {
-      Some(s) => op["security"] = s
-      None => ()
-    }
-    // Last, so `openapi_extra` can override any field moonapi generated. A
-    // fragment that is not an object has nothing to merge and is ignored.
-    if route.openapi_extra is Some(Object(extra)) {
-      for k, v in extra {
-        op[k] = v
-      }
-    }
-    let doc_path = path_template(full_path)
-    let item = match paths.get(doc_path) {
-      Some(Object(m)) => m
-      _ => Map([])
-    }
-    item[key] = Json(op)
-    paths[doc_path] = Json(item)
+    add_operation(
+      paths,
+      path_template(full_path),
+      key,
+      operation(route, full_path, defs, version, path_params=true),
+    )
   }
-  let info : Map[String, Json] = Map([
-    ("title", Json(title)),
-    ("version", Json(api_version)),
-  ])
-  if description != "" {
-    info["description"] = Json(description)
-  }
-  if terms_of_service != "" {
-    info["termsOfService"] = Json(terms_of_service)
-  }
-  match contact {
-    Some(c) => {
-      let cm : Map[String, Json] = Map([])
-      if c.name != "" {
-        cm["name"] = Json(c.name)
+  let hooks : Map[String, Json] = Map([])
+  if version is OpenApi31 {
+    for route in self.webhooks.routes {
+      guard route.include_in_schema &&
+        operation_key(route.verb, version) is Some(key) else {
+        continue
       }
-      if c.url != "" {
-        cm["url"] = Json(c.url)
-      }
-      if c.email != "" {
-        cm["email"] = Json(c.email)
-      }
-      if !cm.is_empty() {
-        info["contact"] = Json(cm)
-      }
+      add_operation(
+        hooks,
+        route.path,
+        key,
+        operation(route, route.path, defs, version, path_params=false),
+      )
     }
-    None => ()
-  }
-  match license {
-    Some(l) => {
-      let lm : Map[String, Json] = Map([("name", Json(l.name))])
-      if l.url != "" {
-        lm["url"] = Json(l.url)
-      }
-      info["license"] = Json(lm)
-    }
-    None => ()
   }
   let (root_key, version_str) = version_field(version)
   let doc : Map[String, Json] = Map([
     (root_key, Json(version_str)),
-    ("info", Json(info)),
+    ("info", info_json(info, version)),
     ("paths", Json(paths)),
   ])
   // `servers` is an OpenAPI 3.x construct (2.0 uses host/basePath), so emit it
   // only for the 3.x dialects.
-  if !servers.is_empty() {
-    match version {
-      Swagger20 => ()
-      _ => {
-        let sarr : Array[Json] = []
-        for s in servers {
-          let sm : Map[String, Json] = Map([("url", Json(s.url))])
-          if s.description != "" {
-            sm["description"] = Json(s.description)
-          }
-          sarr.push(Json(sm))
-        }
-        doc["servers"] = Json(sarr)
-      }
-    }
+  if !info.servers.is_empty() && !(version is Swagger20) {
+    doc["servers"] = Json(info.servers.map(server_json))
+  }
+  if !hooks.is_empty() {
+    doc["webhooks"] = Json(hooks)
   }
   // Hoisted named object schemas and the declared security schemes (the app's
   // own plus every mounted sub-app's): under `components` (`schemas` /
@@ -197,7 +114,195 @@ pub fn App::openapi(
         doc["components"] = Json(comp)
       }
   }
+  if !info.tags.is_empty() {
+    doc["tags"] = Json(info.tags.map(t => t.to_json()))
+  }
+  if info.external_docs is Some(d) {
+    doc["externalDocs"] = d.to_json()
+  }
   Json(doc)
+}
+
+///|
+/// Put `op` under `paths[path][key]`, beside whatever other methods that path
+/// already has.
+fn add_operation(
+  paths : Map[String, Json],
+  path : String,
+  key : String,
+  op : Json,
+) -> Unit {
+  let item = match paths.get(path) {
+    Some(Object(m)) => m
+    _ => Map([])
+  }
+  item[key] = op
+  paths[path] = Json(item)
+}
+
+///|
+/// One route as its operation object for `version`. `path_params` reads the
+/// parameters an untyped route documents off its path; a webhook's name and a
+/// callback's runtime expression are not request paths, so theirs are not.
+fn operation(
+  route : @route.Route,
+  full_path : String,
+  defs : Map[String, Json],
+  version : @schema.OpenApiVersion,
+  path_params~ : Bool,
+) -> Json {
+  let op : Map[String, Json] = Map([])
+  if route.summary != "" {
+    op["summary"] = Json(route.summary)
+  }
+  if route.description != "" {
+    op["description"] = Json(route.description)
+  }
+  // FastAPI omits `tags` entirely when empty rather than emitting `[]`.
+  if !route.tags.is_empty() {
+    op["tags"] = Json(route.tags)
+  }
+  // FastAPI omits `deprecated` unless the route is actually deprecated.
+  if route.deprecated {
+    op["deprecated"] = Json(true)
+  }
+  if route.operation_id != "" {
+    op["operationId"] = Json(route.operation_id)
+  }
+  let ok_status = route.status_code.unwrap_or(200)
+  match route.endpoint {
+    // A typed route: walk its descriptor once for parameters, request body,
+    // responses, and any hoisted component schemas.
+    Some(ep) => emit_endpoint(op, ep, defs, version, ok_status)
+    // An untyped route: the path's own parameters and a default response.
+    None => {
+      let params = if path_params {
+        path_parameters(full_path, version)
+      } else {
+        []
+      }
+      if params.length() > 0 {
+        op["parameters"] = Json(params)
+      }
+      let ok : Map[String, Json] = Map([("description", Json("OK"))])
+      let responses : Map[String, Json] = Map([
+        (ok_status.to_string(), Json(ok)),
+      ])
+      op["responses"] = Json(responses)
+    }
+  }
+  // The route's own `responses` are written after the descriptor's, so on a
+  // status both name, the one declared at the route stands.
+  if !route.responses.is_empty() {
+    let responses : Map[String, Json] = match op.get("responses") {
+      Some(Object(m)) => m
+      _ => Map([])
+    }
+    for rs in route.responses {
+      responses[rs.status.to_string()] = response_json(rs, defs, version)
+    }
+    op["responses"] = Json(responses)
+  }
+  // Per-operation security requirements (← FastAPI's `Security(...)`).
+  match security_json(route.security) {
+    Some(s) => op["security"] = s
+    None => ()
+  }
+  // Grouped by the callback route's name, then keyed by its expression. An
+  // unnamed one is grouped under its expression.
+  if !route.callbacks.is_empty() && !(version is Swagger20) {
+    let callbacks : Map[String, Json] = Map([])
+    for cb in route.callbacks {
+      guard cb.include_in_schema && operation_key(cb.verb, version) is Some(key) else {
+        continue
+      }
+      let name = if cb.name == "" { cb.path } else { cb.name }
+      let item = match callbacks.get(name) {
+        Some(Object(m)) => m
+        _ => Map([])
+      }
+      add_operation(
+        item,
+        cb.path,
+        key,
+        operation(cb, cb.path, defs, version, path_params=false),
+      )
+      callbacks[name] = Json(item)
+    }
+    if !callbacks.is_empty() {
+      op["callbacks"] = Json(callbacks)
+    }
+  }
+  // Last, so `openapi_extra` can override any field moonapi generated. A
+  // fragment that is not an object has nothing to merge and is ignored.
+  if route.openapi_extra is Some(Object(extra)) {
+    for k, v in extra {
+      op[k] = v
+    }
+  }
+  Json(op)
+}
+
+///|
+/// The `info` object for `version`. `summary` and a license `identifier` are
+/// 3.1's; the older dialects take the license `url` instead.
+fn info_json(info : @openapi.ApiInfo, version : @schema.OpenApiVersion) -> Json {
+  let m : Map[String, Json] = Map([("title", Json(info.title))])
+  if info.summary != "" && version is OpenApi31 {
+    m["summary"] = Json(info.summary)
+  }
+  m["version"] = Json(info.api_version)
+  if info.description != "" {
+    m["description"] = Json(info.description)
+  }
+  if info.terms_of_service != "" {
+    m["termsOfService"] = Json(info.terms_of_service)
+  }
+  if info.contact is Some(c) {
+    let cm : Map[String, Json] = Map([])
+    if c.name != "" {
+      cm["name"] = Json(c.name)
+    }
+    if c.url != "" {
+      cm["url"] = Json(c.url)
+    }
+    if c.email != "" {
+      cm["email"] = Json(c.email)
+    }
+    if !cm.is_empty() {
+      m["contact"] = Json(cm)
+    }
+  }
+  if info.license is Some(l) {
+    let lm : Map[String, Json] = Map([("name", Json(l.name))])
+    if l.identifier != "" && version is OpenApi31 {
+      lm["identifier"] = Json(l.identifier)
+    } else if l.url != "" {
+      lm["url"] = Json(l.url)
+    }
+    m["license"] = Json(lm)
+  }
+  Json(m)
+}
+
+///|
+fn server_json(s : @openapi.Server) -> Json {
+  let m : Map[String, Json] = Map([("url", Json(s.url))])
+  if s.description != "" {
+    m["description"] = Json(s.description)
+  }
+  Json(m)
+}
+
+///|
+/// Named examples as the `examples` map an OpenAPI 3.x parameter or media type
+/// carries.
+fn examples_json(examples : Map[String, @endpoint.Example]) -> Json {
+  let m : Map[String, Json] = Map([])
+  for name, ex in examples {
+    m[name] = ex.to_json()
+  }
+  Json(m)
 }
 
 ///|
@@ -273,7 +378,14 @@ fn emit_endpoint(
   }
   match ep.request_body {
     Some(body) =>
-      attach_request_body(op, body, ep.request_required, defs, version)
+      attach_request_body(
+        op,
+        body,
+        ep.request_required,
+        ep.request_examples,
+        defs,
+        version,
+      )
     None => ()
   }
   let specs = if ep.responses.length() > 0 {
@@ -320,12 +432,16 @@ fn param_json(
             version,
           )
       }
-    _ =>
+    _ => {
       m["schema"] = param_facets_on(
         @schema.emit_schema(p.schema, defs, version),
         p,
         version,
       )
+      if !p.examples.is_empty() {
+        m["examples"] = examples_json(p.examples)
+      }
+    }
   }
   Json(m)
 }
@@ -338,6 +454,7 @@ fn attach_request_body(
   op : Map[String, Json],
   body : @schema.Schema,
   required : Bool,
+  examples : Map[String, @endpoint.Example],
   defs : Map[String, Json],
   version : @schema.OpenApiVersion,
 ) -> Unit {
@@ -360,6 +477,9 @@ fn attach_request_body(
       let media : Map[String, Json] = Map([
         ("schema", @schema.emit_schema(body, defs, version)),
       ])
+      if !examples.is_empty() {
+        media["examples"] = examples_json(examples)
+      }
       let content : Map[String, Json] = Map([("application/json", Json(media))])
       let rb : Map[String, Json] = Map([
         ("required", Json(required)),
@@ -372,29 +492,37 @@ fn attach_request_body(
 
 ///|
 /// One response as its OpenAPI response object. OpenAPI 3.x nests the body schema
-/// under `content."application/json".schema`; Swagger 2.0 puts it directly under
-/// `schema`.
+/// and the named examples under `content."application/json"`; Swagger 2.0 puts
+/// the schema directly under `schema` and has room for one example per media
+/// type, which is the first one's value.
 fn response_json(
   rs : @endpoint.ResponseSpec,
   defs : Map[String, Json],
   version : @schema.OpenApiVersion,
 ) -> Json {
   let m : Map[String, Json] = Map([("description", Json(rs.description))])
-  match rs.body {
-    Some(body) =>
-      match version {
-        Swagger20 => m["schema"] = @schema.emit_schema(body, defs, version)
-        _ => {
-          let media : Map[String, Json] = Map([
-            ("schema", @schema.emit_schema(body, defs, version)),
-          ])
-          let content : Map[String, Json] = Map([
-            ("application/json", Json(media)),
-          ])
-          m["content"] = Json(content)
-        }
+  match version {
+    Swagger20 => {
+      if rs.body is Some(body) {
+        m["schema"] = @schema.emit_schema(body, defs, version)
       }
-    None => ()
+      if rs.examples.values().find_first(ex => ex.value is Some(_))
+        is Some({ value: Some(v), .. }) {
+        m["examples"] = Json({ "application/json": v })
+      }
+    }
+    _ => {
+      let media : Map[String, Json] = Map([])
+      if rs.body is Some(body) {
+        media["schema"] = @schema.emit_schema(body, defs, version)
+      }
+      if !rs.examples.is_empty() {
+        media["examples"] = examples_json(rs.examples)
+      }
+      if !media.is_empty() {
+        m["content"] = Json({ "application/json": Json(media) })
+      }
+    }
   }
   Json(m)
 }
