@@ -1,38 +1,38 @@
 /* =========================================================================
    moonapi docs — design system
-   Palette: cream #FFF2E0 · periwinkle #C0C9EE / #A2AADB · iris #898AC4 (main)
+   Palette: iris #898AC4 (main) · periwinkle #A2AADB / #C0C9EE · cream #FFF2E0 (accent only)
    ========================================================================= */
 
 :root {
-  /* surfaces */
-  --paper:      #FFF2E0;   /* cream page background */
-  --paper-2:    #FBECdb;   /* deeper cream for bands */
-  --panel:      #FFFBF6;   /* warm white card */
-  --panel-2:    #F7EFE1;   /* sunken panel */
-  --ink:        #2B2740;   /* deep indigo ink */
-  --ink-soft:   #4A4566;
-  --muted:      #786F92;
-  --line:       #EAD9C0;   /* warm hairline */
-  --line-soft:  #F1E6D3;
+  /* periwinkle / iris is the MAIN colour; cream is only an accent (点缀) */
+  --paper:      #ECEFFA;   /* periwinkle-tinted page background */
+  --paper-2:    #E2E7F6;   /* deeper periwinkle band */
+  --panel:      #FFFFFF;   /* white card */
+  --panel-2:    #F4F5FC;   /* sunken periwinkle-white */
+  --ink:        #232049;   /* deep indigo ink */
+  --ink-soft:   #454270;
+  --muted:      #6C6990;
+  --line:       #D8DCF2;   /* periwinkle hairline */
+  --line-soft:  #E7EAF7;
 
-  /* brand */
+  /* brand — MAIN colour family */
   --iris:       #898AC4;   /* main accent */
   --iris-strong:#6E6FAE;
-  --iris-deep:  #5C5D9C;
+  --iris-deep:  #56578F;
   --peri:       #A2AADB;   /* periwinkle */
   --peri-soft:  #C0C9EE;   /* light periwinkle */
-  --cream:      #FFF2E0;
+  --cream:      #FFF2E0;   /* accent ONLY (点缀) */
 
   /* tints built from the brand */
-  --iris-tint:  #EFEDF9;   /* faint iris wash */
-  --peri-tint:  #EDEFFA;
-  --ok:         #5C8A6E;
+  --iris-tint:  #E8EAF7;   /* faint iris wash */
+  --peri-tint:  #EAEDF8;
+  --ok:         #4E8A6B;
   --ok-tint:    #E7F0EA;
 
   /* code */
-  --code-bg:    #F3EEF8;
-  --code-ink:   #2B2740;
-  --code-line:  #E7DEF2;
+  --code-bg:    #F4F5FC;
+  --code-ink:   #232049;
+  --code-line:  #E0E4F4;
 
   --shadow-sm: 0 1px 2px rgba(43,39,64,.05), 0 2px 6px -3px rgba(43,39,64,.10);
   --shadow:    0 1px 2px rgba(43,39,64,.05), 0 12px 30px -16px rgba(43,39,64,.22);
@@ -95,13 +95,7 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
-/* soft solid brand wash behind everything (pure colour, no gradient) */
-body::before {
-  content: "";
-  position: fixed; inset: 0; z-index: -1;
-  background: color-mix(in oklab, var(--iris-tint) 55%, var(--paper));
-  pointer-events: none;
-}
+/* page background comes directly from --paper (periwinkle); no overlay */
 h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height: 1.15; color: var(--ink); letter-spacing: -.01em; }
 a { color: var(--iris-strong); text-decoration: none; }
 a:hover { text-decoration: underline; }
@@ -131,8 +125,7 @@ img, svg { max-width: 100%; }
   position: sticky; top: 0; z-index: 50;
   display: flex; align-items: center; gap: 1.1rem;
   padding: .7rem clamp(1rem, 4vw, 2.2rem);
-  background: color-mix(in oklab, var(--paper) 82%, transparent);
-  backdrop-filter: saturate(1.4) blur(10px);
+  background: var(--panel);
   border-bottom: 1px solid var(--line);
 }
 .brand { display: flex; align-items: center; gap: .6rem; font-family: var(--font-display); font-weight: 600; font-size: 1.18rem; color: var(--ink); }
@@ -270,7 +263,8 @@ pre code { background: none; border: none; padding: 0; color: inherit; font-size
 
 /* ---- feature grid ---- */
 .features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin: 1.6rem 0 2.4rem; }
-.feature { position: relative; overflow: hidden; }
+.feature { position: relative; overflow: hidden; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 1.15rem 1.25rem; box-shadow: var(--shadow-sm); transition: border-color .2s, transform .2s; }
+.feature:hover { border-color: var(--iris); transform: translateY(-2px); }
 .feature .ico { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; background: var(--iris-tint); color: var(--iris-strong); margin-bottom: .7rem; }
 .feature .ico svg { width: 21px; height: 21px; }
 .feature h3 { font-size: 1.08rem; margin: 0 0 .35rem; }
@@ -394,13 +388,33 @@ footer.site { border-top: 1px solid var(--line); margin-top: 3rem; }
 /* =========================================================================
    Home / landing page
    ========================================================================= */
-.hero { position: relative; overflow: hidden; border-bottom: 1px solid var(--line); background: color-mix(in oklab, var(--peri-soft) 28%, var(--paper)); }
+.hero { position: relative; overflow: hidden; background: var(--iris); border-bottom: 1px solid var(--iris-strong); }
 .hero-inner { position: relative; z-index: 1; max-width: var(--maxw); margin: 0 auto; padding: 4rem clamp(1rem, 4vw, 2.2rem) 3.2rem; }
-.hero .eyebrow { font-family: var(--font-mono); font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; color: var(--iris-strong); }
-.hero h1 { font-size: clamp(2.1rem, 5vw, 3.4rem); line-height: 1.05; margin: .6rem 0 .4rem; letter-spacing: -.02em; }
-.hero h1 .grad { color: var(--iris-deep); }
-.hero p.lede { font-size: 1.12rem; color: var(--ink-soft); max-width: 56ch; margin: 0 0 1.6rem; }
+.hero .eyebrow { font-family: var(--font-mono); font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; color: var(--cream); }
+.hero h1 { font-size: clamp(2.1rem, 5vw, 3.4rem); line-height: 1.05; margin: .6rem 0 .4rem; letter-spacing: -.02em; color: #fff; }
+.hero h1 .grad { color: var(--cream); }
+.hero p.lede { font-size: 1.12rem; color: rgba(255,255,255,.92); max-width: 56ch; margin: 0 0 1.6rem; }
 .hero-cta { display: flex; flex-wrap: wrap; gap: .7rem; }
+
+/* hero sits on the iris surface, so its controls invert */
+.hero-cta .btn-primary { background: var(--cream); color: var(--iris-deep); }
+.hero-cta .btn-primary:hover { background: #fff; color: var(--iris-deep); text-decoration: none; }
+.hero-cta .btn-ghost { background: rgba(255,255,255,.14); color: #fff; border-color: rgba(255,255,255,.4); }
+.hero-cta .btn-ghost:hover { background: rgba(255,255,255,.24); color: #fff; text-decoration: none; }
+.hero .install { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.38); color: #fff; }
+.hero .install .pmt { color: var(--cream); }
+.hero .install code { color: #fff; }
+.hero .install .copy { color: #fff; border-color: rgba(255,255,255,.4); }
+.hero .install .copy:hover { background: rgba(255,255,255,.2); }
+
+/* keep the hero readable in the dark theme (deep periwinkle, not light) */
+[data-theme="dark"] .hero { background: #4E4F8A; border-bottom-color: #3C3D73; }
+[data-theme="dark"] .hero h1, [data-theme="dark"] .hero p.lede { color: #fff; }
+[data-theme="dark"] .hero h1 .grad,
+[data-theme="dark"] .hero .eyebrow,
+[data-theme="dark"] .hero .install .pmt { color: var(--cream); }
+[data-theme="dark"] .hero-cta .btn-primary { background: var(--cream); color: #3C3D73; }
+[data-theme="dark"] .hero-cta .btn-primary:hover { background: #fff; color: #3C3D73; }
 
 /* two-pane demo: code on the left, request/response on the right */
 .demo { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.8rem 0 0; }
