@@ -62,15 +62,15 @@ js: `App::handle` and the moonasgi test client drive it through the same ASGI
 path a server does.
 
 `App::enable_docs()` mounts `/openapi.json`, `/docs` and `/redoc` instead of
-printing the document; `swagger_ui()` and `redoc_ui()` return those pages on
-their own.
+printing the document; `scalar_ui()`, `swagger_ui()` and `redoc_ui()` return
+those pages on their own.
 
 For a runnable integration of the root API, two routers, authentication,
 validation, middleware, background work, streaming and docs, see the
 [complete application example](src/examples/25-full-example/). The full example list
 is in [src/examples/README.md](src/examples/README.md). On Windows, macOS or Linux, start
 the native server with `moon run src/examples/25-full-example --target native`. The service
-provides Swagger UI at `http://127.0.0.1:12000/docs`, ReDoc at
+provides the API reference at `http://127.0.0.1:12000/docs`, ReDoc at
 `http://127.0.0.1:12000/redoc`, and OpenAPI 3.0.3 at
 `http://127.0.0.1:12000/openapi.json`.
 
