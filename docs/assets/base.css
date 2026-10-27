@@ -508,3 +508,5 @@ footer.site { border-top: 1px solid var(--line); margin-top: 3rem; }
   .demo { grid-template-columns: 1fr; }
   .hero-inner { padding-top: 2.6rem; }
 }
+
+html, button, input, textarea, select { font-variant-ligatures: no-contextual; }
