@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>moonapi — Showcase</title>
+<meta name="description" content="An interactive look at how a moonapi application turns a request into a response: the layer stack, the router, security, handlers and the 404/405 logic.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/base.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="index.html">
+    <svg class="mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <circle cx="16" cy="16" r="14" fill="#FFF2E0" stroke="#898AC4" stroke-width="2"/>
+      <path d="M11 21c4 3 6 3 10 0M12.5 13.5a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2Zm7 0a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2Z" stroke="#898AC4" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <span class="name">moon<b>api</b></span>
+  </a>
+  <nav class="nav"><a href="index.html">Home</a><a href="guide.html">Guide</a><a href="api.html">API</a><a href="examples.html">Examples</a><a class="active" href="showcase.html">Showcase</a><span class="sep"></span><a class="gh-link" href="https://github.com/moonbitstack/moonapi" target="_blank" rel="noopener" aria-label="GitHub repository"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"></path></svg><span>GitHub</span></a></nav><button class="theme-btn" data-theme-toggle aria-label="Toggle theme">◐</button>
+</header>
+
+<section class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow">Showcase</span>
+    <h1>Watch a request become a <span class="grad">response</span></h1>
+    <p class="lede">Every moonapi application routes a request the same way: through the layer stack, into the router, through any security enforcers, to your handler, and back out through the response filters. Step through the pipeline, then try your own request against a small application.</p>
+  </div>
+</section>
+
+<section class="section">
+  <h2>The pipeline, step by step</h2>
+  <p class="sub">Press <b>Run request</b> to send a sample request through the stages. Each stage lights up as the request reaches it; the explanation on the right updates to match.</p>
+
+  <div class="demo">
+    <div class="pane">
+      <div class="ph">request lifecycle</div>
+      <div class="flow" id="flow">
+        <div class="node" data-step="0"><div class="step">1 · in</div><div class="name">Layers</div><div class="arrow">›</div></div>
+        <div class="node" data-step="1"><div class="step">2 · match</div><div class="name">Router</div><div class="arrow">›</div></div>
+        <div class="node" data-step="2"><div class="step">3 · guard</div><div class="name">Security</div><div class="arrow">›</div></div>
+        <div class="node" data-step="3"><div class="step">4 · run</div><div class="name">Handler</div><div class="arrow">›</div></div>
+        <div class="node" data-step="4"><div class="step">5 · out</div><div class="name">Response</div></div>
+      </div>
+      <div style="display:flex;gap:.6rem;margin:.4rem 0 .2rem">
+        <button class="btn btn-primary" id="runBtn" type="button">Run request</button>
+        <button class="btn btn-ghost" id="resetBtn" type="button">Reset</button>
+      </div>
+      <div class="kv" id="stageOut">idle — press “Run request” to begin.</div>
+    </div>
+    <div class="pane">
+      <div class="ph">what happens here</div>
+      <div class="card" style="border:1px solid var(--line);min-height:280px">
+        <h3 id="stageTitle" style="margin-top:.1rem">The request lifecycle</h3>
+        <p id="stageText" style="color:var(--muted);font-size:.94rem">A moonapi application is a single object that compiles to a server. The layers wrap the router; the router matches the path and method; security enforcers verify the caller; the handler builds the response; and the response passes back through the layers before it is sent.</p>
+        <div class="term" style="margin-top:.4rem">
+          <div class="term-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="title">sample request</span></div>
+          <div class="term-body" id="traceOut">GET /users/42</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>Try your own request</h2>
+  <p class="sub">This tiny application has a handful of routes. Type a path and choose a method; the simulator applies the real 404/405 rules and shows what the application would answer.</p>
+
+  <div class="stage">
+    <div style="display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin-bottom:.8rem">
+      <select id="methodSel" class="install" style="max-width:130px;padding:.5rem .7rem">
+        <option>GET</option><option>POST</option><option>PUT</option>
+        <option>PATCH</option><option>DELETE</option><option>HEAD</option><option>OPTIONS</option>
+      </select>
+      <input id="pathInput" class="install" style="flex:1;min-width:220px;color:var(--ink)"
+             value="/users/42" aria-label="request path">
+      <button class="btn btn-primary" id="sendBtn" type="button">Send</button>
+    </div>
+
+    <div class="chips" id="examples">
+      <span class="chip" data-m="GET"    data-p="/">GET /</span>
+      <span class="chip" data-m="GET"    data-p="/users/42">GET /users/42</span>
+      <span class="chip" data-m="POST"   data-p="/users">POST /users</span>
+      <span class="chip" data-m="GET"    data-p="/search?q=cat&amp;limit=5">GET /search?q=cat</span>
+      <span class="chip" data-m="GET"    data-p="/items/233">GET /items/233</span>
+      <span class="chip" data-m="GET"    data-p="/items">GET /items (405)</span>
+      <span class="chip" data-m="GET"    data-p="/missing">GET /missing (404)</span>
+    </div>
+
+    <div class="demo" style="margin-top:.6rem">
+      <div class="pane">
+        <div class="ph">matched route</div>
+        <div class="kv" id="matchOut">—</div>
+      </div>
+      <div class="pane">
+        <div class="ph">response</div>
+        <div class="term">
+          <div class="term-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="title">App::handle</span></div>
+          <div class="term-body" id="respOut">send a request to see the response</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note" style="margin-top:.8rem">
+      <b>Why 405 and not 404?</b> When the path matches a route under a <em>different</em> method, the application answers <code>405 Method Not Allowed</code> and lists the allowed methods in the <code>Allow</code> header. Only when no route owns the path at all does it answer <code>404 Not Found</code>.
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>What the stages do</h2>
+  <div class="features">
+    <div class="card feature"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.5 8 8 10 4.5-2 8-5 8-10V7Z"/></svg></div><h3>Layers</h3><p>Middleware wraps the router on the way in and the response on the way out — CORS, gzip, logging and custom filters all live here.</p></div>
+    <div class="card feature"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><path d="M20 12h-8M14 12l-3-3M14 12l-3 3"/></svg></div><h3>Router</h3><p>Matches the path and method, binds <code>{id}</code> parameters, and decides 405 versus 404 when nothing fits.</p></div>
+    <div class="card feature"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 6v6c0 5 3.5 8 8 10 4.5-2 8-5 8-10V6Z"/><path d="m9 12 2 2 4-4"/></svg></div><h3>Security</h3><p>Before the handler runs, the schemes declared on the route are enforced; an unauthenticated caller never reaches your code.</p></div>
+    <div class="card feature"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17l6-6-6-6M12 19h8"/></svg></div><h3>Handler</h3><p>Your function receives a typed context and returns a response — text, html, json, a redirect, or a stream.</p></div>
+    <div class="card feature"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M21 3v6h-6"/></svg></div><h3>Status &amp; exception handlers</h3><p>A raised exception or a particular status code can be caught and reshaped by handlers you register on the application.</p></div>
+    <div class="card feature"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4Z"/><path d="M3 7v10l9 4 9-4V7"/></svg></div><h3>Mounts</h3><p>Mount a sub-application, such as static files or a whole router, under its own prefix without touching the main routes.</p></div>
+  </div>
+</section>
+
+<footer class="site">
+  <div class="foot">
+    <span>moonapi · a typed web framework for MoonBit</span>
+    <span class="grow"></span>
+    <a href="https://github.com/moonbitstack/moonapi" target="_blank" rel="noopener">GitHub</a>
+    <a href="index.html">Home</a>
+    <a href="guide.html">Guide</a>
+    <a href="api.html">API</a>
+    <a href="examples.html">Examples</a>
+  </div>
+</footer>
+
+<script src="assets/site.js"></script>
+<script>
+(function () {
+  "use strict";
+  // ---- step-through pipeline ----
+  var stages = [
+    { t: "Layers", d: "The request enters the layer stack. Each middleware may read or rewrite the request on the way in — adding CORS headers, decompressing the body, or logging. Layers are the outermost thing a request touches." },
+    { t: "Router", d: "The router matches the path and method. A {id} piece binds a parameter; if the path matches a route under another method it records 405, and if no path matches at all it records 404." },
+    { t: "Security", d: "For routes that declare schemes, the enforcers run here. They inspect the request, build the authenticated principal, and only then let control reach the handler. An unauthenticated caller is rejected before your code runs." },
+    { t: "Handler", d: "Your function runs with a typed context. It reads the path, query and body, uses dependencies from the container, and returns a response built with text, html, json, a redirect, or a stream." },
+    { t: "Response", d: "The response travels back out through the layers (gzip, extra headers), then any registered status or exception handlers may reshape it on the way to the client." }
+  ];
+  var trace = [
+    "GET /users/42",
+    "Layers   → router sees GET /users/42",
+    "Router   → matches GET /users/{id}, id = 42",
+    "Security → no scheme declared, passes",
+    "Handler  → text(200, \"user 42\")",
+    "Response → 200 OK  ·  user 42"
+  ];
+  var flow = document.getElementById("flow");
+  var nodes = Array.prototype.slice.call(flow.querySelectorAll(".node"));
+  var titleEl = document.getElementById("stageTitle");
+  var textEl = document.getElementById("stageText");
+  var outEl = document.getElementById("stageOut");
+  var traceEl = document.getElementById("traceOut");
+  var timer = null;
+
+  function clearNodes() { nodes.forEach(function (n) { n.classList.remove("active", "done"); }); }
+  function run() {
+    if (timer) clearInterval(timer);
+    clearNodes();
+    var i = 0;
+    outEl.textContent = "sending GET /users/42 …";
+    traceEl.textContent = trace[0];
+    timer = setInterval(function () {
+      if (i > 0) nodes[i - 1].classList.add("done");
+      if (i < nodes.length) {
+        nodes[i].classList.add("active");
+        titleEl.textContent = stages[i].t;
+        textEl.textContent = stages[i].d;
+        outEl.textContent = "stage " + (i + 1) + " of " + nodes.length + " — " + stages[i].t;
+        traceEl.textContent = trace[i + 1] || trace[trace.length - 1];
+        i++;
+      } else {
+        clearInterval(timer); timer = null;
+        outEl.textContent = "done — 200 OK · user 42";
+      }
+    }, 700);
+  }
+  function reset() {
+    if (timer) { clearInterval(timer); timer = null; }
+    clearNodes();
+    titleEl.textContent = "The request lifecycle";
+    textEl.textContent = "A moonapi application is a single object that compiles to a server. The layers wrap the router; the router matches the path and method; security enforcers verify the caller; the handler builds the response; and the response passes back through the layers before it is sent.";
+    outEl.textContent = "idle — press “Run request” to begin.";
+    traceEl.textContent = "GET /users/42";
+  }
+  document.getElementById("runBtn").addEventListener("click", run);
+  document.getElementById("resetBtn").addEventListener("click", reset);
+
+  // ---- request simulator (real 404/405 rules) ----
+  var routes = [
+    { m: "GET",    p: "/" },
+    { m: "POST",   p: "/users" },
+    { m: "GET",    p: "/users/{id}" },
+    { m: "GET",    p: "/search" },
+    { m: "GET",    p: "/items/{id}" },
+    { m: "POST",   p: "/items" },
+    { m: "PUT",    p: "/items/{id}" },
+    { m: "PATCH",  p: "/items/{id}" },
+    { m: "DELETE", p: "/items/{id}" },
+    { m: "HEAD",   p: "/items" },
+    { m: "OPTIONS",p: "/items" }
+  ];
+  function segs(s) { return s.split("/").filter(function (x) { return x.length; }); }
+  function matchPath(pat, path) {
+    var a = segs(pat), b = segs(path);
+    if (a.length !== b.length) return null;
+    var params = {};
+    for (var i = 0; i < a.length; i++) {
+      if (a[i][0] === "{") params[a[i].slice(1, -1)] = b[i];
+      else if (a[i] !== b[i]) return null;
+    }
+    return params;
+  }
+  function dispatch(method, rawPath) {
+    var path = rawPath.split("?")[0];
+    if (path.length > 1 && path[path.length - 1] === "/") path = path.slice(0, -1);
+    var exact = null, pathMatched = false;
+    for (var i = 0; i < routes.length; i++) {
+      var p = matchPath(routes[i].p, path);
+      if (p) {
+        if (routes[i].m === method) { exact = { route: routes[i], params: p }; break; }
+        pathMatched = true;
+      }
+    }
+    if (exact) {
+      var body = "hello";
+      if (exact.route.p === "/users/{id}") body = "user " + exact.params.id;
+      else if (exact.route.p === "/search") body = "{\"q\":\"cat\",\"limit\":\"5\"}";
+      else if (exact.route.p === "/items/{id}") body = "item " + exact.params.id;
+      else if (exact.route.p === "/") body = "Hello from moonapi";
+      else if (exact.route.p === "/users") body = "created";
+      else if (exact.route.p === "/items") body = "created";
+      return { status: exact.route.m === "POST" ? 201 : 200, body: body, route: exact.route, params: exact.params };
+    }
+    if (pathMatched) {
+      var allow = routes.filter(function (r) { return matchPath(r.p, path); })
+                       .map(function (r) { return r.m; });
+      return { status: 405, body: "{\"detail\":\"Method Not Allowed\"}", allow: allow, route: null };
+    }
+    return { status: 404, body: "{\"detail\":\"Not Found\"}", route: null };
+  }
+  var matchOut = document.getElementById("matchOut");
+  var respOut = document.getElementById("respOut");
+  function send() {
+    var m = document.getElementById("methodSel").value;
+    var p = document.getElementById("pathInput").value.trim() || "/";
+    var r = dispatch(m, p);
+    if (r.route) {
+      var ps = Object.keys(r.params).length
+        ? "  ·  params: " + Object.keys(r.params).map(function (k) { return k + "=" + r.params[k]; }).join(", ")
+        : "";
+      matchOut.textContent = m + " " + r.route.p + ps;
+    } else if (r.status === 405) {
+      matchOut.textContent = "no " + m + " route for this path (allow: " + r.allow.join(", ") + ")";
+    } else {
+      matchOut.textContent = "no route owns this path";
+    }
+    var head = (r.status === 405 ? "405 Method Not Allowed" : (r.status === 404 ? "404 Not Found" : r.status + " OK"));
+    var allowLine = r.allow ? "\nAllow: " + r.allow.join(", ") : "";
+    respOut.textContent = m + " " + p + " -> " + head + allowLine + "\n" + r.body;
+  }
+  document.getElementById("sendBtn").addEventListener("click", send);
+  Array.prototype.slice.call(document.querySelectorAll("#examples .chip")).forEach(function (c) {
+    c.addEventListener("click", function () {
+      document.getElementById("methodSel").value = c.getAttribute("data-m");
+      document.getElementById("pathInput").value = c.getAttribute("data-p");
+      send();
+    });
+  });
+  send();
+})();
+</script>
+</body>
+</html>

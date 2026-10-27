@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>moonapi — Guide</title>
+<meta name="description" content="A progressive guide to building a service with moonapi, the typed web framework for MoonBit. Every fragment is shown against its real, compiled output.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/base.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="index.html">
+    <svg class="mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <circle cx="16" cy="16" r="14" fill="#FFF2E0" stroke="#898AC4" stroke-width="2"/>
+      <path d="M11 21c4 3 6 3 10 0M12.5 13.5a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2Zm7 0a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2Z" stroke="#898AC4" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <span class="name">moon<b>api</b></span>
+  </a>
+  <nav class="nav"><a href="index.html">Home</a><a class="active" href="guide.html">Guide</a><a href="api.html">API</a><a href="examples.html">Examples</a><a href="showcase.html">Showcase</a><span class="sep"></span><a class="gh-link" href="https://github.com/moonbitstack/moonapi" target="_blank" rel="noopener" aria-label="GitHub repository"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"></path></svg><span>GitHub</span></a></nav><button class="theme-btn" data-theme-toggle aria-label="Toggle theme">◐</button>
+</header>
+
+<section class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow">Guide</span>
+    <h1>From an empty application to a <span class="grad">documented service</span></h1>
+    <p class="lede">This guide builds a moonapi service step by step. Every fragment is real MoonBit that compiles, and every result beneath it is the output of running that exact code through <code>App::handle</code> — no paraphrasing.</p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="#install">Install and run</a>
+      <a class="btn btn-ghost" href="api.html">Full API reference</a>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <!-- ============ 1. INSTALL ============ -->
+  <h2 id="install">1 · Install and your first application</h2>
+  <p class="sub">Add the package, then build one application object and register a route. A handler receives a context and returns a response.</p>
+
+  <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="hl"><code>let app = @moonapi.App::new()
+app.get("/", _ctx => @moonapi.text(200, "Hello from moonapi"))
+app.post("/users", _ctx => @moonapi.text(201, "created"))
+app.get("/users/{id}", ctx =>
+  @moonapi.text(200, "user " + ctx.param("id").unwrap_or("")))</code></pre></div>
+
+  <p>A moonapi application is just a value. You can run a request through it in-process with <code>App::handle</code>, which returns a response you can inspect — useful for tests and for the demos on this page.</p>
+
+  <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="hl"><code>let request = {
+  http_method: "GET", path: "/users/42",
+  query_string: b"", headers: [], body: b"",
+}
+let response = app.handle(request)~
+response.status  // 200</code></pre></div>
+
+  <p>When no handler matches the path, you get <code>404</code>; when the path exists but not for that method, you get <code>405</code>. Both are produced by the framework, not written by hand.</p>
+
+  <div class="term">
+    <div class="term-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="title">recorded · App::handle</span></div>
+    <div class="term-body"><span class="ok">GET /</span>            <span class="accent">-> 200</span> Hello from moonapi
+<span class="ok">GET /users/42</span>     <span class="accent">-> 200</span> user 42
+<span class="ok">POST /users</span>      <span class="accent">-> 201</span> created
+<span class="ok">GET /missing</span>     <span class="accent">-> 404</span> {"detail":"Not Found"}
+<span class="ok">DELETE /</span>        <span class="accent">-> 405</span> {"detail":"Method Not Allowed"}</div>
+  </div>
+
+  <!-- ============ 2. ROUTING ============ -->
+  <h2 id="routing">2 · Routes, verbs and path parameters</h2>
+  <p class="sub">A <code>{name}</code> piece in the path becomes a parameter you read from the context. The same verb may be bound to several paths, and any HTTP method can be attached with <code>App::route</code>.</p>
+
+  <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="hl"><code>app.get("/items/{id}", ctx =>
+  @moonapi.text(200, "item " + ctx.param("id").unwrap()))
+app.post("/items",       _ctx => @moonapi.text(201, "created"))
+app.put("/items/{id}",   _ctx => @moonapi.text(200, "replaced"))
+app.patch("/items/{id}", _ctx => @moonapi.text(200, "patched"))
+app.delete("/items/{id}",_ctx => @moonapi.text(200, "deleted"))
+app.route(Head,    "/items", _ctx => @moonapi.text(200, ""))
+app.route(Options, "/items", _ctx => @moonapi.text(204, ""))</code></pre></div>
+
+  <div class="term">
+    <div class="term-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="title">recorded · every verb</span></div>
+    <div class="term-body"><span class="ok">GET</span>    /items/233             <span class="accent">-> 200</span> item 233
+<span class="ok">POST</span>   /items                  <span class="accent">-> 201</span> created
+<span class="ok">PUT</span>    /items/233             <span class="accent">-> 200</span> replaced
+<span class="ok">PATCH</span>  /items/233             <span class="accent">-> 200</span> patched
+<span class="ok">DELETE</span> /items/233             <span class="accent">-> 200</span> deleted
+<span class="ok">HEAD</span>   /items                  <span class="accent">-> 200</span>
+<span class="ok">OPTIONS</span>/items                  <span class="accent">-> 204</span>
+<span class="ok">GET</span>    /items   <span class="muted">(exists, wrong verb)</span> <span class="accent">-> 405</span> {"detail":"Method Not Allowed"}
+<span class="ok">GET</span>    /missing  <span class="muted">(no such path)</span>     <span class="accent">-> 404</span> {"detail":"Not Found"}</div>
+  </div>
+
+  <p>Routes can be named so you can build their URLs later with <code>App::url_for</code> — handy for redirects and links.</p>
+  <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="hl"><code>let app = @moonapi.App::new()
+app.get("/items/{id}", _ctx => @moonapi.text(200, "x"), name="get_item")
+app.url_for("get_item", params=Map([("id", "77")]))
+// Some("/items/77")</code></pre></div>
+
+  <!-- ============ 3. REQUEST DATA ============ -->
+  <h2 id="request">3 · Reading the request</h2>
+  <p class="sub">The context exposes the path, the query string, the headers and the body. Each extractor returns an option, so you handle the missing case inline.</p>
+
+  <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="hl"><code>app.get("/search", ctx => {
+  let q = ctx.query("q").unwrap_or("")
+  let limit = ctx.query("limit").unwrap_or("20")
+  @moonapi.json(200, Json::object(Map([
+    ("q", Json::string(q)),
+    ("limit", Json::string(limit)),
+  ])))
+})</code></pre></div>
+
+  <div class="term">
+    <div class="term-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="title">recorded · GET /search?q=cat&amp;limit=5</span></div>
+    <div class="term-body"><span class="accent">200</span> {"q":"cat","limit":"5"}</div>
+  </div>
+
+  <p>For a JSON body, <code>Context::body_json</code> returns the parsed value, or <code>None</code> if the body is not valid JSON.</p>
+  <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="hl"><code>app.post("/login", ctx =>
+  match ctx.body_json() {
+    Some(j) => @moonapi.json(200, j)
+    None    => @moonapi.json(400, Json::object(Map([
+                 ("error", Json::string("bad json"))]))
+  })</code></pre></div>
+  <div class="term">
+    <div class="term-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="title">recorded · POST /login</span></div>
+    <div class="term-body"><span class="accent">200</span> {"user":"heke","pass":"s3cret"}</div>
+  </div>
+
+  <!-- ============ 4. TYPED BODY ============ -->
+  <h2 id="typed">4 · Typed bodies and validation</h2>
+  <p class="sub">When the payload matters, ask for a typed value. <code>Context::body_validated</code> checks the JSON against a descriptor and deserialises into a <code>derive(FromJson)</code> struct; if it does not conform you receive located errors instead of a crash.</p>
+
+  <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="hl"><code>app.post("/greet", ctx => {
+  match (ctx.body_validated(GreetReq::schema()) : Result[GreetReq, _]) {
+    Ok(g)  => @moonapi.text(200, "Hello, " + g.name)
+    Err(e) => @moonapi.unprocessable(e)
+  }
+})</code></pre></div>
+
+  <div class="term">
+    <div class="term-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="title">recorded · validated extraction</span></div>
+    <div class="term-body"><span class="ok">POST</span> /greet {"name":"lfanke"}      <span class="accent">-> 200</span> Hello, lfanke
+<span class="ok">POST</span> /greet {"name":233}          <span class="accent">-> 422</span> {"detail":[{"type":"string_type","loc":["body","name"],"msg":"Input should be a valid string"}]}
+<span class="ok">POST</span> /greet                          <span class="accent">-> 422</span> {"detail":[{"type":"missing","loc":["body"],"msg":"Field required"}]}</div>
+  </div>
+  <p class="note">The unchecked counterpart <code>Context::body</code> returns a <code>T?</code> — <code>None</code> when the body cannot shape-match, rather than an error. Use it when a missing payload is not exceptional.</p>
+
+  <!-- ============ 5. DI ============ -->
+  <h2 id="di">5 · Shared services with dependency injection</h2>
+  <p class="sub">Register services in a container and let the framework build them per request, caching each one and tearing it down when the request ends. A sum type holds the different service shapes in one type-safe container.</p>
+
+  <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="hl"><code>enum Dep {
+  Cfg(String)
+  Conn(String)
+  Repo(String)
+}
+
+let c : @moonapi.Container[Dep] = @moonapi.Container::new()
+c.provide("config", () => Cfg("prod-dsn")) |> ignore
+c.provide_using("conn", scope => {
+  let dsn = match scope.get("config") { Some(Cfg(s)) => s; _ => "?" }
+  Conn(dsn)
+}) |> ignore
+c.provide_using("repo", scope =>
+  match scope.get("conn") { Some(Conn(d)) => Repo("repo@" + d); _ => Repo("repo@?") }) |> ignore</code></pre></div>
+
+  <p>When a request resolves <code>repo</code>, the container pulls <code>conn</code>, which in turn pulls <code>config</code> — each built once. Overriding <code>config</code> for a request swaps the whole chain, the way a test substitutes a fake.</p>
+
+  <div class="term">
+    <div class="term-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="title">recorded · three requests</span></div>
+    <div class="term-body">request A:
+  [open]  conn -&gt; prod-dsn
+  [close] conn
+  -&gt; 200 repo@prod-dsn
+  conn opened 1 time(s)
+request B (config overridden):
+  [open]  conn -&gt; test-dsn
+  [close] conn
+  -&gt; 200 repo@test-dsn
+request C (manual scope):
+  resolved prod-dsn
+unknown key resolved: false</div>
+  </div>
+
+  <!-- ============ 6. ERRORS ============ -->
+  <h2 id="errors">6 · Errors as values</h2>
+  <p class="sub">Raise a typed <code>HttpException</code> from anywhere in a handler; the framework turns it into a response with the status and detail you gave it.</p>
+  <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="hl"><code>app.get("/boom", _ctx => raise @exceptions.HttpException(
+  status = 418,
+  detail = Json::string("teapot"),
+  headers = [],
+))</code></pre></div>
+  <div class="term">
+    <div class="term-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="title">recorded · GET /boom</span></div>
+    <div class="term-body"><span class="accent">418</span> {"detail":"teapot"}</div>
+  </div>
+
+  <!-- ============ 7. OPENAPI ============ -->
+  <h2 id="openapi">7 · Generating an OpenAPI document</h2>
+  <p class="sub">Give each route a summary and tags and the application can emit an OpenAPI 3.1 document on demand. Serve it at <code>/openapi.json</code> or hand it to a documentation UI.</p>
+  <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="hl"><code>app.get("/ping", _ctx => @moonapi.text(200, "pong"),
+  summary="Health check", tags=["misc"])
+app.post("/echo", _ctx => @moonapi.json(200,
+  Json::object(Map([("ok", Json::boolean(true))]))),
+  summary="Echo", tags=["misc"])
+
+let doc = app.openapi_json(version=OpenApi31)
+// doc is a JSON string ready to serve</code></pre></div>
+  <div class="term">
+    <div class="term-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="title">recorded · openapi_json (first lines)</span></div>
+    <div class="term-body">{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "moonapi",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/ping": {
+      "get": {
+        "summary": "Health check",
+        "tags": ["misc"],
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/echo": {
+      "post": {
+        "summary": "Echo",
+        "tags": ["misc"],
+        "responses": { "200": { "description": "OK" } }
+      }
+    }
+  }
+}</div>
+  </div>
+
+  <!-- ============ 8. RUN ============ -->
+  <h2 id="serve">8 · Serving it</h2>
+  <p class="sub">The same application runs on a native server or compiles to WebAssembly. With the Mooncat server the application listens on <code>127.0.0.1:12000</code>; open <code>/docs</code> for the API reference, <code>/redoc</code> for ReDoc, or <code>/openapi.json</code> for the document.</p>
+  <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="hl"><code>moon run src/examples/25-full-example --target native</code></pre></div>
+  <p>The bundled <code>25-full-example</code> composes routers, authentication, typed bodies, response filtering, CORS and gzip layers, dependency injection, forms, files, background tasks, server-sent events, WebSockets, lifespan hooks and OpenAPI into one integrated service. The focused examples in <code>src/examples/</code> isolate each of those features.</p>
+
+  <div class="note"><b>Where to go next.</b> The <a href="api.html">API reference</a> lists every public type, function and method with its parameters. The <a href="showcase.html">showcase</a> visualises how a request travels through the application.</div>
+</section>
+
+<footer class="site">
+  <div class="foot">
+    <span>moonapi · a typed web framework for MoonBit</span>
+    <span class="grow"></span>
+    <a href="https://github.com/moonbitstack/moonapi" target="_blank" rel="noopener">GitHub</a>
+    <a href="index.html">Home</a>
+    <a href="api.html">API</a>
+    <a href="examples.html">Examples</a>
+    <a href="showcase.html">Showcase</a>
+  </div>
+</footer>
+<script src="assets/site.js"></script>
+</body>
+</html>

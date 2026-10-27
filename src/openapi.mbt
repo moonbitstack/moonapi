@@ -349,6 +349,10 @@ fn App::collect_security_schemes(
 
 ///|
 /// The app's OpenAPI / Swagger document for `version`, stringified.
+///
+/// ```mbt
+/// let doc = app.openapi_json()        // a JSON string for OpenAPI 3.1
+/// ```
 pub fn App::openapi_json(
   self : App,
   version~ : @schema.OpenApiVersion = OpenApi31,

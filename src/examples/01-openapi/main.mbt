@@ -1,13 +1,13 @@
 ///|
 /// Typed routes in, OpenAPI out. Register a text `GET`, a `:param` `GET`, and a
 /// `POST`, let the app `handle` a request, then dump the OpenAPI 3.1 document the
-/// same routes generate — the role FastAPI plays in Python.
+/// same routes generate an OpenAPI 3.1 document you can serve or hand to a UI.
 ///
 ///     moon run src/examples/01-openapi
 #coverage.skip
 async fn main {
   let app = @moonapi.App::new()
-  app.get("/", _ctx => @moonapi.text(200, "moonapi <- FastAPI"))
+  app.get("/", _ctx => @moonapi.text(200, "Hello from moonapi"))
   app.get(
     "/users/{id}",
     ctx => @moonapi.text(200, "user " + ctx.param("id").unwrap()),

@@ -130,6 +130,11 @@ pub fn App::mount_asgi(
 /// `None` when nothing is registered under that name, or when `params` is
 /// missing one the path needs or holds one its convertor refuses; only a `path`
 /// parameter takes a `/`.
+///
+/// ```mbt
+/// app.get("/items/{id}", handler, name="get_item")
+/// app.url_for("get_item", Map([("id", "77")]))   // Some("/items/77")
+/// ```
 pub fn App::url_for(
   self : App,
   name : String,

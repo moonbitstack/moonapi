@@ -2,6 +2,12 @@
 /// Look up a query-string parameter by name, e.g. `?limit=10&q=cat%20dog`. Keys and
 /// values are percent/plus-decoded, so `q` above reads back as `cat dog`. When a key
 /// repeats, the first occurrence wins; use `query_all` to read every one.
+///
+/// ```mbt
+/// app.get("/search", ctx =>
+///   json(200, Json::object([("q", Json::string(ctx.query("q").unwrap_or("")))])))
+/// // GET /search?q=cat  ->  {"q":"cat"}
+/// ```
 pub fn Context::query(
   self : Context,
   name : String,
@@ -24,6 +30,14 @@ pub fn Context::query_all(
 ///|
 /// Parse the request body as JSON, returning `None` for an empty body or one
 /// that does not parse — the total counterpart of FastAPI reading a JSON body.
+///
+/// ```mbt
+/// app.post("/login", ctx =>
+///   match ctx.body_json() {
+///     Some(j) => json(200, j)
+///     None => json(400, Json::object([("error", Json::string("bad json"))]))
+///   })
+/// ```
 pub fn Context::body_json(self : Context) -> Json? {
   let s = decode_field(self.request.body)
   if s == "" {

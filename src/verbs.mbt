@@ -165,6 +165,12 @@ pub fn App::stream(
 
 ///|
 /// Register a `GET` route. A shorthand for `route(Get, ...)`.
+///
+/// ```mbt
+/// app.get("/users/{id}", ctx =>
+///   text(200, "user " + ctx.param("id").unwrap_or("")))
+/// // GET /users/42  ->  200 "user 42"
+/// ```
 pub fn App::get(
   self : App,
   path : String,

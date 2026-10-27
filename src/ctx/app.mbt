@@ -32,6 +32,12 @@ pub fn Context::new(
 
 ///|
 /// Look up a path parameter by name.
+///
+/// ```mbt
+/// app.get("/users/{id}", ctx =>
+///   text(200, "user " + ctx.param("id").unwrap_or("")))
+/// // GET /users/42  ->  "user 42"
+/// ```
 pub fn Context::param(self : Context, name : String) -> String? {
   self.params.get(name)
 }

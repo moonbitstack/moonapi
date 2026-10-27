@@ -62,6 +62,11 @@ pub struct App {
 /// trailing slash added or removed, with a `307` to that other path, the query
 /// kept (← FastAPI's and Starlette's `redirect_slashes`, on by default in both).
 /// `/` itself is never redirected, nor is a WebSocket connection.
+///
+/// ```mbt
+/// let app = App::new()
+/// app.get("/", _ctx => text(200, "Hello"))
+/// ```
 pub fn App::new(redirect_slashes~ : Bool = true) -> App {
   {
     router: @route.Router::new(),

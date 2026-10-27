@@ -1,0 +1,66 @@
+name: Documentation site
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "docs/**"
+      - "src/**"
+      - "scripts/**"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+# Grant the pages deployment the tokens it needs.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Do not run two documentation deployments at once.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: install moon (unix)
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: post install
+        run: |
+          moon version --all
+          moon update
+
+      # Regenerate the compiled interfaces so the API reference matches source.
+      - name: regenerate interfaces
+        run: moon info --target all
+
+      # Rebuild the API reference from the interfaces and source comments.
+      # The output is deterministic, so an unexpected diff means a source
+      # comment changed without regenerating (run `python3 scripts/gen_api.py`
+      # locally and commit the result).
+      - name: generate API reference
+        run: python3 scripts/gen_api.py
+
+      - name: API reference is up to date
+        run: git -c core.autocrlf=false diff --ignore-cr-at-eol --exit-code -- docs/api.html
+
+      - name: setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: upload site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+      - name: deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

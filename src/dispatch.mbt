@@ -28,6 +28,12 @@ pub fn App::to_asgi(self : App) -> @moonasgi.AsgiApp {
 /// Run `request` through the app in-process and return the response, the way a server would
 /// see it answered: the same ASGI path, layers included (← Starlette's `TestClient`). A
 /// streamed response comes back with its body joined.
+///
+/// ```mbt
+/// let request = { http_method: "GET", path: "/", query_string: b"", headers: [], body: b"" }
+/// let response = app.handle(request)~
+/// response.status   // 200
+/// ```
 pub async fn App::handle(
   self : App,
   request : @moonasgi.Request,
