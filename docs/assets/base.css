@@ -276,7 +276,18 @@ pre code { background: none; border: none; padding: 0; color: inherit; font-size
 .section .sub { color: var(--muted); max-width: 60ch; margin: 0 0 1.4rem; }
 
 /* ---- callout ---- */
-.note { border: 1px solid var(--line); border-left: 3px solid var(--iris); background: var(--iris-tint); border-radius: var(--radius-sm); padding: .9rem 1.1rem; color: var(--ink-soft); font-size: .94rem; }
+/* Fresh, light callout: crisp right angles, thin iris left accent, airy white panel. */
+.note {
+  position: relative;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--iris);
+  background: var(--panel);
+  border-radius: 0;                 /* no rounded corners */
+  padding: 1rem 1.2rem;
+  color: var(--ink-soft);
+  font-size: .94rem;
+  box-shadow: var(--shadow-sm);
+}
 .note b { color: var(--iris-strong); }
 
 /* ---- footer ---- */
