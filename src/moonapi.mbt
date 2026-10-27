@@ -170,7 +170,19 @@ pub using @security {
 }
 
 ///|
-pub using @route {type ApiHandler, type Method, type Router, type StreamHandler}
+pub using @route {
+  type ApiHandler,
+  type Hoop,
+  type Method,
+  type Router,
+  type StreamHandler,
+  type Url,
+  trait View,
+  group,
+  path,
+  view,
+  websocket,
+}
 
 ///|
 pub using @openapi {

@@ -87,7 +87,7 @@ fn mount_for(
   for entry in mounted {
     let (prefix, app) = entry
     if strip_prefix(prefix, path) is Some(rest) {
-      return Some((app, rest, join_prefix(prefix, "")))
+      return Some((app, rest, @route.join_prefix(prefix, "")))
     }
   }
   None
@@ -303,9 +303,29 @@ async fn App::answer(
 }
 
 ///|
-/// Security, then validation, then the declared dependencies around the handler. Whatever
-/// fails becomes a response here, so what comes back is always something to send.
+/// The route's hoops, outermost first, around its security, validation, dependencies and
+/// handler. Whatever fails becomes a response here, so what comes back is always something to
+/// send.
 async fn App::run_route(
+  self : App,
+  route : @route.Route,
+  ctx : @ctx.Context,
+) -> @route.Reply {
+  let mut next : async (@ctx.Context) -> @route.Reply = c => {
+    self.guarded(route, c)
+  }
+  for hoop in route.hoops.rev() {
+    let inner = next
+    next = c => hoop(c, inner)
+  }
+  next(ctx) catch {
+    e => Buffered(self.dispatch_exception(ctx, e))
+  }
+}
+
+///|
+/// Security, then validation, then the declared dependencies around the handler.
+async fn App::guarded(
   self : App,
   route : @route.Route,
   ctx : @ctx.Context,

@@ -82,13 +82,3 @@ test "url_for refuses a value its convertor would not match" {
   assert_eq(app.url_for("user", params=Map([("id", "7")])), Some("/users/7"))
   assert_eq(app.url_for("user", params=Map([("id", "seven")])), None)
 }
-
-///|
-test "join_prefix keeps the path's own trailing slash" {
-  assert_eq(join_prefix("/api", "/items/"), "/api/items/")
-  assert_eq(join_prefix("/api/", "/items"), "/api/items")
-  assert_eq(join_prefix("/api", "/"), "/api/")
-  assert_eq(join_prefix("/api", ""), "/api")
-  assert_eq(join_prefix("", ""), "/")
-  assert_eq(join_prefix("api", "items"), "/api/items")
-}

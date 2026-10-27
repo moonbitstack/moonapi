@@ -22,6 +22,7 @@ OPTIONS = [
     ("validate", "Bool", "true"),
     ("openapi_extra", "Json", None),
     ("callbacks", "Array[@route.Route]", "[]"),
+    ("hoops", "Array[@route.Hoop]", "[]"),
 ]
 
 VERBS = [
@@ -52,7 +53,8 @@ ROUTE_DOC = """/// Register a route for an explicit method. An optional `endpoin
 /// resolves, `openapi_extra` a fragment merged over the generated operation
 /// object, and `callbacks` the requests this operation makes back to its caller,
 /// written as routes whose paths are runtime expressions — the same keyword
-/// arguments FastAPI's path operations take."""
+/// arguments FastAPI's path operations take. `hoops` wrap this one route, inside
+/// any its routers put around it."""
 
 STREAM_DOC = """/// Register a streaming route (← a FastAPI path operation returning a
 /// `StreamingResponse`). The handler's chunks reach the client as separate body

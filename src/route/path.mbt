@@ -271,3 +271,27 @@ pub fn Pattern::template(self : Pattern) -> String {
   }
   out.to_string()
 }
+
+///|
+/// A route `path` under `prefix`, written as FastAPI writes it: the prefix with
+/// its trailing slashes dropped, then the path as given, so `("/sub", "/items/")`
+/// is `/sub/items/` and `("/sub", "/")` is `/sub/`. A path keeps its own trailing
+/// slash because a trailing slash is part of what a route matches.
+pub fn join_prefix(prefix : String, path : String) -> String {
+  let head = prefix.trim_end(chars="/").to_owned()
+  let head = if head.is_empty() || head.has_prefix("/") {
+    head
+  } else {
+    "/" + head
+  }
+  let joined = if path.is_empty() || path.has_prefix("/") {
+    head + path
+  } else {
+    head + "/" + path
+  }
+  if joined.is_empty() {
+    "/"
+  } else {
+    joined
+  }
+}

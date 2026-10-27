@@ -16,7 +16,8 @@
 /// resolves, `openapi_extra` a fragment merged over the generated operation
 /// object, and `callbacks` the requests this operation makes back to its caller,
 /// written as routes whose paths are runtime expressions — the same keyword
-/// arguments FastAPI's path operations take.
+/// arguments FastAPI's path operations take. `hoops` wrap this one route, inside
+/// any its routers put around it.
 pub fn App::route(
   self : App,
   verb : @route.Method,
@@ -37,6 +38,7 @@ pub fn App::route(
   validate~ : Bool = true,
   openapi_extra? : Json,
   callbacks~ : Array[@route.Route] = [],
+  hoops~ : Array[@route.Hoop] = [],
 ) -> Unit {
   self.router.route(
     verb,
@@ -57,6 +59,7 @@ pub fn App::route(
     validate~,
     openapi_extra?,
     callbacks~,
+    hoops~,
   )
 }
 
@@ -89,6 +92,7 @@ pub fn App::route_stream(
   validate~ : Bool = true,
   openapi_extra? : Json,
   callbacks~ : Array[@route.Route] = [],
+  hoops~ : Array[@route.Hoop] = [],
 ) -> Unit {
   self.router.route_stream(
     verb,
@@ -109,6 +113,7 @@ pub fn App::route_stream(
     validate~,
     openapi_extra?,
     callbacks~,
+    hoops~,
   )
 }
 
@@ -134,6 +139,7 @@ pub fn App::stream(
   validate~ : Bool = true,
   openapi_extra? : Json,
   callbacks~ : Array[@route.Route] = [],
+  hoops~ : Array[@route.Hoop] = [],
 ) -> Unit {
   self.router.stream(
     path,
@@ -153,6 +159,7 @@ pub fn App::stream(
     validate~,
     openapi_extra?,
     callbacks~,
+    hoops~,
   )
 }
 
@@ -177,6 +184,7 @@ pub fn App::get(
   validate~ : Bool = true,
   openapi_extra? : Json,
   callbacks~ : Array[@route.Route] = [],
+  hoops~ : Array[@route.Hoop] = [],
 ) -> Unit {
   self.router.get(
     path,
@@ -196,6 +204,7 @@ pub fn App::get(
     validate~,
     openapi_extra?,
     callbacks~,
+    hoops~,
   )
 }
 
@@ -220,6 +229,7 @@ pub fn App::post(
   validate~ : Bool = true,
   openapi_extra? : Json,
   callbacks~ : Array[@route.Route] = [],
+  hoops~ : Array[@route.Hoop] = [],
 ) -> Unit {
   self.router.post(
     path,
@@ -239,6 +249,7 @@ pub fn App::post(
     validate~,
     openapi_extra?,
     callbacks~,
+    hoops~,
   )
 }
 
@@ -263,6 +274,7 @@ pub fn App::put(
   validate~ : Bool = true,
   openapi_extra? : Json,
   callbacks~ : Array[@route.Route] = [],
+  hoops~ : Array[@route.Hoop] = [],
 ) -> Unit {
   self.router.put(
     path,
@@ -282,6 +294,7 @@ pub fn App::put(
     validate~,
     openapi_extra?,
     callbacks~,
+    hoops~,
   )
 }
 
@@ -306,6 +319,7 @@ pub fn App::patch(
   validate~ : Bool = true,
   openapi_extra? : Json,
   callbacks~ : Array[@route.Route] = [],
+  hoops~ : Array[@route.Hoop] = [],
 ) -> Unit {
   self.router.patch(
     path,
@@ -325,6 +339,7 @@ pub fn App::patch(
     validate~,
     openapi_extra?,
     callbacks~,
+    hoops~,
   )
 }
 
@@ -349,6 +364,7 @@ pub fn App::delete(
   validate~ : Bool = true,
   openapi_extra? : Json,
   callbacks~ : Array[@route.Route] = [],
+  hoops~ : Array[@route.Hoop] = [],
 ) -> Unit {
   self.router.delete(
     path,
@@ -368,6 +384,7 @@ pub fn App::delete(
     validate~,
     openapi_extra?,
     callbacks~,
+    hoops~,
   )
 }
 
@@ -392,6 +409,7 @@ pub fn App::options(
   validate~ : Bool = true,
   openapi_extra? : Json,
   callbacks~ : Array[@route.Route] = [],
+  hoops~ : Array[@route.Hoop] = [],
 ) -> Unit {
   self.router.options(
     path,
@@ -411,6 +429,7 @@ pub fn App::options(
     validate~,
     openapi_extra?,
     callbacks~,
+    hoops~,
   )
 }
 
@@ -435,6 +454,7 @@ pub fn App::head(
   validate~ : Bool = true,
   openapi_extra? : Json,
   callbacks~ : Array[@route.Route] = [],
+  hoops~ : Array[@route.Hoop] = [],
 ) -> Unit {
   self.router.head(
     path,
@@ -454,6 +474,7 @@ pub fn App::head(
     validate~,
     openapi_extra?,
     callbacks~,
+    hoops~,
   )
 }
 
@@ -478,6 +499,7 @@ pub fn App::trace(
   validate~ : Bool = true,
   openapi_extra? : Json,
   callbacks~ : Array[@route.Route] = [],
+  hoops~ : Array[@route.Hoop] = [],
 ) -> Unit {
   self.router.trace(
     path,
@@ -497,5 +519,6 @@ pub fn App::trace(
     validate~,
     openapi_extra?,
     callbacks~,
+    hoops~,
   )
 }

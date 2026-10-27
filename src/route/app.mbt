@@ -17,6 +17,14 @@ pub type ApiHandler = async (@ctx.Context) -> @moonasgi.Response
 pub type StreamHandler = async (@ctx.Context) -> @status.Stream
 
 ///|
+/// A middleware on a route or on a router node (← Salvo's hoops, Starlette's route `middleware`):
+/// the request context and the rest of the route in, the reply out. It runs inside the app's own
+/// middleware and outside the route's security, validation and dependencies, so it can answer
+/// for the route — refuse, redirect, serve from a cache — or change what the route produced, and
+/// it can hand `next` a context of its own.
+pub type Hoop = async (@ctx.Context, async (@ctx.Context) -> Reply) -> Reply
+
+///|
 /// What a route produced: a response with its body in hand, or one that writes its body as it
 /// goes.
 pub(all) enum Reply {
@@ -66,6 +74,9 @@ pub(all) struct Route {
   // `callbacks`): documented under the operation, never served. Each one's
   // path is a runtime expression such as `{$request.body#/url}`.
   callbacks : Array[Route]
+  // Outermost first: the hoops of the include calls and routers that led here,
+  // then the route's own.
+  hoops : Array[Hoop]
   // FastAPI's `include_in_schema`: a route that serves the documentation itself has
   // no business appearing in the document it serves.
   include_in_schema : Bool

@@ -127,3 +127,13 @@ test "panic an unknown convertor" {
 test "panic two parameters with nothing between them" {
   ignore(@route.Pattern::parse("/{a}{b}"))
 }
+
+///|
+test "join_prefix keeps the path's own trailing slash" {
+  assert_eq(@route.join_prefix("/api", "/items/"), "/api/items/")
+  assert_eq(@route.join_prefix("/api/", "/items"), "/api/items")
+  assert_eq(@route.join_prefix("/api", "/"), "/api/")
+  assert_eq(@route.join_prefix("/api", ""), "/api")
+  assert_eq(@route.join_prefix("", ""), "/")
+  assert_eq(@route.join_prefix("api", "items"), "/api/items")
+}

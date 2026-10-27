@@ -315,12 +315,12 @@ fn App::collect_routes(
   out : Array[(String, @route.Route)],
 ) -> Unit {
   for route in self.router.routes {
-    out.push((join_prefix(prefix, route.path), route))
+    out.push((@route.join_prefix(prefix, route.path), route))
   }
   for entry in self.mounts {
     // A foreign handler describes nothing, so there is nothing of it to collect.
     if entry.1 is Sub(sub) {
-      sub.collect_routes(join_prefix(prefix, entry.0), out)
+      sub.collect_routes(@route.join_prefix(prefix, entry.0), out)
     }
   }
 }
@@ -653,30 +653,6 @@ fn path_parameters(
   @route.Pattern::parse(path)
   .params()
   .map(p => path_parameter(p.0, p.1, version))
-}
-
-///|
-/// A route `path` under `prefix`, written as FastAPI writes it: the prefix with
-/// its trailing slashes dropped, then the path as given, so `("/sub", "/items/")`
-/// is `/sub/items/` and `("/sub", "/")` is `/sub/`. A path keeps its own trailing
-/// slash because a trailing slash is part of what a route matches.
-fn join_prefix(prefix : String, path : String) -> String {
-  let head = prefix.trim_end(chars="/").to_owned()
-  let head = if head.is_empty() || head.has_prefix("/") {
-    head
-  } else {
-    "/" + head
-  }
-  let joined = if path.is_empty() || path.has_prefix("/") {
-    head + path
-  } else {
-    head + "/" + path
-  }
-  if joined.is_empty() {
-    "/"
-  } else {
-    joined
-  }
 }
 
 ///|

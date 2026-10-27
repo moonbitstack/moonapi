@@ -148,17 +148,17 @@ pub fn App::url_for(
 fn App::named(self : App, name : String, prefix : String) -> String? {
   for r in self.router.routes {
     if r.name == name {
-      return Some(join_prefix(prefix, r.path))
+      return Some(@route.join_prefix(prefix, r.path))
     }
   }
   for w in self.router.ws_routes {
     if w.name == name {
-      return Some(join_prefix(prefix, w.path))
+      return Some(@route.join_prefix(prefix, w.path))
     }
   }
   for entry in self.mounts {
     if entry.1 is Sub(sub) &&
-      sub.named(name, join_prefix(prefix, entry.0)) is Some(path) {
+      sub.named(name, @route.join_prefix(prefix, entry.0)) is Some(path) {
       return Some(path)
     }
   }
@@ -168,16 +168,8 @@ fn App::named(self : App, name : String, prefix : String) -> String? {
 ///|
 /// Fold `router`'s routes into this app (FastAPI's `include_router`, and the
 /// same name — `include` is a reserved word). Each is registered under `prefix`
-/// and becomes one of the app's own routes, and the arguments given here reach
-/// every one of them:
-///
-/// - `tags`, `security` and `dependencies` are placed before the route's own, so
-///   a group's tag leads and a group-wide requirement or dependency cannot be
-///   dropped by a route that adds one of its own;
-/// - `responses` are documented under the route's, which therefore wins any
-///   status both name;
-/// - `deprecated` marks the whole group, and `include_in_schema=false` hides it,
-///   neither of which a route can undo.
+/// and becomes one of the app's own routes, with the arguments given here
+/// reaching every one of them as `Router::include_router` describes.
 pub fn App::include_router(
   self : App,
   router : @route.Router,
@@ -188,31 +180,52 @@ pub fn App::include_router(
   responses~ : Array[@endpoint.ResponseSpec] = [],
   deprecated~ : Bool = false,
   include_in_schema~ : Bool = true,
+  hoops~ : Array[@route.Hoop] = [],
 ) -> Unit {
-  for r in router.routes {
-    let path = join_prefix(prefix, r.path)
-    self.router.routes.push({
-      ..r,
-      path,
-      pattern: @route.Pattern::parse(path),
-      tags: [..tags, ..r.tags],
-      security: [..security, ..r.security],
-      dependencies: [..dependencies, ..r.dependencies],
-      responses: [..responses, ..r.responses],
-      deprecated: deprecated || r.deprecated,
-      include_in_schema: include_in_schema && r.include_in_schema,
-    })
-  }
-  for w in router.ws_routes {
-    let path = join_prefix(prefix, w.path)
-    self.router.ws_routes.push({
-      ..w,
-      path,
-      pattern: @route.Pattern::parse(path),
-      security: [..security, ..w.security],
-      dependencies: [..dependencies, ..w.dependencies],
-    })
-  }
+  self.router.include_router(
+    router,
+    prefix~,
+    tags~,
+    security~,
+    dependencies~,
+    responses~,
+    deprecated~,
+    include_in_schema~,
+    hoops~,
+  )
+}
+
+///|
+/// Register the methods `view` answers at `path`; see `Router::view`.
+pub fn App::view(
+  self : App,
+  path : String,
+  view : &@route.View,
+  name~ : String = "",
+  tags~ : Array[String] = [],
+  security~ : Array[@security.SecurityRequirement] = [],
+  dependencies~ : Array[String] = [],
+  deprecated~ : Bool = false,
+  include_in_schema~ : Bool = true,
+  hoops~ : Array[@route.Hoop] = [],
+) -> Unit {
+  self.router.view(
+    path,
+    view,
+    name~,
+    tags~,
+    security~,
+    dependencies~,
+    deprecated~,
+    include_in_schema~,
+    hoops~,
+  )
+}
+
+///|
+/// Register a route table; see `Router::urls`.
+pub fn App::urls(self : App, urls : Array[@route.Url]) -> Unit {
+  self.router.urls(urls)
 }
 
 ///|

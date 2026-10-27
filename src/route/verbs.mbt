@@ -16,7 +16,8 @@
 /// resolves, `openapi_extra` a fragment merged over the generated operation
 /// object, and `callbacks` the requests this operation makes back to its caller,
 /// written as routes whose paths are runtime expressions — the same keyword
-/// arguments FastAPI's path operations take.
+/// arguments FastAPI's path operations take. `hoops` wrap this one route, inside
+/// any its routers put around it.
 pub fn Router::route(
   self : Router,
   verb : Method,
@@ -37,6 +38,7 @@ pub fn Router::route(
   validate~ : Bool = true,
   openapi_extra? : Json,
   callbacks~ : Array[Route] = [],
+  hoops~ : Array[Hoop] = [],
 ) -> Unit {
   self.routes.push({
     verb,
@@ -58,6 +60,7 @@ pub fn Router::route(
     validate,
     openapi_extra,
     callbacks,
+    hoops,
   })
 }
 
@@ -90,6 +93,7 @@ pub fn Router::route_stream(
   validate~ : Bool = true,
   openapi_extra? : Json,
   callbacks~ : Array[Route] = [],
+  hoops~ : Array[Hoop] = [],
 ) -> Unit {
   self.routes.push({
     verb,
@@ -111,6 +115,7 @@ pub fn Router::route_stream(
     validate,
     openapi_extra,
     callbacks,
+    hoops,
   })
 }
 
@@ -136,6 +141,7 @@ pub fn Router::stream(
   validate~ : Bool = true,
   openapi_extra? : Json,
   callbacks~ : Array[Route] = [],
+  hoops~ : Array[Hoop] = [],
 ) -> Unit {
   self.route_stream(
     Get,
@@ -156,6 +162,7 @@ pub fn Router::stream(
     validate~,
     openapi_extra?,
     callbacks~,
+    hoops~,
   )
 }
 
@@ -180,6 +187,7 @@ pub fn Router::get(
   validate~ : Bool = true,
   openapi_extra? : Json,
   callbacks~ : Array[Route] = [],
+  hoops~ : Array[Hoop] = [],
 ) -> Unit {
   self.route(
     Get,
@@ -200,6 +208,7 @@ pub fn Router::get(
     validate~,
     openapi_extra?,
     callbacks~,
+    hoops~,
   )
 }
 
@@ -224,6 +233,7 @@ pub fn Router::post(
   validate~ : Bool = true,
   openapi_extra? : Json,
   callbacks~ : Array[Route] = [],
+  hoops~ : Array[Hoop] = [],
 ) -> Unit {
   self.route(
     Post,
@@ -244,6 +254,7 @@ pub fn Router::post(
     validate~,
     openapi_extra?,
     callbacks~,
+    hoops~,
   )
 }
 
@@ -268,6 +279,7 @@ pub fn Router::put(
   validate~ : Bool = true,
   openapi_extra? : Json,
   callbacks~ : Array[Route] = [],
+  hoops~ : Array[Hoop] = [],
 ) -> Unit {
   self.route(
     Put,
@@ -288,6 +300,7 @@ pub fn Router::put(
     validate~,
     openapi_extra?,
     callbacks~,
+    hoops~,
   )
 }
 
@@ -312,6 +325,7 @@ pub fn Router::patch(
   validate~ : Bool = true,
   openapi_extra? : Json,
   callbacks~ : Array[Route] = [],
+  hoops~ : Array[Hoop] = [],
 ) -> Unit {
   self.route(
     Patch,
@@ -332,6 +346,7 @@ pub fn Router::patch(
     validate~,
     openapi_extra?,
     callbacks~,
+    hoops~,
   )
 }
 
@@ -356,6 +371,7 @@ pub fn Router::delete(
   validate~ : Bool = true,
   openapi_extra? : Json,
   callbacks~ : Array[Route] = [],
+  hoops~ : Array[Hoop] = [],
 ) -> Unit {
   self.route(
     Delete,
@@ -376,6 +392,7 @@ pub fn Router::delete(
     validate~,
     openapi_extra?,
     callbacks~,
+    hoops~,
   )
 }
 
@@ -400,6 +417,7 @@ pub fn Router::options(
   validate~ : Bool = true,
   openapi_extra? : Json,
   callbacks~ : Array[Route] = [],
+  hoops~ : Array[Hoop] = [],
 ) -> Unit {
   self.route(
     Options,
@@ -420,6 +438,7 @@ pub fn Router::options(
     validate~,
     openapi_extra?,
     callbacks~,
+    hoops~,
   )
 }
 
@@ -444,6 +463,7 @@ pub fn Router::head(
   validate~ : Bool = true,
   openapi_extra? : Json,
   callbacks~ : Array[Route] = [],
+  hoops~ : Array[Hoop] = [],
 ) -> Unit {
   self.route(
     Head,
@@ -464,6 +484,7 @@ pub fn Router::head(
     validate~,
     openapi_extra?,
     callbacks~,
+    hoops~,
   )
 }
 
@@ -488,6 +509,7 @@ pub fn Router::trace(
   validate~ : Bool = true,
   openapi_extra? : Json,
   callbacks~ : Array[Route] = [],
+  hoops~ : Array[Hoop] = [],
 ) -> Unit {
   self.route(
     Trace,
@@ -508,5 +530,6 @@ pub fn Router::trace(
     validate~,
     openapi_extra?,
     callbacks~,
+    hoops~,
   )
 }
