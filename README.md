@@ -98,7 +98,7 @@ fn me(_ctx : @moonapi.Context) -> @moonasgi.Response {
 Wire the generator into the build once. In `moon.mod`:
 
 ```
-rule(name: "routes", command: "moonx moonbitstack/moonapi/cmd/routes@0.17.1 -C \"$mod_dir\" \"$input\" -o \"$output\"")
+rule(name: "routes", command: "moonx moonbitstack/moonapi/cmd/routes@0.17.2 -C \"$mod_dir\" \"$input\" -o \"$output\"")
 ```
 
 and in the `moon.pkg` of the package holding the handlers:
@@ -249,7 +249,9 @@ The descriptor tree (`Endpoint` / `Param` / `Schema`) drives OpenAPI body schema
 
 **0.17.1 made moonapi ASGI-native.** Handlers are async and a request runs as ASGI events end to end: streams write as they go, a WebSocket handler holds the live connection, background tasks run after the last body event, and CORS and gzip are moonasgi layers. Moving from 0.17.0: `cors(...)` and `gzip(...)` become `app.layer(@mid.Cors::new(...))` and `app.layer(@mid.Gzip::new(...))`; `route_bg` becomes a plain route using `ctx.background`; `sse_response(events)` becomes `sse(e => ...)`; lifespan hooks take the state map; `mount_handler` is `mount_asgi`; `moonapi/mid` is `moonapi/exceptions`.
 
-Next: splitting what remains into packages, so a program that wants the router does not link the OpenAPI writer; static files and templates; and codegen'd request schemas via `moonctl`.
+**0.17.2 settled the routing surface.** Paths are templates with convertors (`{id:int}`, `{rest:path}`), a path off by a trailing slash is redirected, WebSocket routes take security, dependencies and a name, routers nest and carry hoops, and a type or a route table can stand in for one call per route. Templates and static files are subpackages of their own; the document gains webhooks, callbacks, examples and tag metadata; `/docs` serves the Scalar reference, with every reader pinned. Moving from 0.17.1: write `{id}` where `:id` was; a router's `/` under a prefix is `/prefix/`; `@socket.WsRoute` is `@route.WsRoute`; build `License`, `Contact` and `Server` with their `new`, and `Param`, `ResponseSpec`, `Endpoint` and `Field` with theirs, since each gained a field; pass `ui=Swagger` to keep Swagger UI at `/docs`, and `App::new(redirect_slashes=false)` to keep the old `404`.
+
+Next: splitting what remains into packages, so a program that wants the router does not link the OpenAPI writer; `regex=` and `glob=` routes; and codegen'd request schemas via `moonctl`.
 
 ## License
 
