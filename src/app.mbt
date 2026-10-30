@@ -51,6 +51,11 @@ pub struct App {
   // documented under OpenAPI 3.1's `webhooks`, never served. A route's path is
   // the webhook's name.
   webhooks : @route.Router
+  // What the documentation routes serve, `None` for none. They are added the
+  // first time the app becomes an ASGI application, after the app's own routes,
+  // so a route of the app's own at the same path wins.
+  mut docs : Docs?
+  mut docs_served : Bool
 }
 
 ///|
@@ -77,7 +82,10 @@ pub struct App {
 ///   assert_eq(reply.status, 200)
 /// }
 /// ```
-pub fn App::new(redirect_slashes~ : Bool = true) -> App {
+pub fn App::new(
+  redirect_slashes~ : Bool = true,
+  docs~ : Docs? = Some(docs),
+) -> App {
   {
     router: @route.Router::new(),
     layers: [],
@@ -93,6 +101,8 @@ pub fn App::new(redirect_slashes~ : Bool = true) -> App {
     deps: None,
     redirect_slashes,
     webhooks: @route.Router::new(),
+    docs,
+    docs_served: false,
   }
 }
 

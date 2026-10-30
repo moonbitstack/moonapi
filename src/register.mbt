@@ -2,80 +2,130 @@
 // included routers, mounts, the documentation routes, and the reverse lookup `url_for`.
 
 ///|
-/// Serve the app's own documentation: the OpenAPI document at `openapi_url`, an
-/// interactive reference at `docs_url`, and ReDoc at `redoc_url`. Pass `None` for
-/// any of them to leave it off. The routes are kept out of the document they
-/// serve, so enabling docs does not change the spec a client reads.
+/// What the documentation routes serve (← FastAPI's `FastAPI(openapi_url=…,
+/// docs_url=…, redoc_url=…, swagger_ui_oauth2_redirect_url=…,
+/// swagger_ui_init_oauth=…, swagger_ui_parameters=…, root_path_in_servers=…)`).
+/// Each URL set to `None` leaves that route off.
 ///
 /// `ui` picks the reader at `docs_url`. With `Swagger`, `oauth2_redirect_url` is
 /// where an OAuth2 flow started from the page returns to, and `init_oauth`
-/// prefills it (← FastAPI's `swagger_ui_init_oauth`); `ui_extra` is merged over
-/// the reader's own settings either way.
-///
+/// prefills it; `ui_extra` is merged over the reader's own settings either way.
 /// Behind a proxy that mounts the app under a prefix, the server reports that
-/// prefix as the ASGI `root_path`. The pages then fetch the document from under
+/// prefix as the ASGI `root_path`; the pages then fetch the document from under
 /// it, and with `root_path_in_servers` the document names it as its first
-/// server, so a call tried out from the page goes where the app actually is.
+/// server, so a call tried from the page goes where the app actually is.
+pub(all) struct Docs {
+  openapi_url : String?
+  docs_url : String?
+  redoc_url : String?
+  version : @schema.OpenApiVersion
+  ui : @openapi.Ui
+  oauth2_redirect_url : String?
+  init_oauth : Json?
+  ui_extra : Map[String, Json]?
+  root_path_in_servers : Bool
+}
+
+///|
+/// The documentation an app serves unless told otherwise: FastAPI's three
+/// routes at FastAPI's paths, with OpenAPI 3.1 and the Scalar reader.
+pub let docs : Docs = {
+  openapi_url: Some("/openapi.json"),
+  docs_url: Some("/docs"),
+  redoc_url: Some("/redoc"),
+  version: OpenApi31,
+  ui: Scalar,
+  oauth2_redirect_url: Some("/docs/oauth2-redirect"),
+  init_oauth: None,
+  ui_extra: None,
+  root_path_in_servers: true,
+}
+
+///|
+/// Change what the app's documentation routes serve. They are on by default
+/// (`App::new(docs=None)` starts without them); this sets every setting at once,
+/// each left out taking `docs`'s value, and `None` for a URL leaves that route
+/// off. The routes are kept out of the document they serve, so serving docs
+/// does not change the spec a client reads.
 ///
-/// It is a call rather than a default because registering routes behind the app's
-/// back would surprise anyone mounting this app under a prefix.
+/// The routes are added when the app first becomes an ASGI application, after
+/// the app's own routes, so a route the app registers at one of these paths
+/// answers instead. Settings changed after that point do not move them.
 pub fn App::enable_docs(
   self : App,
-  openapi_url~ : String? = Some("/openapi.json"),
-  docs_url~ : String? = Some("/docs"),
-  redoc_url~ : String? = Some("/redoc"),
-  version~ : @schema.OpenApiVersion = OpenApi31,
-  ui~ : @openapi.Ui = Scalar,
-  oauth2_redirect_url~ : String? = Some("/docs/oauth2-redirect"),
+  openapi_url~ : String? = docs.openapi_url,
+  docs_url~ : String? = docs.docs_url,
+  redoc_url~ : String? = docs.redoc_url,
+  version~ : @schema.OpenApiVersion = docs.version,
+  ui~ : @openapi.Ui = docs.ui,
+  oauth2_redirect_url~ : String? = docs.oauth2_redirect_url,
   init_oauth? : Json,
   ui_extra? : Map[String, Json],
-  root_path_in_servers~ : Bool = true,
+  root_path_in_servers~ : Bool = docs.root_path_in_servers,
 ) -> Unit {
-  if openapi_url is Some(url) {
+  self.docs = Some({
+    openapi_url,
+    docs_url,
+    redoc_url,
+    version,
+    ui,
+    oauth2_redirect_url,
+    init_oauth,
+    ui_extra,
+    root_path_in_servers,
+  })
+}
+
+///|
+/// Add the documentation routes once, from the settings the app holds.
+fn App::serve_docs(self : App) -> Unit {
+  guard !self.docs_served && self.docs is Some(d) else { return }
+  self.docs_served = true
+  if d.openapi_url is Some(url) {
     self.get(
       url,
       ctx => {
         let root = ctx.scope.root_path
         let servers = self.info.servers
-        let servers = if root_path_in_servers &&
+        let servers = if d.root_path_in_servers &&
           root != "" &&
           !servers.iter().any(s => s.url == root) {
           [@openapi.Server::new(root), ..servers]
         } else {
           servers
         }
-        @status.json(200, self.openapi(version~, servers~))
+        @status.json(200, self.openapi(version=d.version, servers~))
       },
       include_in_schema=false,
     )
   }
-  let spec_path = match openapi_url {
+  let spec_path = match d.openapi_url {
     Some(url) => url
     None => "/openapi.json"
   }
-  if docs_url is Some(url) {
+  if d.docs_url is Some(url) {
     self.get(
       url,
       ctx => {
         let root = ctx.scope.root_path
         let spec_url = root + spec_path
         let title = self.info.title
-        let page = match ui {
-          Scalar => @openapi.scalar_ui(spec_url~, title~, extra?=ui_extra)
+        let page = match d.ui {
+          Scalar => @openapi.scalar_ui(spec_url~, title~, extra?=d.ui_extra)
           Swagger =>
             @openapi.swagger_ui(
               spec_url~,
               title~,
-              oauth2_redirect_url?=oauth2_redirect_url.map(r => root + r),
-              init_oauth?,
-              extra?=ui_extra,
+              oauth2_redirect_url?=d.oauth2_redirect_url.map(r => root + r),
+              init_oauth?=d.init_oauth,
+              extra?=d.ui_extra,
             )
         }
         @status.html(200, page)
       },
       include_in_schema=false,
     )
-    if ui is Swagger && oauth2_redirect_url is Some(r) {
+    if d.ui is Swagger && d.oauth2_redirect_url is Some(r) {
       self.get(
         r,
         _ctx => @status.html(200, @openapi.swagger_redirect()),
@@ -83,7 +133,7 @@ pub fn App::enable_docs(
       )
     }
   }
-  if redoc_url is Some(url) {
+  if d.redoc_url is Some(url) {
     self.get(
       url,
       ctx => {

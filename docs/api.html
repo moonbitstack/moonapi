@@ -27,7 +27,7 @@
   <aside class="sidebar">
     <h4>Packages</h4>
     <div class="side-nav">
-      <a href="#pkg-moonapi"><span class="at">@</span>moonapi<span class="cnt">204</span></a>
+      <a href="#pkg-moonapi"><span class="at">@</span>moonapi<span class="cnt">205</span></a>
 <a href="#pkg-ctx"><span class="at">@</span>ctx<span class="cnt">30</span></a>
 <a href="#pkg-di"><span class="at">@</span>di<span class="cnt">3</span></a>
 <a href="#pkg-endpoint"><span class="at">@</span>endpoint<span class="cnt">19</span></a>
@@ -86,10 +86,10 @@
 
 <section class="api-item" id="moonapi-App">
   <span class="kind kind-struct">struct</span>
-  <pre class="sig"><code>pub struct App { router : @route.Router layers : Array[&amp;@mid.Layer] exception_handlers : Array[(@ctx.Context, Error) -&gt; @http.Response?] security_schemes : Array[@security.DeclaredScheme] enforcers : Map[String, (@ctx.Context, @security.SecurityScopes, Int64) -&gt; Result[@security.AuthenticatedUser, @http.Response]] status_handlers : Map[Int32, (@ctx.Context) -&gt; @http.Response] mounts : Array[(String, Mount)] startup_hooks : Array[async (Map[String, Json]) -&gt; Unit] shutdown_hooks : Array[async (Map[String, Json]) -&gt; Unit] mut info : @openapi.ApiInfo mut clock : () -&gt; Int64 mut deps : @di.Deps? redirect_slashes : Bool webhooks : @route.Router }</code></pre>
+  <pre class="sig"><code>pub struct App { router : @route.Router layers : Array[&amp;@mid.Layer] exception_handlers : Array[(@ctx.Context, Error) -&gt; @http.Response?] security_schemes : Array[@security.DeclaredScheme] enforcers : Map[String, (@ctx.Context, @security.SecurityScopes, Int64) -&gt; Result[@security.AuthenticatedUser, @http.Response]] status_handlers : Map[Int32, (@ctx.Context) -&gt; @http.Response] mounts : Array[(String, Mount)] startup_hooks : Array[async (Map[String, Json]) -&gt; Unit] shutdown_hooks : Array[async (Map[String, Json]) -&gt; Unit] mut info : @openapi.ApiInfo mut clock : () -&gt; Int64 mut deps : @di.Deps? redirect_slashes : Bool webhooks : @route.Router mut docs : Docs? mut docs_served : Bool }</code></pre>
   <p class="doc">A moonapi application: routes and WebSocket routes, the layers around them, exception and per-status handlers, mounts, the security schemes the OpenAPI document surfaces (with their runtime enforcers), lifespan hooks, and the verification clock. Compiles to an ASGI application any server (mooncat) can run.</p>
   
-  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>router</td><td><code>@route.Router</code></td></tr><tr><td class='pname'>layers</td><td><code>Array[&amp;@mid.Layer]</code></td></tr><tr><td class='pname'>exception_handlers</td><td><code>Array[(@ctx.Context, Error) -&gt; @http.Response?]</code></td></tr><tr><td class='pname'>security_schemes</td><td><code>Array[@security.DeclaredScheme]</code></td></tr><tr><td class='pname'>enforcers</td><td><code>Map[String, (@ctx.Context, @security.SecurityScopes, Int64) -&gt; Result[@security.AuthenticatedUser, @http.Response]]</code></td></tr><tr><td class='pname'>status_handlers</td><td><code>Map[Int32, (@ctx.Context) -&gt; @http.Response]</code></td></tr><tr><td class='pname'>mounts</td><td><code>Array[(String, Mount)]</code></td></tr><tr><td class='pname'>startup_hooks</td><td><code>Array[async (Map[String, Json]) -&gt; Unit]</code></td></tr><tr><td class='pname'>shutdown_hooks</td><td><code>Array[async (Map[String, Json]) -&gt; Unit]</code></td></tr><tr><td class='pname'>info <span class=mut>mut</span></td><td><code>@openapi.ApiInfo</code></td></tr><tr><td class='pname'>clock <span class=mut>mut</span></td><td><code>() -&gt; Int64</code></td></tr><tr><td class='pname'>deps <span class=mut>mut</span></td><td><code>@di.Deps?</code></td></tr><tr><td class='pname'>redirect_slashes</td><td><code>Bool</code></td></tr><tr><td class='pname'>webhooks</td><td><code>@route.Router</code></td></tr></tbody></table>
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>router</td><td><code>@route.Router</code></td></tr><tr><td class='pname'>layers</td><td><code>Array[&amp;@mid.Layer]</code></td></tr><tr><td class='pname'>exception_handlers</td><td><code>Array[(@ctx.Context, Error) -&gt; @http.Response?]</code></td></tr><tr><td class='pname'>security_schemes</td><td><code>Array[@security.DeclaredScheme]</code></td></tr><tr><td class='pname'>enforcers</td><td><code>Map[String, (@ctx.Context, @security.SecurityScopes, Int64) -&gt; Result[@security.AuthenticatedUser, @http.Response]]</code></td></tr><tr><td class='pname'>status_handlers</td><td><code>Map[Int32, (@ctx.Context) -&gt; @http.Response]</code></td></tr><tr><td class='pname'>mounts</td><td><code>Array[(String, Mount)]</code></td></tr><tr><td class='pname'>startup_hooks</td><td><code>Array[async (Map[String, Json]) -&gt; Unit]</code></td></tr><tr><td class='pname'>shutdown_hooks</td><td><code>Array[async (Map[String, Json]) -&gt; Unit]</code></td></tr><tr><td class='pname'>info <span class=mut>mut</span></td><td><code>@openapi.ApiInfo</code></td></tr><tr><td class='pname'>clock <span class=mut>mut</span></td><td><code>() -&gt; Int64</code></td></tr><tr><td class='pname'>deps <span class=mut>mut</span></td><td><code>@di.Deps?</code></td></tr><tr><td class='pname'>redirect_slashes</td><td><code>Bool</code></td></tr><tr><td class='pname'>webhooks</td><td><code>@route.Router</code></td></tr><tr><td class='pname'>docs <span class=mut>mut</span></td><td><code>Docs?</code></td></tr><tr><td class='pname'>docs_served <span class=mut>mut</span></td><td><code>Bool</code></td></tr></tbody></table>
 </section>
 
 <section class="api-item" id="moonapi-AuthenticatedUser">
@@ -492,6 +492,14 @@
   
 </section>
 <h3 class="grp">Constants &amp; values</h3>
+
+<section class="api-item" id="moonapi-docs">
+  <span class="kind kind-let">value</span>
+  <pre class="sig"><code>pub let docs : Docs</code></pre>
+  <p class="doc">The documentation an app serves unless told otherwise: three routes at paths, with OpenAPI 3.1 and the Scalar reader.</p>
+  
+  
+</section>
 
 <section class="api-item" id="moonapi-HTTP_100_CONTINUE">
   <span class="kind kind-const">constant</span>
@@ -1404,10 +1412,8 @@
 <section class="api-item" id="moonapi-App-enable_docs">
   <span class="kind kind-fn">function</span>
   <pre class="sig"><code>pub fn App::enable_docs(Self, openapi_url? : String?, docs_url? : String?, redoc_url? : String?, version? : @schema.OpenApiVersion, ui? : @openapi.Ui, oauth2_redirect_url? : String?, init_oauth? : Json, ui_extra? : Map[String, Json], root_path_in_servers? : Bool) -&gt; Unit</code></pre>
-  <p class="doc">Serve the app&#x27;s own documentation: the OpenAPI document at <code>openapi_url</code>, an interactive reference at <code>docs_url</code>, and ReDoc at <code>redoc_url</code>. Pass <code>None</code> for any of them to leave it off. The routes are kept out of the document they serve, so enabling docs does not change the spec a client reads.</p>
-<p class="doc"><code>ui</code> picks the reader at <code>docs_url</code>. With <code>Swagger</code>, <code>oauth2_redirect_url</code> is where an OAuth2 flow started from the page returns to, and <code>init_oauth</code> prefills it ; <code>ui_extra</code> is merged over the reader&#x27;s own settings either way.</p>
-<p class="doc">Behind a proxy that mounts the app under a prefix, the server reports that prefix as the ASGI <code>root_path</code>. The pages then fetch the document from under it, and with <code>root_path_in_servers</code> the document names it as its first server, so a call tried out from the page goes where the app actually is.</p>
-<p class="doc">It is a call rather than a default because registering routes behind the app&#x27;s back would surprise anyone mounting this app under a prefix.</p>
+  <p class="doc">Change what the app&#x27;s documentation routes serve. They are on by default (<code>App::new(docs=None)</code> starts without them); this sets every setting at once, each left out taking <code>docs</code>&#x27;s value, and <code>None</code> for a URL leaves that route off. The routes are kept out of the document they serve, so serving docs does not change the spec a client reads.</p>
+<p class="doc">The routes are added when the app first becomes an ASGI application, after the app&#x27;s own routes, so a route the app registers at one of these paths answers instead. Settings changed after that point do not move them.</p>
   <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname opt'>openapi_url</td><td><code>String?</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>docs_url</td><td><code>String?</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>redoc_url</td><td><code>String?</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>version</td><td><code>@schema.OpenApiVersion</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>ui</td><td><code>@openapi.Ui</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>oauth2_redirect_url</td><td><code>String?</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>init_oauth</td><td><code>Json</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>ui_extra</td><td><code>Map[String, Json]</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>root_path_in_servers</td><td><code>Bool</code></td><td class='opt'>optional</td></tr></tbody></table><p class="returns">Returns <code>Unit</code></p>
   
 </section>
@@ -1501,7 +1507,7 @@
 
 <section class="api-item" id="moonapi-App-new">
   <span class="kind kind-fn">function</span>
-  <pre class="sig"><code>pub fn App::new(redirect_slashes? : Bool) -&gt; Self</code></pre>
+  <pre class="sig"><code>pub fn App::new(redirect_slashes? : Bool, docs? : Docs?) -&gt; Self</code></pre>
   <p class="doc">Create an empty application. The verification clock defaults to <code>0</code> (Unix epoch); a server sets a real one with <code>App::set_clock</code>, and tests inject a fixed time so token expiry is deterministic.</p>
 <p class="doc"><code>redirect_slashes</code> answers a path that matches no route, but would with its trailing slash added or removed, with a <code>307</code> to that other path, the query kept . <code>/</code> itself is never redirected, nor is a WebSocket connection.</p>
 <div class="codewrap ex"><button class="copy" type="button">Copy</button><pre class="sig"><code data-lang="mbt check">async test {
@@ -1516,7 +1522,7 @@
   })
   assert_eq(reply.status, 200)
 }</code></pre></div>
-  <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname opt'>redirect_slashes</td><td><code>Bool</code></td><td class='opt'>optional</td></tr></tbody></table><p class="returns">Returns <code>Self</code></p>
+  <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname opt'>redirect_slashes</td><td><code>Bool</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>docs</td><td><code>Docs?</code></td><td class='opt'>optional</td></tr></tbody></table><p class="returns">Returns <code>Self</code></p>
   
 </section>
 

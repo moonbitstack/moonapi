@@ -1,4 +1,4 @@
-/// `enable_docs` puts three pages on the app: the OpenAPI document, an API
+/// An app serves three pages from the start: the OpenAPI document, an API
 /// reference for trying calls out, and ReDoc for reading. All three stay out of
 /// the document they describe, so a client sees only the real API.
 ///
@@ -17,7 +17,6 @@ async fn main {
     description="One route, documented three ways.",
     api_version="1.0.0",
   )
-  app.enable_docs()
   for path in ["/openapi.json", "/docs", "/redoc"] {
     let resp = app.handle({
       http_method: "GET",
@@ -32,7 +31,7 @@ async fn main {
     }
     println("\{path} -> \{resp.status} \{kind}, \{resp.body.length()} bytes")
   }
-  // Turning a page off is per page.
+  // Turning a page off is per page, and docs=None turns them all off.
   let bare = @moonapi.App::new()
   bare.enable_docs(docs_url=None, redoc_url=None)
   let missing = bare.handle({

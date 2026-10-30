@@ -572,6 +572,35 @@ async test "enable_docs serves the spec, the reference and ReDoc without joining
 }
 
 ///|
+/// The three documentation routes are there unless the app is told otherwise,
+/// as FastAPI's are; `docs=None` starts without them, and the presets match.
+async test "documentation is on by default and off with docs=None" {
+  let app = App::new()
+  assert_eq(app.handle(mkreq("GET", "/openapi.json")).status, 200)
+  assert_eq(app.handle(mkreq("GET", "/docs")).status, 200)
+  assert_eq(app.handle(mkreq("GET", "/redoc")).status, 200)
+  let bare = App::new(docs=None)
+  assert_eq(bare.handle(mkreq("GET", "/openapi.json")).status, 404)
+  assert_eq(bare.handle(mkreq("GET", "/docs")).status, 404)
+  assert_eq(bare.handle(mkreq("GET", "/redoc")).status, 404)
+  let same = App::new(docs=Some(docs))
+  let record = App::new(docs=Some({ ..docs, redoc_url: None, }))
+  assert_eq(same.handle(mkreq("GET", "/redoc")).status, 200)
+  assert_eq(record.handle(mkreq("GET", "/redoc")).status, 404)
+}
+
+///|
+/// A route of the app's own at a documentation path answers instead, because
+/// the documentation routes are added after the app's routes.
+async test "the app's own /docs route wins over the documentation page" {
+  let app = App::new()
+  app.get("/docs", _ctx => @status.text(200, "ours"))
+  let got = app.handle(mkreq("GET", "/docs"))
+  assert_eq(@utf8.decode_lossy(got.body), "ours")
+  assert_eq(app.handle(mkreq("GET", "/redoc")).status, 200)
+}
+
+///|
 /// Each documentation page can be turned off on its own.
 async test "enable_docs leaves off whatever is passed None" {
   let app = App::new()

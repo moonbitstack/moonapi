@@ -189,6 +189,8 @@ pub fn data_url(Bytes, media_type? : String) -> String
 
 pub fn delete_cookie(@http.Response, String, path? : String?, domain? : String, secure? : Bool, http_only? : Bool, same_site? : @cookie.SameSite?) -> @http.Response
 
+pub let docs : Docs
+
 pub fn file_response(Bytes, filename? : String, media_type? : String, status? : Int32, inline? : Bool) -> @http.Response
 
 pub fn filter_response(@schema.Schema, Json) -> Result[Json, Array[@schema.ValidationError]]
@@ -259,6 +261,8 @@ pub struct App {
   mut deps : @di.Deps?
   redirect_slashes : Bool
   webhooks : @route.Router
+  mut docs : Docs?
+  mut docs_served : Bool
 }
 pub fn App::add_security_scheme(Self, String, @security.SecurityScheme, description? : String) -> Unit
 pub fn App::add_status_handler(Self, Int32, (@ctx.Context) -> @http.Response) -> Unit
@@ -275,7 +279,7 @@ pub fn App::layer(Self, &@mid.Layer) -> Unit
 pub fn App::middleware(Self, async (@http.Request, async (@http.Request) -> @http.Response) -> @http.Response) -> Unit
 pub fn App::mount(Self, String, Self) -> Unit
 pub fn App::mount_asgi(Self, String, async (@spec.Scope, async () -> @spec.Event, async (@spec.Event) -> Unit) -> Unit) -> Unit
-pub fn App::new(redirect_slashes? : Bool) -> Self
+pub fn App::new(redirect_slashes? : Bool, docs? : Docs?) -> Self
 pub fn App::on_shutdown(Self, async (Map[String, Json]) -> Unit) -> Unit
 pub fn App::on_startup(Self, async (Map[String, Json]) -> Unit) -> Unit
 pub fn App::openapi(Self, version? : @schema.OpenApiVersion, title? : String, summary? : String, api_version? : String, description? : String, terms_of_service? : String, contact? : @openapi.Contact?, license? : @openapi.License?, servers? : Array[@openapi.Server], tags? : Array[@openapi.Tag], external_docs? : @openapi.ExternalDocs?) -> Json
@@ -301,6 +305,18 @@ pub fn App::url_for(Self, String, params? : Map[String, String]) -> String?
 pub fn App::urls(Self, Array[(@route.Router) -> Unit]) -> Unit
 pub fn App::view(Self, String, &@route.View, name? : String, tags? : Array[String], security? : Array[@security.SecurityRequirement], dependencies? : Array[String], deprecated? : Bool, include_in_schema? : Bool, hoops? : Array[async (@ctx.Context, async (@ctx.Context) -> @route.Reply) -> @route.Reply]) -> Unit
 pub fn App::websocket(Self, String, async (@socket.WebSocket) -> Unit, name? : String, security? : Array[@security.SecurityRequirement], dependencies? : Array[String]) -> Unit
+
+pub(all) struct Docs {
+  openapi_url : String?
+  docs_url : String?
+  redoc_url : String?
+  version : @schema.OpenApiVersion
+  ui : @openapi.Ui
+  oauth2_redirect_url : String?
+  init_oauth : Json?
+  ui_extra : Map[String, Json]?
+  root_path_in_servers : Bool
+}
 
 type Mount
 

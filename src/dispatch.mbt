@@ -6,6 +6,7 @@
 /// Compile the app to an ASGI application a server can run: the layers around the router, in
 /// registration order with the first outermost.
 pub fn App::to_asgi(self : App) -> @moonasgi.AsgiApp {
+  self.serve_docs()
   let mounted = self.mounts.map(entry => {
     let (prefix, target) = entry
     let app = match target {
