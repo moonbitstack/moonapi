@@ -30,6 +30,63 @@ serving needs a socket, so the entry point is `async fn main` and the target is
 native or wasm:
 
 ```moonbit
+#app.get("/", summary="Say hello")
+fn hello(_ctx : @moonapi.Context) -> @moonasgi.Response {
+  @moonapi.text(200, "Hello from moonapi!")
+}
+
+#app.get("/users/{id}", summary="Fetch a user")
+fn user(ctx : @moonapi.Context) -> @moonasgi.Response {
+  @moonapi.text(200, "user " + ctx.param("id").unwrap_or(""))
+}
+
+#app.post("/users", status_code="201")
+fn create_user(_ctx : @moonapi.Context) -> @moonasgi.Response {
+  @moonapi.text(201, "created")
+}
+
+async fn main {
+  let app = @moonapi.App::new()
+  register(app)
+
+  // One set of routes, every mainstream spec version.
+  println(app.openapi_json(version=OpenApi31)) // OpenAPI 3.1.0
+  println(app.openapi_json(version=OpenApi30)) // OpenAPI 3.0.3
+  println(app.openapi_json(version=Swagger20)) // Swagger 2.0
+
+  @mooncat.serve(app.to_asgi(), port=12000) catch {
+    err => println("stopped: \{err}")
+  }
+}
+```
+
+`register` comes from the generator, which reads the annotations at build time. Wire
+it in once, in `moon.mod`:
+
+<!-- nocheck -->
+```
+rule(name: "routes", command: "moonx moonbitstack/moonapi/cmd/routes@0.17.7 -C \"$mod_dir\" \"$input\" -o \"$output\"")
+```
+
+and in the `moon.pkg` of the package holding the handlers:
+
+<!-- nocheck -->
+```
+dev_build(rule: "routes", input: "routes.mbt", output: "routes.g.mbt")
+formatter(ignore: [ "routes.g.mbt" ])
+```
+
+`#app.get`, `post`, `put`, `patch`, `delete`, `head`, `options` and `trace` name their
+verb, `#app.route("PURGE", "/cache")` takes any other, `#app.websocket` a socket, and
+`#router.*` registers on a `Router` through `register_router(router)`. Each takes the
+same arguments as the method it stands for.
+
+### Without annotations
+
+Annotations generate these calls, and routes built at run time are written the same
+way:
+
+```moonbit
 async fn main {
   let app = @moonapi.App::new()
   app.get("/", _ctx => @moonapi.text(200, "Hello from moonapi!"))

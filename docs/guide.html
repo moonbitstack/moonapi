@@ -39,13 +39,30 @@
 <section class="section">
   <!-- ============ 1. INSTALL ============ -->
   <h2 id="install">1 · Install and your first application</h2>
-  <p class="sub">Add the package, then build one application object and register a route. A handler receives a context and returns a response.</p>
+  <p class="sub">Add the package, and write each route as an annotation on its handler. A handler receives a context and returns a response; the generator reads the annotations at build time and writes <code>register(app)</code>.</p>
 
-  <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="hl"><code>let app = @moonapi.App::new()
-app.get("/", _ctx => @moonapi.text(200, "Hello from moonapi"))
-app.post("/users", _ctx => @moonapi.text(201, "created"))
-app.get("/users/{id}", ctx =>
-  @moonapi.text(200, "user " + ctx.param("id").unwrap_or("")))</code></pre></div>
+  <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="hl"><code>#app.get("/")
+fn hello(_ctx : @moonapi.Context) -> @moonasgi.Response {
+  @moonapi.text(200, "Hello from moonapi")
+}
+
+#app.post("/users")
+fn create_user(_ctx : @moonapi.Context) -> @moonasgi.Response {
+  @moonapi.text(201, "created")
+}
+
+#app.get("/users/{id}")
+fn user(ctx : @moonapi.Context) -> @moonasgi.Response {
+  @moonapi.text(200, "user " + ctx.param("id").unwrap_or(""))
+}
+
+let app = @moonapi.App::new()
+register(app)</code></pre></div>
+
+  <p>Wire the generator into the build once: a <code>rule</code> in <code>moon.mod</code> running <code>moonx moonbitstack/moonapi/cmd/routes</code>, and a <code>dev_build</code> in the package's <code>moon.pkg</code>; the README has both lines. Annotations generate plain calls, and routes built at run time are written the same way:</p>
+
+  <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="hl"><code>app.get("/", _ctx => @moonapi.text(200, "Hello from moonapi"))
+app.post("/users", _ctx => @moonapi.text(201, "created"))</code></pre></div>
 
   <p>A moonapi application is just a value. You can run a request through it in-process with <code>App::handle</code>, which returns a response you can inspect — useful for tests and for the demos on this page.</p>
 

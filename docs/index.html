@@ -47,19 +47,23 @@
       <div class="pane">
         <div class="ph">app.mbt</div>
         <div class="codewrap">
-<pre><code>let app = @moonapi.App::new()
-app.get("/", _ctx =>
-  @moonapi.text(200, "Hello from moonapi"))
-app.get("/users/{id}", ctx =>
+<pre><code>#app.get("/")
+fn hello(_ctx : @moonapi.Context) -> Response {
+  @moonapi.text(200, "Hello from moonapi")
+}
+
+#app.get("/users/{id}")
+fn user(ctx : @moonapi.Context) -> Response {
   @moonapi.text(200,
-    "user " + ctx.param("id").unwrap_or("")))
-app.post("/users", _ctx =>
-  @moonapi.text(201, "created"))
+    "user " + ctx.param("id").unwrap_or(""))
+}
 
 // run a request in-process
+let app = @moonapi.App::new()
+register(app)
 let response = app.handle({
-http_method: "GET", path: "/users/42",
-query_string: b"", headers: [], body: b"",
+http_method: "GET", path: "/users/42",
+query_string: b"", headers: [], body: b"",
 })
 response.status  // 200</code></pre>
         </div>
