@@ -7,4 +7,5 @@ import {
   "moonbitstack/moonapi/security",
   "moonbitstack/moonasgi",
   "moonbitstack/moonhttp/method",
+  "moonbitstack/moonregex",
 }

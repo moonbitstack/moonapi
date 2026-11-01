@@ -38,6 +38,7 @@ fn spec(name : String, kind : String) -> @attr.Spec {
   let base = @attr.Spec::new(name)
   let base = if kind == "route" { base.positional("method", Str) } else { base }
   let base = base.positional("path", Str)
+  let base = base.optional("regex", Str).optional("glob", Str)
   if kind == "websocket" {
     return base.optional("name", Str).many("dependencies", Str)
   }
@@ -98,6 +99,19 @@ fn options(args : @attr.Args, where_ : String) -> Array[String] raise {
       out.push("\{key}=\{v}")
     }
   }
+  out.push_iter(matchers(args).iter())
+  out
+}
+
+///|
+/// The labelled arguments that say how a route matches, on any kind of route.
+fn matchers(args : @attr.Args) -> Array[String] {
+  let out = []
+  for key in ["regex", "glob"] {
+    if args.str(key) is Some(v) {
+      out.push(key + "=" + @quote.string(v).to_string())
+    }
+  }
   out
 }
 
@@ -140,6 +154,7 @@ fn statement(
     if !deps.is_empty() {
       parts.push("dependencies=" + quoted(deps))
     }
+    parts.push_iter(matchers(args).iter())
     return "\{target}.websocket(\{parts.join(", ")})"
   }
   let m = match verb {

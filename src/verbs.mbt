@@ -18,6 +18,13 @@
 /// written as routes whose paths are runtime expressions — the same keyword
 /// arguments FastAPI's path operations take. `hoops` wrap this one route, inside
 /// any its routers put around it.
+///
+/// `regex` and `glob` decide which paths this route answers in place of `path`,
+/// which is still what the OpenAPI document and `url_for` show. Either has to match
+/// the whole path; a regular expression's named groups are the path's parameters,
+/// and a glob's `*` and `**` bind the parameters `path` names, in order. Routes are
+/// tried in the order they were registered, these like any other, and the first
+/// that matches answers.
 pub fn App::route(
   self : App,
   verb : @route.Method,
@@ -39,6 +46,8 @@ pub fn App::route(
   openapi_extra? : Json,
   callbacks~ : Array[@route.Route] = [],
   hoops~ : Array[@route.Hoop] = [],
+  regex? : String,
+  glob? : String,
 ) -> Unit {
   self.router.route(
     verb,
@@ -60,6 +69,8 @@ pub fn App::route(
     openapi_extra?,
     callbacks~,
     hoops~,
+    regex?,
+    glob?,
   )
 }
 
@@ -93,6 +104,8 @@ pub fn App::route_stream(
   openapi_extra? : Json,
   callbacks~ : Array[@route.Route] = [],
   hoops~ : Array[@route.Hoop] = [],
+  regex? : String,
+  glob? : String,
 ) -> Unit {
   self.router.route_stream(
     verb,
@@ -114,6 +127,8 @@ pub fn App::route_stream(
     openapi_extra?,
     callbacks~,
     hoops~,
+    regex?,
+    glob?,
   )
 }
 
@@ -140,6 +155,8 @@ pub fn App::stream(
   openapi_extra? : Json,
   callbacks~ : Array[@route.Route] = [],
   hoops~ : Array[@route.Hoop] = [],
+  regex? : String,
+  glob? : String,
 ) -> Unit {
   self.router.stream(
     path,
@@ -160,6 +177,8 @@ pub fn App::stream(
     openapi_extra?,
     callbacks~,
     hoops~,
+    regex?,
+    glob?,
   )
 }
 
@@ -185,6 +204,8 @@ pub fn App::get(
   openapi_extra? : Json,
   callbacks~ : Array[@route.Route] = [],
   hoops~ : Array[@route.Hoop] = [],
+  regex? : String,
+  glob? : String,
 ) -> Unit {
   self.router.get(
     path,
@@ -205,6 +226,8 @@ pub fn App::get(
     openapi_extra?,
     callbacks~,
     hoops~,
+    regex?,
+    glob?,
   )
 }
 
@@ -230,6 +253,8 @@ pub fn App::post(
   openapi_extra? : Json,
   callbacks~ : Array[@route.Route] = [],
   hoops~ : Array[@route.Hoop] = [],
+  regex? : String,
+  glob? : String,
 ) -> Unit {
   self.router.post(
     path,
@@ -250,6 +275,8 @@ pub fn App::post(
     openapi_extra?,
     callbacks~,
     hoops~,
+    regex?,
+    glob?,
   )
 }
 
@@ -275,6 +302,8 @@ pub fn App::put(
   openapi_extra? : Json,
   callbacks~ : Array[@route.Route] = [],
   hoops~ : Array[@route.Hoop] = [],
+  regex? : String,
+  glob? : String,
 ) -> Unit {
   self.router.put(
     path,
@@ -295,6 +324,8 @@ pub fn App::put(
     openapi_extra?,
     callbacks~,
     hoops~,
+    regex?,
+    glob?,
   )
 }
 
@@ -320,6 +351,8 @@ pub fn App::patch(
   openapi_extra? : Json,
   callbacks~ : Array[@route.Route] = [],
   hoops~ : Array[@route.Hoop] = [],
+  regex? : String,
+  glob? : String,
 ) -> Unit {
   self.router.patch(
     path,
@@ -340,6 +373,8 @@ pub fn App::patch(
     openapi_extra?,
     callbacks~,
     hoops~,
+    regex?,
+    glob?,
   )
 }
 
@@ -365,6 +400,8 @@ pub fn App::delete(
   openapi_extra? : Json,
   callbacks~ : Array[@route.Route] = [],
   hoops~ : Array[@route.Hoop] = [],
+  regex? : String,
+  glob? : String,
 ) -> Unit {
   self.router.delete(
     path,
@@ -385,6 +422,8 @@ pub fn App::delete(
     openapi_extra?,
     callbacks~,
     hoops~,
+    regex?,
+    glob?,
   )
 }
 
@@ -410,6 +449,8 @@ pub fn App::options(
   openapi_extra? : Json,
   callbacks~ : Array[@route.Route] = [],
   hoops~ : Array[@route.Hoop] = [],
+  regex? : String,
+  glob? : String,
 ) -> Unit {
   self.router.options(
     path,
@@ -430,6 +471,8 @@ pub fn App::options(
     openapi_extra?,
     callbacks~,
     hoops~,
+    regex?,
+    glob?,
   )
 }
 
@@ -455,6 +498,8 @@ pub fn App::head(
   openapi_extra? : Json,
   callbacks~ : Array[@route.Route] = [],
   hoops~ : Array[@route.Hoop] = [],
+  regex? : String,
+  glob? : String,
 ) -> Unit {
   self.router.head(
     path,
@@ -475,6 +520,8 @@ pub fn App::head(
     openapi_extra?,
     callbacks~,
     hoops~,
+    regex?,
+    glob?,
   )
 }
 
@@ -500,6 +547,8 @@ pub fn App::trace(
   openapi_extra? : Json,
   callbacks~ : Array[@route.Route] = [],
   hoops~ : Array[@route.Hoop] = [],
+  regex? : String,
+  glob? : String,
 ) -> Unit {
   self.router.trace(
     path,
@@ -520,5 +569,7 @@ pub fn App::trace(
     openapi_extra?,
     callbacks~,
     hoops~,
+    regex?,
+    glob?,
   )
 }

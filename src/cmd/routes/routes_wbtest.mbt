@@ -176,3 +176,36 @@ test "mistakes are refused with where they are" {
     assert_eq(message.contains(words), true, msg=message)
   }
 }
+
+///|
+test "regex and glob pass through, on a route and on a websocket" {
+  let source =
+    #|#app.get("/users/{id}", regex="/users/(?P<id>[0-9]+)")
+    #|fn user(ctx : @moonapi.Context) -> @moonasgi.Response raise {
+    #|  @moonapi.text(200, "user")
+    #|}
+    #|
+    #|#app.get("/f/{name}", glob="/f/*.css")
+    #|fn file(ctx : @moonapi.Context) -> @moonasgi.Response raise {
+    #|  @moonapi.text(200, "file")
+    #|}
+    #|
+    #|#app.websocket("/ws/{room}", regex="/ws/(?P<room>[a-z]+)")
+    #|async fn room(ws : @moonapi.WebSocket) -> Unit {
+    #|  ws.close()
+    #|}
+  let code = generate(source)
+  assert_true(code.contains("regex=\"/users/(?P<id>[0-9]+)\""))
+  assert_true(code.contains("glob=\"/f/*.css\""))
+  assert_true(code.contains("regex=\"/ws/(?P<room>[a-z]+)\""))
+}
+
+///|
+test "an escape in an annotation comes out as the same escape" {
+  let source =
+    #|#app.get("/n/{id}", regex="/n/(?P<id>\\d+)")
+    #|fn n(ctx : @moonapi.Context) -> @moonasgi.Response raise {
+    #|  @moonapi.text(200, "n")
+    #|}
+  assert_true(generate(source).contains("(?P<id>\\\\d+)"))
+}

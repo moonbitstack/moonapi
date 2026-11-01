@@ -68,7 +68,7 @@ pub fn Router::include_router(
     self.routes.push({
       ..r,
       path,
-      pattern: Pattern::parse(path),
+      pattern: r.pattern.moved(path, prefix),
       tags: [..tags, ..r.tags],
       security: [..security, ..r.security],
       dependencies: [..dependencies, ..r.dependencies],
@@ -83,7 +83,7 @@ pub fn Router::include_router(
     self.ws_routes.push({
       ..w,
       path,
-      pattern: Pattern::parse(path),
+      pattern: w.pattern.moved(path, prefix),
       security: [..security, ..w.security],
       dependencies: [..dependencies, ..w.dependencies],
     })
@@ -95,7 +95,8 @@ pub fn Router::include_router(
 /// the including prefix like any other route. `security` and `dependencies` are
 /// checked before the handler runs, as on an HTTP route, and a refusal declines
 /// the handshake; `name` is the handle `App::url_for` resolves. The OpenAPI
-/// attributes do not apply, since a WebSocket route is not an operation.
+/// attributes do not apply, since a WebSocket route is not an operation. `regex`
+/// and `glob` decide what it answers, as on an HTTP route.
 pub fn Router::websocket(
   self : Router,
   path : String,
@@ -103,10 +104,12 @@ pub fn Router::websocket(
   name~ : String = "",
   security~ : Array[@security.SecurityRequirement] = [],
   dependencies~ : Array[String] = [],
+  regex? : String,
+  glob? : String,
 ) -> Unit {
   self.ws_routes.push({
     path,
-    pattern: Pattern::parse(path),
+    pattern: Pattern::of(path, regex?, glob?),
     handler,
     name,
     security,

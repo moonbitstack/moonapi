@@ -1,6 +1,6 @@
 name = "moonbitstack/moonapi"
 
-version = "0.17.6"
+version = "0.17.7"
 
 readme = "README.md"
 
@@ -29,7 +29,8 @@ import {
   "moonbitstack/moonzip@0.3.2",
   "moonbitstack/moonpug@0.1.2",
   "moonbitstack/mooncat@0.18.8",
-  "moonbitstack/moonast@0.2.2",
+  "moonbitstack/moonast@0.2.3",
+  "moonbitstack/moonregex@0.1.2",
   "moonbitlang/parser@0.4.6",
   "moonbitlang/async@0.22.5",
 }

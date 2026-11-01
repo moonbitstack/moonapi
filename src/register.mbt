@@ -305,6 +305,16 @@ pub fn App::websocket(
   name~ : String = "",
   security~ : Array[@security.SecurityRequirement] = [],
   dependencies~ : Array[String] = [],
+  regex? : String,
+  glob? : String,
 ) -> Unit {
-  self.router.websocket(path, handler, name~, security~, dependencies~)
+  self.router.websocket(
+    path,
+    handler,
+    name~,
+    security~,
+    dependencies~,
+    regex?,
+    glob?,
+  )
 }

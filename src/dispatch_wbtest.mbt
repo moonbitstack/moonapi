@@ -82,3 +82,66 @@ test "url_for refuses a value its convertor would not match" {
   assert_eq(app.url_for("user", params=Map([("id", "7")])), Some("/users/7"))
   assert_eq(app.url_for("user", params=Map([("id", "seven")])), None)
 }
+
+///|
+async test "a regular expression decides the route, and its groups are parameters" {
+  let app = App::new()
+  app.get(
+    "/users/{id}",
+    ctx => @status.text(200, ctx.param("id").unwrap_or("?")),
+    name="user",
+    regex="/users/(?P<id>[0-9]+)(?:/profile)?",
+  )
+  let got = app.handle(mkreq("GET", "/users/42/profile"))
+  assert_eq(got.status, 200)
+  assert_eq(got.body, b"42")
+  assert_eq(app.handle(mkreq("GET", "/users/abc")).status, 404)
+  // The template is still the route's name in the document and in `url_for`.
+  assert_true(path_exists(app.openapi(), "/users/{id}"))
+  assert_eq(app.url_for("user", params={ "id": "7" }), Some("/users/7"))
+}
+
+///|
+async test "a glob decides the route, and its wildcards bind the template's parameters" {
+  let app = App::new()
+  app.get(
+    "/assets/{file:path}",
+    ctx => @status.text(200, ctx.param("file").unwrap_or("?")),
+    glob="/assets/**.{css,js}",
+  )
+  assert_eq(app.handle(mkreq("GET", "/assets/a/b.css")).body, b"a/b")
+  assert_eq(app.handle(mkreq("GET", "/assets/a/b.png")).status, 404)
+}
+
+///|
+async test "routes are tried in order, a regex like any other" {
+  let app = App::new()
+  app.get("/items/new", _ctx => @status.text(200, "fixed"))
+  app.get(
+    "/items/{id}",
+    _ctx => @status.text(200, "pattern"),
+    regex="/items/.+",
+  )
+  assert_eq(app.handle(mkreq("GET", "/items/new")).body, b"fixed")
+  assert_eq(app.handle(mkreq("GET", "/items/9")).body, b"pattern")
+}
+
+///|
+async test "an included router's regex and glob sit under its prefix" {
+  let router = @route.Router::new()
+  router.get(
+    "/users/{id}",
+    ctx => @status.text(200, ctx.param("id").unwrap_or("?")),
+    regex="/users/(?P<id>[0-9]+)",
+  )
+  router.get(
+    "/files/{f}",
+    _ctx => @status.text(200, "file"),
+    glob="/files/*.txt",
+  )
+  let app = App::new()
+  app.include_router(router, prefix="/api")
+  assert_eq(app.handle(mkreq("GET", "/api/users/5")).body, b"5")
+  assert_eq(app.handle(mkreq("GET", "/users/5")).status, 404)
+  assert_eq(app.handle(mkreq("GET", "/api/files/a.txt")).status, 200)
+}

@@ -25,6 +25,12 @@ OPTIONS = [
     ("hoops", "Array[@route.Hoop]", "[]"),
 ]
 
+# How the route matches: they become its `Pattern`, so they are arguments and not fields.
+MATCHERS = [
+    ("regex", "String", None),
+    ("glob", "String", None),
+]
+
 VERBS = [
     ("get", "Get", "GET"),
     ("post", "Post", "POST"),
@@ -54,7 +60,14 @@ ROUTE_DOC = """/// Register a route for an explicit method. An optional `endpoin
 /// object, and `callbacks` the requests this operation makes back to its caller,
 /// written as routes whose paths are runtime expressions — the same keyword
 /// arguments FastAPI's path operations take. `hoops` wrap this one route, inside
-/// any its routers put around it."""
+/// any its routers put around it.
+///
+/// `regex` and `glob` decide which paths this route answers in place of `path`,
+/// which is still what the OpenAPI document and `url_for` show. Either has to match
+/// the whole path; a regular expression's named groups are the path's parameters,
+/// and a glob's `*` and `**` bind the parameters `path` names, in order. Routes are
+/// tried in the order they were registered, these like any other, and the first
+/// that matches answers."""
 
 STREAM_DOC = """/// Register a streaming route (← a FastAPI path operation returning a
 /// `StreamingResponse`). The handler's chunks reach the client as separate body
@@ -68,7 +81,7 @@ STREAM_DOC = """/// Register a streaming route (← a FastAPI path operation ret
 
 def params(owner):
     out = []
-    for name, typ, default in OPTIONS:
+    for name, typ, default in OPTIONS + MATCHERS:
         if owner == "Router":
             typ = typ.replace("@route.", "")
         out.append(f"  {name}? : {typ}," if default is None else f"  {name}~ : {typ} = {default},")
@@ -76,7 +89,9 @@ def params(owner):
 
 
 def forward():
-    return "\n".join(f"    {name}?," if default is None else f"    {name}~," for name, _, default in OPTIONS)
+    return "\n".join(
+        f"    {name}?," if default is None else f"    {name}~," for name, _, default in OPTIONS + MATCHERS
+    )
 
 
 def fields():
@@ -102,10 +117,10 @@ def router_file():
     parts.append(method(
         "Router", "route", ROUTE_DOC.replace("Register a route", "Register a route on the router"),
         "  verb : Method,\n  path : String,", "ApiHandler",
-        f"  self.routes.push({{\n    verb,\n    path,\n    pattern: Pattern::parse(path),\n    run: ctx => Buffered(handler(ctx)),\n{fields()}\n  }})"))
+        f"  self.routes.push({{\n    verb,\n    path,\n    pattern: Pattern::of(path, regex?, glob?),\n    run: ctx => Buffered(handler(ctx)),\n{fields()}\n  }})"))
     parts.append(method(
         "Router", "route_stream", STREAM_DOC, "  verb : Method,\n  path : String,", "StreamHandler",
-        f"  self.routes.push({{\n    verb,\n    path,\n    pattern: Pattern::parse(path),\n    run: ctx => Streamed(handler(ctx)),\n{fields()}\n  }})"))
+        f"  self.routes.push({{\n    verb,\n    path,\n    pattern: Pattern::of(path, regex?, glob?),\n    run: ctx => Streamed(handler(ctx)),\n{fields()}\n  }})"))
     parts.append(method(
         "Router", "stream",
         "/// Register a streaming `GET` route — the verb a stream is nearly always read\n/// over, and what an SSE endpoint is. A shorthand for `route_stream(Get, ...)`.",

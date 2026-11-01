@@ -47,6 +47,9 @@ pub extend Piece with Debug::{to_repr}
 pub(all) struct Pattern {
   source : String
   pieces : Array[Piece]
+  /// What decides the match instead of `pieces`, when the route gave `regex` or
+  /// `glob`.
+  matcher : Matcher?
 } derive(Eq, Debug)
 
 ///|
@@ -102,13 +105,16 @@ pub fn Pattern::parse(path : String) -> Pattern {
   if from < path.length() {
     pieces.push(Literal(path.view(start_offset=from).to_owned()))
   }
-  { source: path, pieces, }
+  { source: path, pieces, matcher: None, }
 }
 
 ///|
 /// The parameters `path` binds, or `None` when it does not match. The whole
 /// path must match: a trailing slash is a different path.
 pub fn Pattern::bind(self : Pattern, path : StringView) -> Map[String, String]? {
+  if self.matcher is Some(m) {
+    return m.bind(path)
+  }
   let params : Map[String, String] = Map([])
   if bind_from(self.pieces, 0, path, 0, params) {
     Some(params)
