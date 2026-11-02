@@ -76,6 +76,8 @@ same ASGI application `25-full-example` serves over Mooncat.
 | 17 | [`sse`](17-sse/) | Server-Sent Event framing (`data`/`event`/`id`/`retry`/multi-line/comment) streamed one body event per frame | `@sse.Event::of/new/ping`, `sse`, `App::stream`, `@testing.communicate` |
 | 18 | [`websocket`](18-websocket/) | A chat room that speaks first and echoes, and a JSON request-reply, driven by the test client | `App::websocket`, `WebSocket::accept/receive/send_text/send_json/close`, `@testing.Client::websocket` |
 | 19 | [`json-schema`](19-json-schema/) | A body written as JSON Schema — a `pattern` and a closed set the constructors cannot say — emitted into the document and validated against | `Schema::json`, `Endpoint::new`, `validate_schema` |
+| 20 | [`views`](20-views/) | A type that answers GET, PUT and DELETE on one path; a method it leaves out answers 405 with `Allow` | `View`, `App::view` |
+| 21 | [`route-table`](21-route-table/) | Routes in one table, apart from their handlers | `App::urls`, `path`, `group` |
 | 22 | [`docs-ui`](22-docs-ui/) | The three documentation pages — the spec, the API reference, ReDoc — and how to leave one off | `App::enable_docs`, `scalar_ui`, `swagger_ui`, `redoc_ui`, `html` |
 | 23 | [`lifespan`](23-lifespan/) | Startup and shutdown hooks in order, and the lifespan state a request reads, driven by the test client | `App::on_startup`, `App::on_shutdown`, `Context::state`, `@testing.Client::lifespan` |
 | 24 | [`files`](24-files/) | Serving a file the way RFC 9110 asks: a 304 for a repeat, a 206 for a resumed download, a 416 for a range that is not there, and the `data:` URL a browser hands back | `Context::serve`, `data_response`, `data_url`, `@conditional.hash` |

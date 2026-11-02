@@ -1,0 +1,10 @@
+// The guide's examples written as annotations. `routes.g.mbt` comes from `cmd/routes`.
+import {
+  "moonbitstack/moonapi",
+  "moonbitstack/moonapi/schema",
+  "moonbitstack/moonapi/exceptions",
+  "moonbitstack/moonasgi",
+  "moonbitlang/core/json",
+}
+
+formatter(ignore: [ "routes.g.mbt" ])

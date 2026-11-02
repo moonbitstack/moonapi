@@ -80,6 +80,42 @@ let hit = (verb : String, path : String) =&gt; {
   let req : @moonasgi.Request = {</code></pre></div>
       <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/02-routing" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
     </article>
+    <article class="ex-card">
+      <span class="tag">20-views</span>
+      <h3>Routes as a type</h3>
+      <p>A type implementing View answers GET, PUT and DELETE on one path; a method it leaves out answers 405 with Allow.</p>
+      <div class="codewrap"><pre><code>let app = @moonapi.App::new()
+app.view("/items/{id}", Item::{ shelf: "A", }, tags=["items"])
+for verb in ["GET", "PUT", "DELETE", "POST"] {
+  let r = app.handle({
+    http_method: verb,
+    path: "/items/7",
+    query_string: b"",
+    headers: [],
+    body: b"",
+  })
+  let allow = r.headers
+    .iter()</code></pre></div>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/20-views" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+    </article>
+    <article class="ex-card">
+      <span class="tag">21-route-table</span>
+      <h3>A route table</h3>
+      <p>Keep routes in one table apart from their handlers: path, view and group entries registered with app.urls.</p>
+      <div class="codewrap"><pre><code>let app = @moonapi.App::new()
+app.urls([
+  @moonapi.path("/", home),
+  @moonapi.path("/items", create_item, methods=[Post]),
+  @moonapi.group("/admin", [@moonapi.path("/stats", stats)], tags=["admin"]),
+])
+for request in [("GET", "/"), ("POST", "/items"), ("GET", "/admin/stats")] {
+  let r = app.handle({
+    http_method: request.0,
+    path: request.1,
+    query_string: b"",
+    headers: [],</code></pre></div>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/21-route-table" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+    </article>
     </div>
   </section>
   <section class="section ex-group">

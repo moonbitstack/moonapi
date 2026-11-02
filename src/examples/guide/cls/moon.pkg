@@ -1,0 +1,9 @@
+// The guide's examples written as types implementing `View`.
+import {
+  "moonbitstack/moonapi",
+  "moonbitstack/moonapi/schema",
+  "moonbitstack/moonapi/exceptions",
+  "moonbitlang/core/json",
+}
+
+warnings = "-missing_priv"

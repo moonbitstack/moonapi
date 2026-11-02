@@ -94,6 +94,14 @@ META = {
         "Bodies & validation", "Inspect the emitted JSON schema",
         "See exactly what schema a typed body contributes to the generated OpenAPI document.",
     ),
+    "20-views": (
+        "Start here", "Routes as a type",
+        "A type implementing View answers GET, PUT and DELETE on one path; a method it leaves out answers 405 with Allow.",
+    ),
+    "21-route-table": (
+        "Start here", "A route table",
+        "Keep routes in one table apart from their handlers: path, view and group entries registered with app.urls.",
+    ),
     "22-docs-ui": (
         "OpenAPI & docs UI", "Serve the docs UI",
         "Enable the bundled UI and hit /openapi.json, /docs and /redoc for the live specification.",

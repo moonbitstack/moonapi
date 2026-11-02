@@ -1,0 +1,22 @@
+// Runs every request of the guide against the three ways of writing it; `scripts/gen_guide.py`
+// puts the output on the page.
+import {
+  "moonbitstack/moonapi/examples/guide/ann",
+  "moonbitstack/moonapi/examples/guide/annapi",
+  "moonbitstack/moonapi/examples/guide/fns",
+  "moonbitstack/moonapi/examples/guide/cls",
+  "moonbitstack/moonapi",
+  "moonbitlang/async",
+  "moonbitlang/core/encoding/utf8",
+}
+
+pkgtype(kind: "executable")
+
+warnings = "-29"
+
+options(
+  targets: {
+    "main.mbt": [ "native", "wasm", "js" ],
+    "elsewhere.mbt": [ "wasm-gc" ],
+  },
+)

@@ -1,0 +1,7 @@
+// The guide's examples written as one call per route.
+import {
+  "moonbitstack/moonapi",
+  "moonbitstack/moonapi/schema",
+  "moonbitstack/moonapi/exceptions",
+  "moonbitlang/core/json",
+}

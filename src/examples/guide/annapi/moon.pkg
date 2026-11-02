@@ -1,0 +1,7 @@
+// The guide's OpenAPI example written as annotations, an app of its own.
+import {
+  "moonbitstack/moonapi",
+  "moonbitstack/moonasgi",
+}
+
+formatter(ignore: [ "routes.g.mbt" ])

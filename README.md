@@ -107,6 +107,34 @@ async fn main {
 }
 ```
 
+### As types
+
+A type implementing `View` answers the methods of one path, and `app.view` registers each
+method it answers. A method it leaves out answers `405`, with `Allow` naming the ones it does:
+
+```moonbit
+struct User {}
+
+impl @moonapi.View for User with get(_) {
+  Some(ctx => @moonapi.text(200, "user " + ctx.param("id").unwrap_or("")))
+}
+
+impl @moonapi.View for User with delete(_) {
+  Some(_ctx => @moonapi.text(204, ""))
+}
+
+async fn main {
+  let app = @moonapi.App::new()
+  app.view("/users/{id}", User::{})
+  @mooncat.serve(app.to_asgi(), port=12000) catch {
+    err => println("stopped: \{err}")
+  }
+}
+```
+
+`app.urls` takes a route table instead, kept apart from the handlers: `path`, `view` and
+`group` each make an entry.
+
 ```
 moon run src/main --target native
 curl http://127.0.0.1:12000/users/233

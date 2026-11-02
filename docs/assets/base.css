@@ -519,3 +519,34 @@ html, button, input, textarea, select { font-variant-ligatures: no-contextual; }
 @supports not selector(::-webkit-scrollbar) {
   html:not(.scrolling) { scrollbar-color: transparent transparent; }
 }
+
+/* ---- how routes are written: one switch for the whole guide ---- */
+.style-bar {
+  position: sticky; top: 66px; z-index: 5;
+  display: flex; justify-content: flex-end;
+  margin: 0 0 .6rem; pointer-events: none;
+}
+.style-switch {
+  pointer-events: auto;
+  display: inline-flex; align-items: center; gap: .2rem;
+  padding: .25rem; border-radius: 11px;
+  background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow-sm);
+}
+.style-switch .style-label { color: var(--muted); font-size: .78rem; padding: 0 .4rem 0 .45rem; }
+.style-switch button {
+  font: inherit; font-size: .82rem; font-weight: 500; color: var(--muted);
+  background: transparent; border: 0; border-radius: 8px; cursor: pointer;
+  padding: .34rem .72rem .26rem;
+}
+.style-switch button:hover { color: var(--ink); background: var(--iris-tint); }
+.style-switch button[aria-checked="true"] { color: var(--iris-strong); background: var(--iris-tint); }
+.style-switch button:focus-visible { outline: 2px solid var(--iris); outline-offset: 1px; }
+.styles > .variant { display: none; }
+html:not([data-style]) .styles > [data-style="annotations"],
+html[data-style="annotations"] .styles > [data-style="annotations"],
+html[data-style="functions"] .styles > [data-style="functions"],
+html[data-style="classes"] .styles > [data-style="classes"] { display: block; }
+@media (width <= 520px) {
+  .style-switch .style-label { display: none; }
+  .style-switch button { padding: .34rem .55rem .26rem; }
+}

@@ -1,0 +1,40 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonapi/examples/guide/cls"
+
+import {
+  "moonbitstack/moonapi",
+}
+
+// Values
+pub fn app() -> @moonapi.App
+
+pub fn openapi_app() -> @moonapi.App
+
+// Errors
+
+// Types and methods
+type Boom
+
+type Echo
+
+type Greet
+
+type Home
+
+type Item
+
+type Items
+
+type Login
+
+type Ping
+
+type Search
+
+type User
+
+type Users
+
+// Type aliases
+
+// Traits

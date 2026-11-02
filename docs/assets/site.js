@@ -19,6 +19,40 @@
     applyTheme(cur === "dark" ? "light" : "dark");
   });
 
+  /* ---------- how routes are written ---------- */
+  var STYLES = ["annotations", "functions", "classes"];
+  function applyStyle(s) {
+    root.setAttribute("data-style", s);
+    document.querySelectorAll("[data-style-pick]").forEach(function (b) {
+      var on = b.getAttribute("data-style-pick") === s;
+      b.setAttribute("aria-checked", on ? "true" : "false");
+      b.tabIndex = on ? 0 : -1;
+    });
+  }
+  function pickStyle(s, focus) {
+    applyStyle(s);
+    try { localStorage.setItem("moonapi-style", s); } catch (e) {}
+    if (focus) {
+      var b = document.querySelector('[data-style-pick="' + s + '"]');
+      if (b) b.focus();
+    }
+  }
+  var savedStyle = null;
+  try { savedStyle = localStorage.getItem("moonapi-style"); } catch (e) {}
+  applyStyle(STYLES.indexOf(savedStyle) >= 0 ? savedStyle : "annotations");
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-style-pick]");
+    if (b) pickStyle(b.getAttribute("data-style-pick"), false);
+  });
+  document.addEventListener("keydown", function (e) {
+    var b = e.target.closest && e.target.closest("[data-style-pick]");
+    if (!b || (e.key !== "ArrowRight" && e.key !== "ArrowLeft")) return;
+    var i = STYLES.indexOf(b.getAttribute("data-style-pick"));
+    var step = e.key === "ArrowRight" ? 1 : STYLES.length - 1;
+    pickStyle(STYLES[(i + step) % STYLES.length], true);
+    e.preventDefault();
+  });
+
   /* ---------- copy buttons ---------- */
   document.addEventListener("click", function (e) {
     var b = e.target.closest("[data-copy]");

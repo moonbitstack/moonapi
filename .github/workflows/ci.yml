@@ -61,7 +61,14 @@ jobs:
           git -c core.autocrlf=false diff --ignore-cr-at-eol --exit-code -- src/verbs.mbt src/route/verbs.mbt
 
       - name: generated routes are fresh
-        run: moon run src/cmd/routes --target native -- -C . src/examples/27-annotations/routes.mbt -o src/examples/27-annotations/routes.g.mbt --check
+        run: |
+          for dir in 27-annotations guide/ann guide/annapi; do
+            moon run src/cmd/routes --target native -- -C . src/examples/$dir/routes.mbt -o src/examples/$dir/routes.g.mbt --check
+          done
+
+      - name: the guide shows the code it runs
+        if: runner.os == 'Linux'
+        run: python3 scripts/gen_guide.py --check
 
       - name: annotated example runs
         run: moon run src/examples/27-annotations | grep -q "PURGE /cache -> 200 purged"
