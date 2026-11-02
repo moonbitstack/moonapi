@@ -76,11 +76,11 @@ response.status  // 200</code></pre></div>
 
   <div class="term">
     <div class="term-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="title">recorded · App::handle</span></div>
-    <div class="term-body"><span class="ok">GET /</span>            <span class="accent">-> 200</span> Hello from moonapi
-<span class="ok">GET /users/42</span>     <span class="accent">-> 200</span> user 42
-<span class="ok">POST /users</span>      <span class="accent">-> 201</span> created
-<span class="ok">GET /missing</span>     <span class="accent">-> 404</span> {"detail":"Not Found"}
-<span class="ok">DELETE /</span>        <span class="accent">-> 405</span> {"detail":"Method Not Allowed"}</div>
+    <div class="term-body"><span class="ok">GET /</span>          <span class="accent">-> 200</span> Hello from moonapi
+<span class="ok">GET /users/42</span>  <span class="accent">-> 200</span> user 42
+<span class="ok">POST /users</span>    <span class="accent">-> 201</span> created
+<span class="ok">GET /missing</span>   <span class="accent">-> 404</span> {"detail":"Not Found"}
+<span class="ok">DELETE /</span>       <span class="accent">-> 405</span> {"detail":"Method Not Allowed"}</div>
   </div>
 
   <!-- ============ 2. ROUTING ============ -->
@@ -98,15 +98,15 @@ app.route(Options, "/items", _ctx => @moonapi.text(204, ""))</code></pre></div>
 
   <div class="term">
     <div class="term-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="title">recorded · every verb</span></div>
-    <div class="term-body"><span class="ok">GET</span>    /items/233             <span class="accent">-> 200</span> item 233
-<span class="ok">POST</span>   /items                  <span class="accent">-> 201</span> created
-<span class="ok">PUT</span>    /items/233             <span class="accent">-> 200</span> replaced
-<span class="ok">PATCH</span>  /items/233             <span class="accent">-> 200</span> patched
-<span class="ok">DELETE</span> /items/233             <span class="accent">-> 200</span> deleted
-<span class="ok">HEAD</span>   /items                  <span class="accent">-> 200</span>
-<span class="ok">OPTIONS</span>/items                  <span class="accent">-> 204</span>
-<span class="ok">GET</span>    /items   <span class="muted">(exists, wrong verb)</span> <span class="accent">-> 405</span> {"detail":"Method Not Allowed"}
-<span class="ok">GET</span>    /missing  <span class="muted">(no such path)</span>     <span class="accent">-> 404</span> {"detail":"Not Found"}</div>
+    <div class="term-body"><span class="ok">GET</span>     /items/233                      <span class="accent">-> 200</span> item 233
+<span class="ok">POST</span>    /items                          <span class="accent">-> 201</span> created
+<span class="ok">PUT</span>     /items/233                      <span class="accent">-> 200</span> replaced
+<span class="ok">PATCH</span>   /items/233                      <span class="accent">-> 200</span> patched
+<span class="ok">DELETE</span>  /items/233                      <span class="accent">-> 200</span> deleted
+<span class="ok">HEAD</span>    /items                          <span class="accent">-> 200</span>
+<span class="ok">OPTIONS</span> /items                          <span class="accent">-> 204</span>
+<span class="ok">GET</span>     /items    <span class="muted">(exists, wrong verb)</span>  <span class="accent">-> 405</span> {"detail":"Method Not Allowed"}
+<span class="ok">GET</span>     /missing  <span class="muted">(no such path)</span>        <span class="accent">-> 404</span> {"detail":"Not Found"}</div>
   </div>
 
   <p>Routes can be named so you can build their URLs later with <code>App::url_for</code> — handy for redirects and links.</p>
@@ -158,9 +158,9 @@ app.url_for("get_item", params=Map([("id", "77")]))
 
   <div class="term">
     <div class="term-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="title">recorded · validated extraction</span></div>
-    <div class="term-body"><span class="ok">POST</span> /greet {"name":"lfanke"}      <span class="accent">-> 200</span> Hello, lfanke
-<span class="ok">POST</span> /greet {"name":233}          <span class="accent">-> 422</span> {"detail":[{"type":"string_type","loc":["body","name"],"msg":"Input should be a valid string"}]}
-<span class="ok">POST</span> /greet                          <span class="accent">-> 422</span> {"detail":[{"type":"missing","loc":["body"],"msg":"Field required"}]}</div>
+    <div class="term-body"><span class="ok">POST</span> /greet {"name":"lfanke"}  <span class="accent">-> 200</span> Hello, lfanke
+<span class="ok">POST</span> /greet {"name":233}       <span class="accent">-> 422</span> {"detail":[{"type":"string_type","loc":["body","name"],"msg":"Input should be a valid string"}]}
+<span class="ok">POST</span> /greet                    <span class="accent">-> 422</span> {"detail":[{"type":"missing","loc":["body"],"msg":"Field required"}]}</div>
   </div>
   <p class="note">The unchecked counterpart <code>Context::body</code> returns a <code>T?</code> — <code>None</code> when the body cannot shape-match, rather than an error. Use it when a missing payload is not exceptional.</p>
 
