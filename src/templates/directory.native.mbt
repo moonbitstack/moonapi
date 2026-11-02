@@ -15,7 +15,7 @@ pub async fn load_directory(path : String) -> Map[String, String] {
     for name in names {
       let full = dir + "/" + name
       guard @fs.kind(full) is Regular else { continue }
-      let rel = full.view(start_offset=root.length() + 1).to_owned()
+      let rel = full.exact_view(start=root.length() + 1).to_owned()
       out[rel.replace_all(old="\\", new="/")] = @utf8.decode_lossy(
         @fs.read_file(full).binary()[:],
       )

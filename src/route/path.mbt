@@ -72,16 +72,16 @@ pub fn Pattern::parse(path : String) -> Pattern {
       i += 1
       continue
     }
-    let close = match path.view(start_offset=i).find("}") {
+    let close = match path.exact_view(start=i).find("}") {
       Some(k) => i + k
       None => abort("route path \{path}: `{` is never closed")
     }
-    let inside = path.view(start_offset=i + 1, end_offset=close)
+    let inside = path.exact_view(start=i + 1, end=close)
     let (name, convertor) = match inside.find(":") {
       Some(k) => {
-        let conv = inside.view(start_offset=k + 1)
+        let conv = inside.exact_view(start=k + 1)
         match Convertor::of(conv) {
-          Some(c) => (inside.view(end_offset=k).to_owned(), c)
+          Some(c) => (inside.exact_view(end=k).to_owned(), c)
           None => abort("route path \{path}: no convertor called `\{conv}`")
         }
       }
@@ -94,16 +94,14 @@ pub fn Pattern::parse(path : String) -> Pattern {
       abort("route path \{path}: two parameters with nothing between them")
     }
     if i > from {
-      pieces.push(
-        Literal(path.view(start_offset=from, end_offset=i).to_owned()),
-      )
+      pieces.push(Literal(path.exact_view(start=from, end=i).to_owned()))
     }
     pieces.push(Param(name~, convertor~))
     i = close + 1
     from = i
   }
   if from < path.length() {
-    pieces.push(Literal(path.view(start_offset=from).to_owned()))
+    pieces.push(Literal(path.exact_view(start=from).to_owned()))
   }
   { source: path, pieces, matcher: None, }
 }
@@ -136,13 +134,13 @@ fn bind_from(
   }
   match pieces[i] {
     Literal(text) => {
-      let rest = path.view(start_offset=at)
+      let rest = path.exact_view(start=at)
       rest.has_prefix(text) &&
       bind_from(pieces, i + 1, path, at + text.length(), params)
     }
     Param(name~, convertor~) => {
       for end in ends(convertor, path, at) {
-        params[name] = path.view(start_offset=at, end_offset=end).to_owned()
+        params[name] = path.exact_view(start=at, end~).to_owned()
         if bind_from(pieces, i + 1, path, end, params) {
           return true
         }
@@ -200,7 +198,7 @@ fn ends(convertor : Convertor, path : StringView, at : Int32) -> Array[Int32] {
       out
     }
     Uuid =>
-      if at + 36 <= n && is_uuid(path.view(start_offset=at, end_offset=at + 36)) {
+      if at + 36 <= n && is_uuid(path.exact_view(start=at, end=at + 36)) {
         [at + 36]
       } else {
         []
@@ -236,7 +234,7 @@ pub fn Pattern::fill(self : Pattern, params : Map[String, String]) -> String? {
       Literal(text) => out.write_string(text)
       Param(name~, convertor~) => {
         guard params.get(name) is Some(value) else { return None }
-        guard ends(convertor, value.view(), 0) is [whole, ..] &&
+        guard ends(convertor, value[:], 0) is [whole, ..] &&
           whole == value.length() &&
           (convertor is Path || !value.contains("/")) else {
           return None

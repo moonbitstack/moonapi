@@ -44,7 +44,7 @@ fn matcher_of(route : String, source : String) -> Matcher {
 /// request that makes one run away is a request this route does not answer.
 fn Matcher::bind(self : Matcher, path : StringView) -> Map[String, String]? {
   guard path.has_prefix(self.prefix) else { return None }
-  let rest = path.view(start_offset=self.prefix.length()).to_owned()
+  let rest = path.exact_view(start=self.prefix.length()).to_owned()
   let found = self.compiled.full(rest) catch { _ => return None }
   found.map(m => m.groupdict(default=Some("")))
 }
