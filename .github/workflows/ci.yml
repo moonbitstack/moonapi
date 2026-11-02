@@ -61,6 +61,7 @@ jobs:
           git -c core.autocrlf=false diff --ignore-cr-at-eol --exit-code -- src/verbs.mbt src/route/verbs.mbt
 
       - name: generated routes are fresh
+        shell: bash
         run: |
           for dir in 27-annotations guide/ann guide/annapi; do
             moon run src/cmd/routes --target native -- -C . src/examples/$dir/routes.mbt -o src/examples/$dir/routes.g.mbt --check
