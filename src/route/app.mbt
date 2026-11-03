@@ -55,6 +55,11 @@ pub(all) struct Route {
   // handler builds its own response, and rewriting the status it chose would make
   // the app disagree with itself rather than with the spec.
   status_code : Int32?
+  // The media type the success response is documented under, said as the kind of
+  // body it carries. Also documentation only, and for the same reason: a client
+  // that knows what to parse is what the document is for, and the handler is
+  // still the one that wrote the bytes.
+  response_class : @status.ResponseClass
   // Documented alongside whatever the endpoint descriptor produced, and written
   // after it, so the status a route names here is the one that stands.
   responses : Array[@endpoint.ResponseSpec]

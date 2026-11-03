@@ -13,6 +13,7 @@ OPTIONS = [
     ("deprecated", "Bool", "false"),
     ("operation_id", "String", '""'),
     ("status_code", "Int", None),
+    ("response_class", "@status.ResponseClass", "Json"),
     ("responses", "Array[@endpoint.ResponseSpec]", "[]"),
     ("name", "String", '""'),
     ("endpoint", "@endpoint.Endpoint", None),
@@ -55,12 +56,13 @@ ROUTE_DOC = """/// Register a route for an explicit method. An optional `endpoin
 /// The rest describe the operation: `summary` and `description` are its prose,
 /// `operation_id` the stable handle client generators name their method after,
 /// `status_code` the status its success response is documented under,
-/// `responses` further documented responses, `name` the handle `App::url_for`
-/// resolves, `openapi_extra` a fragment merged over the generated operation
-/// object, and `callbacks` the requests this operation makes back to its caller,
-/// written as routes whose paths are runtime expressions — the same keyword
-/// arguments FastAPI's path operations take. `hoops` wrap this one route, inside
-/// any its routers put around it.
+/// `response_class` the kind of body that response carries and therefore the
+/// media type it is documented under, `responses` further documented responses,
+/// `name` the handle `App::url_for` resolves, `openapi_extra` a fragment merged
+/// over the generated operation object, and `callbacks` the requests this
+/// operation makes back to its caller, written as routes whose paths are runtime
+/// expressions — the same keyword arguments FastAPI's path operations take.
+/// `hoops` wrap this one route, inside any its routers put around it.
 ///
 /// `regex` and `glob` decide which paths this route answers in place of `path`,
 /// which is still what the OpenAPI document and `url_for` show. Either has to match

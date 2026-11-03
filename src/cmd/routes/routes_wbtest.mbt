@@ -154,6 +154,10 @@ test "mistakes are refused with where they are" {
       "users.mbt:1:", "status_code",
     ),
     (
+      "#app.get(\"/x\", response_class=\"markdown\")\nfn x(ctx : @moonapi.Context) -> @moonasgi.Response raise { abort(\"\") }\n",
+      "users.mbt:1:", "response_class is json, text, html",
+    ),
+    (
       "#app.fetch(\"/x\")\nfn x(ctx : @moonapi.Context) -> @moonasgi.Response raise { abort(\"\") }\n",
       "users.mbt:1:", "not a route annotation",
     ),
@@ -198,6 +202,25 @@ test "regex and glob pass through, on a route and on a websocket" {
   assert_true(code.contains("regex=\"/users/(?P<id>[0-9]+)\""))
   assert_true(code.contains("glob=\"/f/*.css\""))
   assert_true(code.contains("regex=\"/ws/(?P<room>[a-z]+)\""))
+}
+
+///|
+test "a response class is written as the constructor it stands for" {
+  let source =
+    #|#app.get("/a", response_class="text")
+    #|fn a(ctx : @moonapi.Context) -> @moonasgi.Response raise {
+    #|  @moonapi.text(200, "a")
+    #|}
+    #|
+    #|#app.get("/b", response_class="event_stream")
+    #|fn b(ctx : @moonapi.Context) -> @moonasgi.Response raise {
+    #|  @moonapi.text(200, "b")
+    #|}
+  let code = generate(source)
+  assert_true(code.contains("response_class=@moonapi.ResponseClass::Text"))
+  assert_true(
+    code.contains("response_class=@moonapi.ResponseClass::EventStream"),
+  )
 }
 
 ///|

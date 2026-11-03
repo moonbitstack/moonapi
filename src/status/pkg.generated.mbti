@@ -197,6 +197,16 @@ pub struct Events {
 pub async fn Events::ping(Self, comment? : String) -> Unit
 pub async fn Events::send(Self, @sse.Event) -> Unit
 
+pub(all) enum ResponseClass {
+  Json
+  Text
+  Html
+  Xml
+  EventStream
+  Bytes
+}
+pub fn ResponseClass::media_type(Self) -> String
+
 pub(all) struct Stream {
   status : Int32
   headers : Array[(String, String)]

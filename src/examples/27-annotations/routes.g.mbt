@@ -8,6 +8,7 @@ pub fn register(app : @moonapi.App) -> Unit {
     ctx => read_item(ctx),
     summary="Read an item",
     tags=["items"],
+    response_class=@moonapi.ResponseClass::Text,
   )
   app.route(
     Post,

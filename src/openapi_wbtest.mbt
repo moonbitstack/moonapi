@@ -831,3 +831,148 @@ test "openapi: named examples on a parameter, a body and a response" {
     Some({ "id": 1 }),
   )
 }
+
+///|
+test "openapi: a route's response class is the media type of its success response" {
+  let app = App::new()
+  app.get(
+    "/hello",
+    _ctx => @status.text(200, "hi"),
+    response_class=Text,
+    summary="Says hello in plain text",
+  )
+  let no_shape : Map[String, Json] = Map([])
+  for version in [@schema.OpenApi30, OpenApi31] {
+    let ok = dig(app.openapi(version~), [
+      "paths", "/hello", "get", "responses", "200",
+    ]).unwrap()
+    assert_eq(json_str(ok, "description"), "OK")
+    // The body has no declared shape, so the media type object is empty — what
+    // the route answers is still said, which is the point of naming a class.
+    assert_eq(
+      dig(ok, ["content", "text/plain; charset=utf-8"]),
+      Some(Json(no_shape)),
+    )
+    assert_eq(dig(ok, ["content", "application/json"]), None)
+  }
+  // Swagger 2.0 states media types on the operation, not the response.
+  let op20 = dig(app.openapi(version=Swagger20), ["paths", "/hello", "get"]).unwrap()
+  assert_eq(dig(op20, ["produces"]), Some(Json(["text/plain; charset=utf-8"])))
+  assert_eq(dig(op20, ["responses", "200", "schema"]), None)
+}
+
+///|
+test "openapi: a declared success response keeps its schema under the class's media type" {
+  let ep = @endpoint.Endpoint::new(responses=[
+    @endpoint.ResponseSpec::new(200, body=SStr),
+    @endpoint.ResponseSpec::new(404, body=SStr),
+  ])
+  let app = App::new()
+  app.get(
+    "/page",
+    _ctx => @status.html(200, "<p>hi</p>"),
+    endpoint=ep,
+    response_class=Html,
+  )
+  let doc = app.openapi(version=OpenApi31)
+  let ok = dig(doc, ["paths", "/page", "get", "responses", "200"]).unwrap()
+  assert_eq(
+    json_str(
+      dig(ok, ["content", "text/html; charset=utf-8", "schema"]).unwrap(),
+      "type",
+    ),
+    "string",
+  )
+  assert_eq(dig(ok, ["content", "application/json"]), None)
+  // The class speaks for the success status alone: an error is still the JSON
+  // envelope the app raises.
+  let miss = dig(doc, ["paths", "/page", "get", "responses", "404"]).unwrap()
+  assert_eq(
+    json_str(
+      dig(miss, ["content", "application/json", "schema"]).unwrap(),
+      "type",
+    ),
+    "string",
+  )
+  assert_eq(dig(miss, ["content", "text/html; charset=utf-8"]), None)
+}
+
+///|
+test "openapi: a route naming no class documents what it always did" {
+  let app = App::new()
+  app.get("/plain", _ctx => @status.text(200, "x"))
+  let ok = dig(app.openapi(version=OpenApi31), [
+    "paths", "/plain", "get", "responses", "200",
+  ]).unwrap()
+  assert_eq(dig(ok, ["content"]), None)
+  assert_eq(
+    dig(app.openapi(version=Swagger20), ["paths", "/plain", "get", "produces"]),
+    None,
+  )
+}
+
+///|
+test "openapi: every class maps to the media type its helper writes" {
+  let cases : Array[(@status.ResponseClass, String)] = [
+    (Json, "application/json"),
+    (Text, "text/plain; charset=utf-8"),
+    (Html, "text/html; charset=utf-8"),
+    (Xml, "application/xml"),
+    (EventStream, "text/event-stream"),
+    (Bytes, "application/octet-stream"),
+  ]
+  let no_shape : Map[String, Json] = Map([])
+  for entry in cases {
+    let app = App::new()
+    app.get("/x", _ctx => @status.text(200, ""), response_class=entry.0)
+    let ok = dig(app.openapi(version=OpenApi31), [
+      "paths", "/x", "get", "responses", "200",
+    ]).unwrap()
+    if entry.0 is Json {
+      assert_eq(dig(ok, ["content"]), None)
+    } else {
+      assert_eq(dig(ok, ["content", entry.1]), Some(Json(no_shape)))
+    }
+  }
+}
+
+///|
+async test "openapi: a mounted sub-application's webhooks join the parent document" {
+  let billing = App::new()
+  billing.webhooks.post(
+    "invoice-paid",
+    _ctx => @status.text(200, ""),
+    summary="Billing says the invoice was paid",
+  )
+  billing.webhooks.post(
+    "quota-exceeded",
+    _ctx => @status.text(200, ""),
+    summary="Billing's own",
+  )
+  let app = App::new()
+  app.webhooks.post(
+    "quota-exceeded",
+    _ctx => @status.text(200, ""),
+    summary="The outer application's",
+  )
+  app.mount("/billing", billing)
+  let doc = app.openapi(version=OpenApi31)
+  // The sub-application's webhook comes along with it.
+  assert_eq(
+    json_str(dig(doc, ["webhooks", "invoice-paid", "post"]).unwrap(), "summary"),
+    "Billing says the invoice was paid",
+  )
+  // A name both of them claim describes one webhook: the outer one's, since the
+  // document is the outer application's.
+  assert_eq(
+    json_str(
+      dig(doc, ["webhooks", "quota-exceeded", "post"]).unwrap(),
+      "summary",
+    ),
+    "The outer application's",
+  )
+  // A webhook is a request this API sends, never one it answers — not at the
+  // mount either.
+  assert_eq(app.handle(mkreq("POST", "/billing/invoice-paid")).status, 404)
+  assert_eq(app.handle(mkreq("POST", "invoice-paid")).status, 404)
+}

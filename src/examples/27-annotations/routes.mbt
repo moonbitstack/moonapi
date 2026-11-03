@@ -1,5 +1,5 @@
 ///|
-#app.get("/items/{id}", summary="Read an item", tags="items")
+#app.get("/items/{id}", summary="Read an item", tags="items", response_class="text")
 fn read_item(ctx : @moonapi.Context) -> @moonasgi.Response {
   @moonapi.text(200, "item " + ctx.param("id").unwrap_or(""))
 }

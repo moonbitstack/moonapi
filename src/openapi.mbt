@@ -7,8 +7,9 @@
 ///
 /// The webhooks go under `webhooks`, which only 3.1 has; callbacks go under
 /// their operation in both 3.x dialects. Swagger 2.0 can express neither and
-/// leaves them out. The named arguments override what `App::describe` set, for
-/// this one document.
+/// leaves them out. A route's `response_class` keys its success response's
+/// content in 3.x and becomes the operation's `produces` in 2.0. The named
+/// arguments override what `App::describe` set, for this one document.
 pub fn App::openapi(
   self : App,
   version~ : @schema.OpenApiVersion = OpenApi31,
@@ -55,7 +56,9 @@ pub fn App::openapi(
   }
   let hooks : Map[String, Json] = Map([])
   if version is OpenApi31 {
-    for route in self.webhooks.routes {
+    let declared : Array[@route.Route] = []
+    self.collect_webhooks(declared, Map([]))
+    for route in declared {
       guard route.include_in_schema &&
         operation_key(route.verb, version) is Some(key) else {
         continue
@@ -170,10 +173,14 @@ fn operation(
     op["operationId"] = Json(route.operation_id)
   }
   let ok_status = route.status_code.unwrap_or(200)
+  // What the success response's body is documented as. A route naming no class
+  // says nothing beyond the JSON every untyped response already implies, and the
+  // document stays written the way it always was.
+  let ok_media = route.response_class.media_type()
   match route.endpoint {
     // A typed route: walk its descriptor once for parameters, request body,
     // responses, and any hoisted component schemas.
-    Some(ep) => emit_endpoint(op, ep, defs, version, ok_status)
+    Some(ep) => emit_endpoint(op, ep, defs, version, ok_status, ok_media)
     // An untyped route: the path's own parameters and a default response.
     None => {
       let params = if path_params {
@@ -184,12 +191,25 @@ fn operation(
       if params.length() > 0 {
         op["parameters"] = Json(params)
       }
-      let ok : Map[String, Json] = Map([("description", Json("OK"))])
       let responses : Map[String, Json] = Map([
-        (ok_status.to_string(), Json(ok)),
+        (
+          ok_status.to_string(),
+          response_json(
+            @endpoint.ResponseSpec::new(ok_status),
+            defs,
+            version,
+            media_type=ok_media,
+          ),
+        ),
       ])
       op["responses"] = Json(responses)
     }
+  }
+  // Swagger 2.0 has no media type on the response object: it lists them once on
+  // the operation. Written only when there is something to say, so an operation
+  // that answers JSON reads as it always did.
+  if version is Swagger20 && ok_media != "application/json" {
+    op["produces"] = Json([ok_media])
   }
   // The route's own `responses` are written after the descriptor's, so on a
   // status both name, the one declared at the route stands.
@@ -199,7 +219,16 @@ fn operation(
       _ => Map([])
     }
     for rs in route.responses {
-      responses[rs.status.to_string()] = response_json(rs, defs, version)
+      responses[rs.status.to_string()] = response_json(
+        rs,
+        defs,
+        version,
+        media_type=if rs.status == ok_status {
+          ok_media
+        } else {
+          "application/json"
+        },
+      )
     }
     op["responses"] = Json(responses)
   }
@@ -326,6 +355,34 @@ fn App::collect_routes(
 }
 
 ///|
+/// Collect this app's webhooks and every mounted sub-app's into `out`, the app's
+/// own first, so a name it claims shadows a sub-app's of the same name.
+///
+/// A webhook's key is a label the document gives the request, not a request path,
+/// so a mount prefix does not join it: an application mounted under `/billing`
+/// that calls a webhook `invoice-paid` describes the webhook `invoice-paid`, not
+/// `/billing/invoice-paid` — the URL it will actually be sent to is the one the
+/// callback carries. Two applications naming the same webhook describe one
+/// webhook, and the outer document is the one that decides what it says.
+fn App::collect_webhooks(
+  self : App,
+  out : Array[@route.Route],
+  seen : Map[String, Bool],
+) -> Unit {
+  for route in self.webhooks.routes {
+    if !seen.contains(route.path) {
+      seen[route.path] = true
+      out.push(route)
+    }
+  }
+  for entry in self.mounts {
+    if entry.1 is Sub(sub) {
+      sub.collect_webhooks(out, seen)
+    }
+  }
+}
+
+///|
 /// Collect this app's security schemes and every mounted sub-app's, first-writer
 /// wins (a parent's scheme shadows a sub-app's same-named one). `seen` tracks
 /// names already taken.
@@ -371,13 +428,15 @@ pub fn App::openapi_json(
 /// hoisting named schemas into `defs`. Emits `parameters`, `requestBody` (or a
 /// body parameter in 2.0), and `responses`; an endpoint with no declared
 /// responses gets a default `OK` under `ok_status`, which is the route's
-/// `status_code` or `200`.
+/// `status_code` or `200`. `ok_media` is the media type that default is written
+/// under — the route's `response_class`.
 fn emit_endpoint(
   op : Map[String, Json],
   ep : @endpoint.Endpoint,
   defs : Map[String, Json],
   version : @schema.OpenApiVersion,
   ok_status : Int32,
+  ok_media : String,
 ) -> Unit {
   let params : Array[Json] = []
   for p in ep.params {
@@ -403,9 +462,20 @@ fn emit_endpoint(
   } else {
     [@endpoint.ResponseSpec::new(ok_status)]
   }
+  // The class speaks for the success status and nothing else: an error is the
+  // app's JSON envelope whatever the route answers when it works.
   let responses : Map[String, Json] = Map([])
   for rs in specs {
-    responses[rs.status.to_string()] = response_json(rs, defs, version)
+    responses[rs.status.to_string()] = response_json(
+      rs,
+      defs,
+      version,
+      media_type=if rs.status == ok_status {
+        ok_media
+      } else {
+        "application/json"
+      },
+    )
   }
   op["responses"] = Json(responses)
 }
@@ -502,13 +572,16 @@ fn attach_request_body(
 
 ///|
 /// One response as its OpenAPI response object. OpenAPI 3.x nests the body schema
-/// and the named examples under `content."application/json"`; Swagger 2.0 puts
+/// and the named examples under `content."<media type>"`; Swagger 2.0 puts
 /// the schema directly under `schema` and has room for one example per media
-/// type, which is the first one's value.
+/// type, which is the first one's value. `media_type` keys the 3.x content: the
+/// route's `response_class` speaks for its success status, and every other
+/// response is the JSON envelope.
 fn response_json(
   rs : @endpoint.ResponseSpec,
   defs : Map[String, Json],
   version : @schema.OpenApiVersion,
+  media_type~ : String = "application/json",
 ) -> Json {
   let m : Map[String, Json] = Map([("description", Json(rs.description))])
   match version {
@@ -529,8 +602,10 @@ fn response_json(
       if !rs.examples.is_empty() {
         media["examples"] = examples_json(rs.examples)
       }
-      if !media.is_empty() {
-        m["content"] = Json({ "application/json": Json(media) })
+      // A media type the route named says what to parse even when nobody said
+      // what the body looks like; the unstated JSON default says nothing.
+      if !media.is_empty() || media_type != "application/json" {
+        m["content"] = Json(Map([(media_type, Json(media))]))
       }
     }
   }

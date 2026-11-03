@@ -551,7 +551,19 @@ def build():
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w", encoding="utf-8") as fh:
         fh.write(full)
-    print(f"wrote {OUT} ({len(sections)} packages, {sum(n for _,_,n in nav_pkgs)} items)")
+    count = sum(n for _, _, n in nav_pkgs)
+    # The homepage counts what this page lists, so the two cannot disagree after
+    # an item is added or renamed. The number is written here rather than typed
+    # there for that reason.
+    home = os.path.join(ROOT, "docs", "index.html")
+    page = re.sub(
+        r'(<div class="n">)\d+(</div><div class="l">documented public items</div>)',
+        lambda m: f"{m.group(1)}{count}{m.group(2)}",
+        open(home, encoding="utf-8").read(),
+    )
+    with open(home, "w", encoding="utf-8", newline="\n") as fh:
+        fh.write(page)
+    print(f"wrote {OUT} ({len(sections)} packages, {count} items)")
 
 
 def render_nav(nav_pkgs):

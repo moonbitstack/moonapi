@@ -48,11 +48,32 @@ fn spec(name : String, kind : String) -> @attr.Spec {
   .optional("operation_id", Str)
   .optional("name", Str)
   .optional("status_code", Str)
+  .optional("response_class", Str)
   .optional("deprecated", Bool)
   .optional("include_in_schema", Bool)
   .optional("validate", Bool)
   .many("tags", Str)
   .many("dependencies", Str)
+}
+
+///|
+/// The `response_class` names an annotation may spell, and the constructor each
+/// stands for. A new kind of body is one row here and one variant in the enum.
+///
+/// The constructor is written out in full: unlike `Get`, a class name such as
+/// `Text` is a word other libraries use for a kind of their own, and a generated
+/// call that fails to resolve in a package that imports one of them would be a
+/// build error the annotation cannot explain.
+fn class_ctor(name : String) -> String? {
+  match name {
+    "json" => Some("@moonapi.ResponseClass::Json")
+    "text" => Some("@moonapi.ResponseClass::Text")
+    "html" => Some("@moonapi.ResponseClass::Html")
+    "xml" => Some("@moonapi.ResponseClass::Xml")
+    "event_stream" => Some("@moonapi.ResponseClass::EventStream")
+    "bytes" => Some("@moonapi.ResponseClass::Bytes")
+    _ => None
+  }
 }
 
 ///|
@@ -86,6 +107,14 @@ fn options(args : @attr.Args, where_ : String) -> Array[String] raise {
       fail("\{where_}: status_code is a number, not \"\{v}\"")
     }
     out.push("status_code=" + v)
+  }
+  if args.str("response_class") is Some(v) {
+    guard class_ctor(v) is Some(ctor) else {
+      fail(
+        "\{where_}: response_class is json, text, html, xml, event_stream or bytes, not \"\{v}\"",
+      )
+    }
+    out.push("response_class=" + ctor)
   }
   if args.str("name") is Some(v) {
     out.push("name=" + @quote.string(v).to_string())

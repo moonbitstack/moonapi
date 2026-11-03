@@ -81,6 +81,7 @@ pub using @status {
   sse,
   text,
   type Events,
+  type ResponseClass,
   type Stream,
   type Writer,
   WS_1000_NORMAL_CLOSURE,
