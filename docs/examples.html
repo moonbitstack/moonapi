@@ -596,7 +596,9 @@ for path in ["/openapi.json", "/docs", "/redoc"] {</code></pre></div>
       <div class="codewrap"><pre><code>  let app = @ann.build()
   app.on_startup(_ =&gt; @shared.start("tasks.db"))
   app.on_shutdown(_ =&gt; @shared.stop())
-  println("moonapi serving on http://127.0.0.1:12000 — the database is tasks.db")
+  println(
+    "moonapi serving on http://127.0.0.1:12000 — the database is tasks.db",
+  )
   @mooncat.serve(app.to_asgi(), port=12000) catch {
     err =&gt; println("mooncat stopped: \{err}")
   }
