@@ -366,6 +366,26 @@ footer.site { border-top: 1px solid var(--line); margin-top: 3rem; }
 .side-nav a.active .cnt { color: var(--iris-strong); }
 
 /* ---- showcase page ---- */
+/* the request-path figure: Mermaid once it has drawn, characters until then */
+.arch { margin: 0; }
+.arch-img { display: block; width: 100%; max-width: 16rem; height: auto; margin: 0 auto; }
+.arch-fallback {
+  display: none; margin: 0; padding: 1rem 1.1rem; overflow-x: auto;
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  font-family: var(--font-mono); font-size: .78rem; line-height: 1.5; color: var(--ink-soft);
+}
+.arch.no-img .arch-img { display: none; }
+.arch.no-img .arch-fallback { display: block; }
+.arch-legend {
+  display: flex; flex-wrap: wrap; gap: .3rem 1.2rem; margin: .6rem 0 0;
+  font-size: .8rem; color: var(--muted);
+}
+.arch-legend span { display: inline-flex; align-items: center; gap: .4rem; }
+.arch-legend .sw { width: 1.1rem; height: .8rem; border-radius: 3px; display: inline-block; }
+.arch-legend .sw-here { background: #898AC4; border: 1px solid #56578F; }
+.arch-legend .sw-there { background: #E2E7F6; border: 1px solid #A2AADB; }
+.arch-legend code { font-size: .78rem; }
 .stage { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.4rem; box-shadow: var(--shadow); }
 .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: .6rem; margin: 1.6rem 0; }
 .node {
