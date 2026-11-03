@@ -65,7 +65,7 @@ it in once, in `moon.mod`:
 
 <!-- nocheck -->
 ```
-rule(name: "routes", command: "moonx moonbitstack/moonapi/cmd/routes@0.17.7 -C \"$mod_dir\" \"$input\" -o \"$output\"")
+rule(name: "routes", command: "moonx moonbitstack/moonapi/cmd/routes@0.17.8 -C \"$mod_dir\" \"$input\" -o \"$output\"")
 ```
 
 and in the `moon.pkg` of the package holding the handlers:

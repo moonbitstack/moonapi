@@ -1,6 +1,6 @@
 name = "moonbitstack/moonapi"
 
-version = "0.17.7"
+version = "0.17.8"
 
 readme = "README.md"
 
@@ -10,7 +10,40 @@ repository = "https://github.com/moonbitstack/moonapi"
 
 license = "Apache-2.0"
 
-keywords = [ "web", "framework", "openapi" ]
+keywords = [
+  "web",
+  "web-framework",
+  "framework",
+  "http",
+  "rest",
+  "rest-api",
+  "api",
+  "openapi",
+  "swagger",
+  "redoc",
+  "json-schema",
+  "routing",
+  "router",
+  "dependency-injection",
+  "validation",
+  "websocket",
+  "sse",
+  "static-files",
+  "templates",
+  "cors",
+  "gzip",
+  "security",
+  "oauth2",
+  "jwt",
+  "api-key",
+  "basic-auth",
+  "bearer",
+  "annotations",
+  "async",
+  "asgi",
+  "fastapi",
+  "moonbit",
+]
 
 description = "A typed web framework for MoonBit."
 
