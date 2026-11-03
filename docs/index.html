@@ -62,8 +62,11 @@ fn user(ctx : @moonapi.Context) -> Response {
 let app = @moonapi.App::new()
 register(app)
 let response = app.handle({
-http_method: "GET", path: "/users/42",
-query_string: b"", headers: [], body: b"",
+  http_method: "GET",
+  path: "/users/42",
+  query_string: b"",
+  headers: [],
+  body: b"",
 })
 response.status  // 200</code></pre>
         </div>
