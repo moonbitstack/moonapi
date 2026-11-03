@@ -28,6 +28,17 @@ Its source is split by responsibility:
 	services/                # shared dependencies and response/request helpers
 ```
 
+`29-ecosystem` is the other end of the range: one description of a task, in
+`moonmodel`'s vocabulary, projected into the request body the API validates, the
+document it publishes and the SQLite table it stores rows in — the rows written
+through the ORM, an API key on the writes, CORS and gzip around the router, and an
+error page for anything uncaught. The routes are registered three ways (`ann`,
+`fns`, `cls`) and its `check` fails when the three do not answer alike:
+
+```bash
+moon run src/examples/29-ecosystem/check --target native
+```
+
 ## Full Example API
 
 The integrated service exposes these routes:
@@ -85,6 +96,7 @@ same ASGI application `25-full-example` serves over Mooncat.
 | 26 | [`described-model`](26-described-model/) | One moonmodel description driving both the validation and the document, a reference looked up in `known`, and the report for one that is not there | `Schema::of_model`, `Unresolved`, `Endpoint::validate`, `App::openapi_json` |
 | 27 | [`annotations`](27-annotations/) | Routes declared as `#app.get`, `#app.post`, `#app.delete`, `#app.route("PURGE", ...)` and `#router.get`, registered by the generated `routes.g.mbt` | `#app.*`, `#router.*`, `register`, `register_router`, `Other` |
 | 28 | [`templates`](28-templates/) | Pages rendered from templates that extend a base, see the request and link by route name, beside a stylesheet served from a static source | `@templates.Templates`, `url_for`, `@static.serve`, `@static.Memory`, `App::mount_asgi` |
+| 29 | [`ecosystem`](29-ecosystem/) | One description of a task driving the request body's validation, the document and the SQLite table, with the rows stored through the ORM, an API key on writes, CORS, gzip and an error page — registered three ways and served by Mooncat | `Schema::of_model`, `@moonmodel/sql.table`, `@moonorm.Session`, `App::layer`, `App::middleware`, `#app.*` |
 
 The complete application serves OpenAPI 3.0.3 at `/openapi.json`. Other examples
 can emit Swagger 2.0, OpenAPI 3.0.3 or 3.1.0 by passing the corresponding version

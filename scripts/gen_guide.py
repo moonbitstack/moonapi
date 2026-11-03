@@ -78,6 +78,19 @@ def recorded():
     return got, doc
 
 
+def ecosystem():
+    """Run the ecosystem example's check: its three registrations must answer alike.
+
+    The guide's own three variants are compared by `check`; the example beside
+    them is the same property on a bigger surface — a database, a document and a
+    guard — so it is driven here rather than in a step of its own.
+    """
+    run = subprocess.run(["moon", "run", "src/examples/29-ecosystem/check", "--target", "native"],
+                         cwd=ROOT, capture_output=True, text=True, encoding="utf-8")
+    if run.returncode != 0 or "same:" not in run.stdout:
+        sys.exit("the ecosystem example's check failed://n" + run.stdout + run.stderr)
+
+
 def bar(title):
     return ('<div class="term">\n    <div class="term-bar"><span class="dot r"></span><span class="dot y"></span>'
             f'<span class="dot g"></span><span class="title">{html.escape(title)}</span></div>\n')
@@ -186,6 +199,7 @@ def render(page, parts):
 
 
 def main():
+    ecosystem()
     page = GUIDE.read_text(encoding="utf-8")
     got, doc = recorded()
     new = render(page, sections(got, doc))

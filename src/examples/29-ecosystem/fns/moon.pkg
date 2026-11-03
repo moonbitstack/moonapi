@@ -1,0 +1,7 @@
+// The same four routes as one call each.
+import {
+  "moonbitstack/moonapi",
+  "moonbitstack/moonapi/examples/29-ecosystem/shared",
+}
+
+supported_targets = "native"

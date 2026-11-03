@@ -1,0 +1,12 @@
+// One description of a task, three ways of registering the routes that serve it,
+// and the native server that runs one of them.
+import {
+  "moonbitstack/moonapi/examples/29-ecosystem/shared",
+  "moonbitstack/moonapi/examples/29-ecosystem/ann",
+  "moonbitstack/mooncat",
+  "moonbitlang/async",
+}
+
+supported_targets = "native"
+
+pkgtype(kind: "executable")

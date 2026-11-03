@@ -1,0 +1,16 @@
+// Drives the same requests at all three registrations and fails when they answer
+// differently.
+import {
+  "moonbitstack/moonapi",
+  "moonbitstack/moonasgi",
+  "moonbitstack/moonapi/examples/29-ecosystem/shared",
+  "moonbitstack/moonapi/examples/29-ecosystem/ann",
+  "moonbitstack/moonapi/examples/29-ecosystem/fns",
+  "moonbitstack/moonapi/examples/29-ecosystem/cls",
+  "moonbitlang/core/encoding/utf8",
+  "moonbitlang/async",
+}
+
+supported_targets = "native"
+
+pkgtype(kind: "executable")

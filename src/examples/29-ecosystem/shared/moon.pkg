@@ -1,0 +1,19 @@
+// One description of a task and the three things made from it: the request body
+// the API validates, the table the database is built from, and the columns the
+// ORM writes.
+import {
+  "moonbitstack/moonapi",
+  "moonbitstack/moonasgi",
+  "moonbitstack/moonasgi/mid",
+  "moonbitstack/moonmodel",
+  "moonbitstack/moonmodel/sql",
+  "moonbitstack/moonorm",
+  "moonbitstack/moondb",
+  "moonbitstack/moonsqlite",
+}
+
+import {
+  "moonbitstack/moonorm/schema",
+}
+
+supported_targets = "native"

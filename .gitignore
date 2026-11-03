@@ -6,3 +6,4 @@ target/
 
 examples/*/pkg.generated.mbti
 __pycache__/
+tasks.db

@@ -130,6 +130,11 @@ META = {
         "Templates", "Render HTML templates",
         "Render pages with the template engine, extend a base layout, and build URLs by name.",
     ),
+    "29-ecosystem": (
+        "Full system", "One description, four projections",
+        "Describe a task once, then validate its body, publish its document, build its table and "
+        "store its rows — with CORS, gzip and an API key around the routes, served by a real socket.",
+    ),
 }
 
 # Display order of the groups.
