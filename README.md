@@ -146,9 +146,116 @@ requires by name. The package importing them needs the same three in its
 `moon.pkg`. Drop the server and the app still runs in-process on native, wasm and
 js: `App::handle` drives it through the same path a server does.
 
-An app serves `/openapi.json`, `/docs` and `/redoc` from the start, as FastAPI
-does; `App::new(docs=None)` leaves them off and `enable_docs(...)` changes them.
+An app serves `/openapi.json`, `/docs` and `/redoc` from the start;
+`App::new(docs=None)` leaves them off and `enable_docs(...)` changes them.
 `scalar_ui()`, `swagger_ui()` and `redoc_ui()` return those pages on their own.
+
+## Serving
+
+`App::to_asgi()` is the whole contract between an application and a server:
+what runs it gets the same application — the layers, the mounts, the lifespan
+hooks and the disconnect handling — and every way of serving below is one call
+away from it. The server is a matter of the transport; the application does not
+change when it moves to TLS or to another protocol version.
+
+### HTTP/1.1 and WebSocket
+
+```moonbit
+async fn main {
+  let app = @moonapi.App::new()
+  app.get("/", _ctx => @moonapi.text(200, "Hello"))
+  @mooncat.serve(app.to_asgi(), port=12000) catch {
+    err => println("stopped: \{err}")
+  }
+}
+```
+
+### HTTP/2 over TLS
+
+`@mooncat.serve_tls` serves the same application over TLS 1.3. The listener
+offers `h2` and `http/1.1` by ALPN, so a client that negotiates `h2` is served
+HTTP/2 on the port that answers HTTP/1.1 to everyone else — `wss://` included,
+a WebSocket upgrade over TLS speaking whichever of the two it asked for. The
+streams of one connection run concurrently, each in a task of its own, so a slow
+handler delays its own reply and nobody else's. The certificate and the key are
+PEM files read once at startup, the leaf first and any intermediates after it,
+and a key that is not the certificate's is refused there rather than at the
+first connection.
+
+```moonbit
+async fn main {
+  let app = @moonapi.App::new()
+  app.get("/", _ctx => @moonapi.text(200, "Hello over TLS"))
+  @mooncat.serve_tls(
+    app.to_asgi(),
+    certificate_file="certs/cert.pem",
+    private_key_file="certs/key.pem",
+    port=12000,
+  ) catch {
+    err => println("stopped: \{err}")
+  }
+}
+```
+
+By default the same port also answers cleartext, so a client that reaches it
+with `http://` is served HTTP/1.1 or h2c and the redirect to `https` is the
+application's to make — `app.layer(@mid.HttpsRedirect::new())` is that layer.
+`cleartext=false` makes the port TLS only, and the HTTP/2 limits come from
+`Config`:
+
+```moonbit
+async fn main {
+  let app = @moonapi.App::new()
+  app.get("/", _ctx => @moonapi.text(200, "Hello over TLS"))
+  let config = @mooncat.Config::new(
+    port=8443,
+    cleartext=false,
+    h2=@mooncat.H2Config::new(max_streams=250),
+  )
+  @mooncat.serve_tls_config(
+    app.to_asgi(),
+    config,
+    { certificate_file: "certs/cert.pem", private_key_file: "certs/key.pem" },
+  ) catch {
+    err => println("stopped: \{err}")
+  }
+}
+```
+
+| `Config.h2` | Default | Meaning |
+|:--|:--:|:--|
+| `max_streams` | 100 | concurrent streams; the next one is refused, not queued |
+| `max_header_list` | 64 KiB | fields a request head may carry |
+| `max_frame` | 16 KiB | largest frame accepted |
+| `window`, `connection_window` | 1 MiB | how far a client may run ahead, per stream and per connection |
+
+The limits a plain server applies hold per stream: past `limit_concurrency` a
+stream is answered `503`, every stream counts toward `limit_max_requests`, and a
+connection with nothing open for `timeout_keep_alive` is ended with a GOAWAY.
+
+A listener that speaks HTTP/2 and nothing else is `serve_h2c`, for a client that
+starts with the connection preface because it was told the server speaks HTTP/2
+— what a gRPC client does over a plaintext port:
+
+<!-- nocheck -->
+```moonbit
+@mooncat.serve_h2c(app.to_asgi(), port=12000)
+```
+
+### HTTP/3
+
+Not served yet, and this is the state of it rather than a setting: `mooncat/quic`
+holds the QUIC endpoint — the UDP socket, the datagram loop and the TLS 1.3
+handshake QUIC performs inline — but nothing yet carries ASGI events over
+HTTP/3, so an application cannot be reached over QUIC today.
+
+Nothing in moonapi stands in the way. A server needs `App::to_asgi()` and
+nothing else, which is what makes the protocol version a transport question
+here: when that loop lands, the same application answers on UDP with no change
+to this package. Until then an HTTP/3 front end is a proxy that terminates QUIC
+and speaks HTTP/1.1 or HTTP/2 to the application; behind one, the app sees the
+forwarded scheme and host, and the ASGI `root_path` under which it is mounted
+reaches `/docs`, `/redoc` and `/openapi.json` alike.
 
 For a runnable integration of the root API, two routers, authentication,
 validation, middleware, background work, streaming and docs, see the
@@ -185,6 +292,8 @@ numbered example has a runnable `main` package that isolates one feature:
 | `17-sse` | server-sent events |
 | `18-websocket` | a live WebSocket connection |
 | `19-json-schema` | JSON schema generation |
+| `20-views` | one type answering the methods of a path |
+| `21-route-table` | a route table kept apart from its handlers |
 | `22-docs-ui` | the documentation pages |
 | `23-lifespan` | startup and shutdown hooks |
 | `24-files` | serving files with range and conditional handling |
@@ -238,7 +347,7 @@ is not known is a raised error, where the subpackage is named:
 - **Middleware** — middleware on a route or a router node (`hoops=`, `Router::hoop`): it runs inside the app's middleware and outside the route's security, validation and dependencies, so it can answer for the route, change its reply, or hand the rest a context of its own. The hoops of include calls and routers wrap the route's own, outermost first.
 - **Views and route tables** — a type implementing `View` answers the methods of one path, and a request for any other gets a `405` whose `Allow` lists what it does answer. `app.urls([path(...), view(...), websocket(...), group("/blog", [...])])` registers a route table kept apart from the handlers, with groups nesting and carrying tags, security, dependencies and hoops.
 - **Descriptor tree** — a runtime `Schema` / `Param` / `Endpoint` tree that a typed route carries. Walked **once** to (a) emit **complete** OpenAPI request/response body schemas — objects, arrays, scalars, `required`, nullable (`type: [t, "null"]` in 3.1, `nullable` in 3.0, `x-nullable` in 2.0), a `Map[String, T]` as `additionalProperties`, `Any` as the empty schema, a `format` such as `binary`, and defaults, with named models hoisted under `components/schemas` and referenced by `$ref` — and (b) drive request validation off the same tree. A `Param` carries the same constraints a `Field` does, plus a `default` and an `alias`, so a query parameter's bounds are both documented and enforced, and a `422` points at the name the client actually sent. User structs describe themselves with `derive(ToJson)` + a `T::schema()` associated function + a one-line `ToSchema` bridge.
-- **Multi-version OpenAPI** — `App::openapi_json` emits **Swagger 2.0, OpenAPI 3.0.3, and OpenAPI 3.1.0** from the same routes and descriptors (3.x `requestBody` + `components/schemas`; 2.0 body-parameter + `definitions`). `App::describe` adds the summary, tag descriptions and external documentation; `app.webhooks` documents the requests the API sends out (3.1 `webhooks`); a route's `callbacks` documents the requests an operation makes back to its caller; and a `Param`, a request body, a `ResponseSpec` and a `Field` each take named `examples`.
+- **Multi-version OpenAPI** — `App::openapi_json` emits **Swagger 2.0, OpenAPI 3.0.3, and OpenAPI 3.1.0** from the same routes and descriptors (3.x `requestBody` + `components/schemas`; 2.0 body-parameter + `definitions`). `App::describe` adds the summary, tag descriptions and external documentation; `app.webhooks` documents the requests the API sends out (3.1 `webhooks`); a route's `callbacks` documents the requests an operation makes back to its caller; a `Param`, a request body, a `ResponseSpec` and a `Field` each take named `examples`; and a route's `response_class` states what its success body is — `Text`, `Html`, `Xml`, `EventStream`, `Bytes` — so the document carries that media type (as `produces` in Swagger 2.0) instead of assuming JSON.
 - **Typed body extractors** — `Context::body[T]` deserialises the JSON body into a `derive(FromJson)` struct; `Context::body_validated[T]` first checks it against the endpoint descriptor and returns either the built value or a located `422` error list — schema emission, validation, and deserialisation all off one descriptor.
 - **Dependency injection** — a `Container` (provider registry) with request-scoped, one-shot resolution (per-request caching) and `yield`-style teardown run LIFO around the handler. `App::depends(container.erase())` attaches one to the application, and any route builder takes `dependencies=["key"]`: the keys resolve before the handler and are torn down after it, whatever the handler did. The teardown is handed the error that ended the request, so cleanup can tell a rollback from a commit.
 - **OAuth2 + JWT security** — a `/token` password-grant endpoint issues an HS256 JWT (`create_access_token`), and an `OAuth2PasswordBearer` reads the `Authorization: Bearer` header, verifies the token, and enforces scopes: `401` on a missing or invalid/expired token, `403` when a valid token lacks a required scope. The token itself is `mooncred`'s and the algorithms are `mooncrypt`'s; moonapi names HS256 and hands over a key. `alg: "none"` cannot be expressed, the verifier's algorithm is the one that counts rather than the token's, and signatures compare in constant time.
@@ -312,7 +421,9 @@ meanings.
 
 ## Roadmap
 
-Next: splitting what remains into packages, so a program that wants the router does not link the OpenAPI writer; `regex=` and `glob=` routes; and codegen'd request schemas.
+Next: writing a request's descriptor from the struct it deserialises into, rather
+than by hand, and splitting the router from the OpenAPI writer so a program that
+builds an application and never serves a document links only what it uses.
 
 ## Documentation
 
