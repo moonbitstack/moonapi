@@ -2,7 +2,7 @@
 import {
   "moonbitstack/moonapi",
   "moonbitstack/moonasgi",
-  "moonbitstack/moonapi/examples/29-ecosystem/shared",
+  "moonbitstack/moonapi-ecosystem/shared",
 }
 
 supported_targets = "native"

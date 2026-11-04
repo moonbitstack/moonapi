@@ -63,8 +63,8 @@ jobs:
       - name: generated routes are fresh
         shell: bash
         run: |
-          for dir in 27-annotations 29-ecosystem/ann guide/ann guide/annapi; do
-            moon run src/cmd/routes --target native -- -C . src/examples/$dir/routes.mbt -o src/examples/$dir/routes.g.mbt --check
+          for dir in src/examples/27-annotations integration/src/ann src/examples/guide/ann src/examples/guide/annapi; do
+            moon run src/cmd/routes --target native -- -C . $dir/routes.mbt -o $dir/routes.g.mbt --check
           done
 
       - name: the guide shows the code it runs
@@ -77,7 +77,7 @@ jobs:
       - name: three registrations of the ecosystem example agree
         shell: bash
         run: |
-          moon run src/examples/29-ecosystem/check --target native > "$RUNNER_TEMP/ecosystem.txt"
+          moon run integration/src/check --target native > "$RUNNER_TEMP/ecosystem.txt"
           grep -q "same: all three registrations answer alike" "$RUNNER_TEMP/ecosystem.txt"
           grep -q "POST /tasks -> 201" "$RUNNER_TEMP/ecosystem.txt"
           grep -q "POST /tasks -> 422" "$RUNNER_TEMP/ecosystem.txt"

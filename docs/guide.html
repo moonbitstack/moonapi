@@ -360,9 +360,10 @@ app.view("/login", Login::{ })</code></pre></div>
   <div class="variant" data-style="annotations">
     <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="hl"><code>
 ///|
+#derive(FromJson)
 priv struct GreetReq {
   name : String
-} derive(FromJson)
+}
 
 ///|
 fn GreetReq::schema() -&gt; @schema.Schema {
@@ -381,9 +382,10 @@ fn greet(ctx : @moonapi.Context) -&gt; @moonasgi.Response {
   <div class="variant" data-style="functions">
     <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="hl"><code>
 ///|
+#derive(FromJson)
 priv struct GreetReq {
   name : String
-} derive(FromJson)
+}
 
 ///|
 fn GreetReq::schema() -&gt; @schema.Schema {
@@ -402,9 +404,10 @@ app.post("/greet", ctx =&gt; {
   <div class="variant" data-style="classes">
     <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="hl"><code>
 ///|
+#derive(FromJson)
 priv struct GreetReq {
   name : String
-} derive(FromJson)
+}
 
 ///|
 fn GreetReq::schema() -&gt; @schema.Schema {

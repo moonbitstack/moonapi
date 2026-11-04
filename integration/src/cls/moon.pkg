@@ -1,7 +1,7 @@
 // The same four routes as types answering the methods of a path.
 import {
   "moonbitstack/moonapi",
-  "moonbitstack/moonapi/examples/29-ecosystem/shared",
+  "moonbitstack/moonapi-ecosystem/shared",
 }
 
 supported_targets = "native"

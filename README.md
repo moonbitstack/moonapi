@@ -301,7 +301,7 @@ numbered example has a runnable `main` package that isolates one feature:
 | `26-described-model` | describing a model once, using it four ways |
 | `27-annotations` | registering routes from annotated functions |
 | `28-templates` | rendering HTML templates |
-| `29-ecosystem` | one description driving validation, the document, the table and the rows |
+| [`integration`](integration/) | one description driving validation, the document, the table and the rows |
 
 Run any of them with, for example:
 

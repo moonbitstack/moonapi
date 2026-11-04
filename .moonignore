@@ -5,3 +5,5 @@
 .git/
 _build/
 target/
+# An example with an ORM and a vendored SQLite in its dependencies. It is not part of the library.
+integration/

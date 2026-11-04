@@ -3,10 +3,10 @@
 import {
   "moonbitstack/moonapi",
   "moonbitstack/moonasgi",
-  "moonbitstack/moonapi/examples/29-ecosystem/shared",
-  "moonbitstack/moonapi/examples/29-ecosystem/ann",
-  "moonbitstack/moonapi/examples/29-ecosystem/fns",
-  "moonbitstack/moonapi/examples/29-ecosystem/cls",
+  "moonbitstack/moonapi-ecosystem/shared",
+  "moonbitstack/moonapi-ecosystem/ann",
+  "moonbitstack/moonapi-ecosystem/fns",
+  "moonbitstack/moonapi-ecosystem/cls",
   "moonbitlang/core/encoding/utf8",
   "moonbitlang/async",
 }

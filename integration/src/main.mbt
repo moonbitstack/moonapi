@@ -2,7 +2,7 @@
 /// Serve the task API on the native server, over a SQLite file the lifespan opens
 /// and closes.
 ///
-///     moon run src/examples/29-ecosystem --target native
+///     moon run integration/src --target native
 ///
 /// Then, in another shell:
 ///

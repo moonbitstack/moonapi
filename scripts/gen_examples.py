@@ -130,7 +130,7 @@ META = {
         "Templates", "Render HTML templates",
         "Render pages with the template engine, extend a base layout, and build URLs by name.",
     ),
-    "29-ecosystem": (
+    "ecosystem": (
         "Full system", "One description, four projections",
         "Describe a task once, then validate its body, publish its document, build its table and "
         "store its rows — with CORS, gzip and an API key around the routes, served by a real socket.",
@@ -153,7 +153,7 @@ GROUP_ORDER = [
 
 def snippet(dirname: str) -> str:
     """Extract a representative, compilable-looking code preview from an example."""
-    base = os.path.join(EX, dirname)
+    base = os.path.join(ROOT, "integration", "src") if dirname == "ecosystem" else os.path.join(EX, dirname)
     main = os.path.join(base, "main.mbt")
     if not os.path.exists(main):
         found = glob.glob(os.path.join(base, "**", "*.mbt"), recursive=True)
@@ -198,7 +198,7 @@ def esc(s: str) -> str:
 
 def card(dirname: str, title: str, desc: str) -> str:
     snip = snippet(dirname)
-    src = f"{GITHUB}/tree/master/src/examples/{dirname}"
+    src = f"{GITHUB}/tree/master/integration" if dirname == "ecosystem" else f"{GITHUB}/tree/master/src/examples/{dirname}"
     body = esc(snip) if snip else "<span class='muted'>(no preview)</span>"
     return f"""    <article class="ex-card">
       <span class="tag">{esc(dirname)}</span>
