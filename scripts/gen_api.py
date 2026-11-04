@@ -235,7 +235,7 @@ def collect_docs(pkgdir: str):
                     block.append(lines[i])
                     i += 1
                 j = i
-                while j < n and lines[j].strip() == "":
+                while j < n and (lines[j].strip() == "" or lines[j].startswith("#")):
                     j += 1
                 decl = lines[j] if j < n else ""
                 name = item_name(decl)
