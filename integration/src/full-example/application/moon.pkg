@@ -1,0 +1,8 @@
+import {
+  "moonbitstack/moonapi",
+  "moonbitstack/moonapi-ecosystem/full-example/routes/accounts",
+  "moonbitstack/moonapi-ecosystem/full-example/routes/catalog",
+  "moonbitstack/moonapi-ecosystem/full-example/services",
+  "moonbitstack/moonasgi/mid",
+  "moonbitlang/async",
+}

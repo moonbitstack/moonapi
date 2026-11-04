@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "moonbitstack/moonapi/examples/25-full-example/routes/catalog"
+package "moonbitstack/moonapi-ecosystem/full-example/routes/catalog"
 
 import {
   "moonbitstack/moonapi/route",

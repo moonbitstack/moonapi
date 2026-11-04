@@ -13,3 +13,9 @@ an ORM and a vendored SQLite for the sake of an example.
 moon run integration/src --target native
 moon run integration/src/check --target native
 ```
+
+`full-example` is one service with every feature composed, served by mooncat on `http://127.0.0.1:12000`:
+
+```bash
+moon run integration/src/full-example --target native
+```

@@ -1,11 +1,11 @@
 # Examples
 
 A runnable tour of the public `@moonapi` API. Each numbered example has a
-runnable `main` package; `25-full-example` is a layered native server composed
+runnable `main` package; `integration/src/full-example` is a layered native server, in a module of its own since a server is not something this library depends on, composed
 from several packages.
 
 ```bash
-moon run src/examples/25-full-example --target native
+moon run integration/src/full-example --target native
 ```
 
 Mooncat's native server runs on Windows, macOS and Linux. It listens on
@@ -20,7 +20,7 @@ examples below isolate each feature.
 Its source is split by responsibility:
 
 ```text
-25-full-example/
+integration/src/full-example/
 	main.mbt                 # native Mooncat server entrypoint
 	application/             # app configuration and router composition
 	routes/accounts/         # authenticated profile, body and form routes
@@ -64,7 +64,7 @@ excluded from the generated API schema.
 
 The focused examples run the app in-process on native, wasm and js, through
 `App::handle` or the moonasgi test client; both go through `App::to_asgi`, the
-same ASGI application `25-full-example` serves over Mooncat.
+same ASGI application `full-example` serves over Mooncat.
 
 | # | Example | What it shows | Key API |
 |:--:|:--|:--|:--|
@@ -92,7 +92,7 @@ same ASGI application `25-full-example` serves over Mooncat.
 | 22 | [`docs-ui`](22-docs-ui/) | The three documentation pages — the spec, the API reference, ReDoc — and how to leave one off | `App::enable_docs`, `scalar_ui`, `swagger_ui`, `redoc_ui`, `html` |
 | 23 | [`lifespan`](23-lifespan/) | Startup and shutdown hooks in order, and the lifespan state a request reads, driven by the test client | `App::on_startup`, `App::on_shutdown`, `Context::state`, `@testing.Client::lifespan` |
 | 24 | [`files`](24-files/) | Serving a file the way RFC 9110 asks: a 304 for a repeat, a 206 for a resumed download, a 416 for a range that is not there, and the `data:` URL a browser hands back | `Context::serve`, `data_response`, `data_url`, `@conditional.hash` |
-| 25 | [`full-example`](25-full-example/) | Root endpoints plus two included routers in a multi-package layout, composed with auth, validation, middleware, forms, files, background tasks, SSE, WebSockets, lifecycle and OpenAPI | `App`, `Router`, `include_router`, `secure_oauth2`, `App::layer`, `stream`, `sse`, `websocket` |
+| 25 | [`full-example`](../../integration/src/full-example/) | Root endpoints plus two included routers in a multi-package layout, composed with auth, validation, middleware, forms, files, background tasks, SSE, WebSockets, lifecycle and OpenAPI | `App`, `Router`, `include_router`, `secure_oauth2`, `App::layer`, `stream`, `sse`, `websocket` |
 | 26 | [`described-model`](26-described-model/) | One moonmodel description driving both the validation and the document, a reference looked up in `known`, and the report for one that is not there | `Schema::of_model`, `Unresolved`, `Endpoint::validate`, `App::openapi_json` |
 | 27 | [`annotations`](27-annotations/) | Routes declared as `#app.get`, `#app.post`, `#app.delete`, `#app.route("PURGE", ...)` and `#router.get`, registered by the generated `routes.g.mbt` | `#app.*`, `#router.*`, `register`, `register_router`, `Other` |
 | 28 | [`templates`](28-templates/) | Pages rendered from templates that extend a base, see the request and link by route name, beside a stylesheet served from a static source | `@templates.Templates`, `url_for`, `@static.serve`, `@static.Memory`, `App::mount_asgi` |

@@ -1,7 +1,7 @@
 ///|
 /// Serve the layered API on native HTTP and WebSocket transport.
 ///
-///     moon run src/examples/25-full-example --target native
+///     moon run integration/src/full-example --target native
 #coverage.skip
 async fn main {
   let app = @application.build()

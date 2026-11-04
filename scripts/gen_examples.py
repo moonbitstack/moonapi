@@ -114,7 +114,7 @@ META = {
         "Composition & middleware", "Serve files and data URLs",
         "Stream a file with an etag and turn an inline data URL into a served response.",
     ),
-    "25-full-example": (
+    "full-example": (
         "Full system", "One service, every feature",
         "An integrated application: routers, auth, typed bodies, layers, DI, files, tasks, SSE, WebSockets and OpenAPI.",
     ),
@@ -153,7 +153,10 @@ GROUP_ORDER = [
 
 def snippet(dirname: str) -> str:
     """Extract a representative, compilable-looking code preview from an example."""
-    base = os.path.join(ROOT, "integration", "src") if dirname == "ecosystem" else os.path.join(EX, dirname)
+    base = {
+        "ecosystem": os.path.join(ROOT, "integration", "src"),
+        "full-example": os.path.join(ROOT, "integration", "src", "full-example"),
+    }.get(dirname, os.path.join(EX, dirname))
     main = os.path.join(base, "main.mbt")
     if not os.path.exists(main):
         found = glob.glob(os.path.join(base, "**", "*.mbt"), recursive=True)
@@ -198,7 +201,10 @@ def esc(s: str) -> str:
 
 def card(dirname: str, title: str, desc: str) -> str:
     snip = snippet(dirname)
-    src = f"{GITHUB}/tree/master/integration" if dirname == "ecosystem" else f"{GITHUB}/tree/master/src/examples/{dirname}"
+    src = {
+        "ecosystem": f"{GITHUB}/tree/master/integration",
+        "full-example": f"{GITHUB}/tree/master/integration/src/full-example",
+    }.get(dirname, f"{GITHUB}/tree/master/src/examples/{dirname}")
     body = esc(snip) if snip else "<span class='muted'>(no preview)</span>"
     return f"""    <article class="ex-card">
       <span class="tag">{esc(dirname)}</span>
