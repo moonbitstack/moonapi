@@ -1,10 +1,11 @@
 ///|
 /// A nested value type, to show a `$ref` chain: `User.address` references this
 /// under `components/schemas`.
+#derive(ToJson, Eq)
 struct Address {
   city : String
   zip : String
-} derive(ToJson, Eq)
+}
 
 ///|
 /// The `Address` descriptor.
@@ -22,12 +23,13 @@ impl ToSchema for Address with fn to_schema(_self) {
 /// The demo response model — returned by both user routes. Nests `Address` and
 /// carries an array of tags, so its emitted schema exercises objects, `$ref`s,
 /// and arrays together.
+#derive(ToJson, Eq)
 struct User {
   id : Int32
   name : String
   address : Address
   tags : Array[String]
-} derive(ToJson, Eq)
+}
 
 ///|
 /// The `User` descriptor.

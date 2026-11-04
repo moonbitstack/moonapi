@@ -3,10 +3,11 @@
 // `components/schemas` in 3.x and `definitions` in 2.0.
 
 ///|
+#derive(ToJson)
 struct Price {
   amount : Double
   currency : String
-} derive(ToJson)
+}
 
 ///|
 fn Price::schema() -> @moonapi.Schema {
@@ -17,11 +18,12 @@ fn Price::schema() -> @moonapi.Schema {
 }
 
 ///|
+#derive(ToJson)
 struct Widget {
   id : Int32
   name : String
   price : Price
-} derive(ToJson)
+}
 
 ///|
 fn Widget::schema() -> @moonapi.Schema {

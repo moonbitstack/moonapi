@@ -3,23 +3,24 @@ package "moonbitstack/moonapi/schema"
 
 import {
   "moonbitlang/core/debug",
+  "moonbitlang/core/json",
   "moonbitstack/moonasgi/http",
   "moonbitstack/moonmodel",
   "moonbitstack/moonurl",
 }
 
 // Values
-pub fn check_constraints(Json, Array[Constraint], Array[String], Array[ValidationError]) -> Unit
+pub fn check_constraints(@json.Json, Array[Constraint], Array[String], Array[ValidationError]) -> Unit
 
-pub fn emit_schema(Schema, Map[String, Json], OpenApiVersion) -> Json
+pub fn emit_schema(Schema, Map[String, @json.Json], OpenApiVersion) -> @json.Json
 
-pub fn enum_expected(Array[Json]) -> String
+pub fn enum_expected(Array[@json.Json]) -> String
 
-pub fn enum_member(Array[Json], Json) -> Bool
+pub fn enum_member(Array[@json.Json], @json.Json) -> Bool
 
-pub fn filter_response(Schema, Json) -> Result[Json, Array[ValidationError]]
+pub fn filter_response(Schema, @json.Json) -> Result[@json.Json, Array[ValidationError]]
 
-pub fn json_model(Int32, Schema, Json) -> @http.Response
+pub fn json_model(Int32, Schema, @json.Json) -> @http.Response
 
 pub fn parse_int(String) -> Int32?
 
@@ -29,19 +30,20 @@ pub fn[T : ToSchema] schema_of(T) -> Schema
 
 pub fn unprocessable(Array[ValidationError]) -> @http.Response
 
-pub fn validate_schema(Schema, Json, Array[String], Array[ValidationError]) -> Unit
+pub fn validate_schema(Schema, @json.Json, Array[String], Array[ValidationError]) -> Unit
 
-pub fn validation_error_body(Array[ValidationError]) -> Json
+pub fn validation_error_body(Array[ValidationError]) -> @json.Json
 
-pub fn with_constraints(Json, Array[Constraint], OpenApiVersion) -> Json
+pub fn with_constraints(@json.Json, Array[Constraint], OpenApiVersion) -> @json.Json
 
-pub fn with_description(Json, String) -> Json
+pub fn with_description(@json.Json, String) -> @json.Json
 
-pub fn with_key(Json, String, Json) -> Json
+pub fn with_key(@json.Json, String, @json.Json) -> @json.Json
 
 // Errors
 
 // Types and methods
+#derive(Eq, @debug.Debug)
 pub(all) enum Constraint {
   Minimum(Double)
   Maximum(Double)
@@ -53,43 +55,47 @@ pub(all) enum Constraint {
   Pattern(String)
   MinItems(Int32)
   MaxItems(Int32)
-} derive(Eq, @debug.Debug)
+}
 pub fn Constraint::equal(Self, Self) -> Bool
 pub fn Constraint::not_equal(Self, Self) -> Bool
 pub fn Constraint::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug)
 pub(all) struct Field {
   name : String
   schema : Schema
   required : Bool
   description : String
   constraints : Array[Constraint]
-  default : Json?
-  examples : Array[Json]
-} derive(Eq, @debug.Debug)
+  default : @json.Json?
+  examples : Array[@json.Json]
+}
 pub fn Field::equal(Self, Self) -> Bool
 pub fn Field::is_required(Self) -> Bool
-pub fn Field::new(String, Schema, required? : Bool, description? : String, constraints? : Array[Constraint], default? : Json, examples? : Array[Json]) -> Self
+pub fn Field::new(String, Schema, required? : Bool, description? : String, constraints? : Array[Constraint], default? : @json.Json, examples? : Array[@json.Json]) -> Self
 pub fn Field::not_equal(Self, Self) -> Bool
 pub fn Field::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug)
 pub(all) struct ObjectSchema {
   name : String
   fields : Array[Field]
   description : String
-} derive(Eq, @debug.Debug)
+}
 pub fn ObjectSchema::equal(Self, Self) -> Bool
 pub fn ObjectSchema::not_equal(Self, Self) -> Bool
 pub fn ObjectSchema::to_repr(Self) -> @debug.Repr
 
+#derive(Eq)
 pub(all) enum OpenApiVersion {
   Swagger20
   OpenApi30
   OpenApi31
-} derive(Eq)
+}
 pub fn OpenApiVersion::equal(Self, Self) -> Bool
 pub fn OpenApiVersion::not_equal(Self, Self) -> Bool
 
+#derive(Eq, @debug.Debug)
 pub(all) enum Schema {
   SStr
   SInt
@@ -98,18 +104,18 @@ pub(all) enum Schema {
   SNull
   SArray(Schema)
   SObject(ObjectSchema)
-  SEnum(Schema, Array[Json])
+  SEnum(Schema, Array[@json.Json])
   SNullable(Schema)
   SMap(Schema)
   SAny
   SFormat(Schema, String)
-  SJson(Json)
-} derive(Eq, @debug.Debug)
+  SJson(@json.Json)
+}
 pub fn Schema::array(Self) -> Self
 pub fn Schema::binary() -> Self
 pub fn Schema::equal(Self, Self) -> Bool
 pub fn Schema::format(Self, String) -> Self
-pub fn Schema::json(Json) -> Self
+pub fn Schema::json(@json.Json) -> Self
 pub fn Schema::map(Self) -> Self
 pub fn Schema::not_equal(Self, Self) -> Bool
 pub fn Schema::nullable(Self) -> Self
@@ -117,11 +123,12 @@ pub fn Schema::object(String, Array[Field]) -> Self
 pub fn Schema::of_model(@moonmodel.Model, known? : Array[@moonmodel.Model]) -> (Self, Array[Unresolved])
 pub fn Schema::to_repr(Self) -> @debug.Repr
 
+#derive(Eq)
 pub(all) struct Unresolved {
   field : String
   model : String
   why : String
-} derive(Eq)
+}
 pub fn Unresolved::equal(Self, Self) -> Bool
 pub fn Unresolved::not_equal(Self, Self) -> Bool
 
@@ -131,7 +138,7 @@ pub(all) struct ValidationError {
   kind : String
 }
 pub fn ValidationError::missing(Array[String]) -> Self
-pub fn ValidationError::to_json(Self) -> Json
+pub fn ValidationError::to_json(Self) -> @json.Json
 pub fn ValidationError::type_error(Array[String], String, String) -> Self
 
 // Type aliases

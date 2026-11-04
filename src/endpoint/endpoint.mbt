@@ -1,12 +1,13 @@
 ///|
 /// Where a parameter is carried, the OpenAPI `in` locations: the path, the query
 /// string, a header, or a cookie.
+#derive(Eq)
 pub(all) enum ParamLoc {
   InPath
   InQuery
   InHeader
   InCookie
-} derive(Eq)
+}
 
 ///|
 /// The OpenAPI `in` string for a location.
@@ -24,12 +25,13 @@ pub fn loc_str(l : ParamLoc) -> String {
 /// `openapi_examples`): a `summary` and a `description` for the reader, and
 /// either the `value` itself or an `external_value` URL where it can be fetched.
 /// Documentation viewers offer the examples of a parameter or a body by name.
+#derive(Eq)
 pub(all) struct Example {
   summary : String
   description : String
   value : Json?
   external_value : String
-} derive(Eq)
+}
 
 ///|
 pub fn Example::new(
@@ -69,6 +71,7 @@ pub fn Example::to_json(self : Example) -> Json {
 /// the `alias` it travels under on the wire. Path parameters are always required
 /// (OpenAPI requires it); the constructor keeps the caller's value but
 /// validation treats path params as mandatory.
+#derive(Eq)
 pub(all) struct Param {
   name : String
   loc : ParamLoc
@@ -79,7 +82,7 @@ pub(all) struct Param {
   default : Json?
   alias_ : String
   examples : Map[String, Example]
-} derive(Eq)
+}
 
 ///|
 /// Build a parameter descriptor. `schema` defaults to a string and `required` to
@@ -139,12 +142,13 @@ pub fn Param::is_required(self : Param) -> Bool {
 /// A single response descriptor: the HTTP `status`, a human `description`, an
 /// optional body `schema` (`None` for an empty body, e.g. `204`), and named
 /// `examples` of that body.
+#derive(Eq)
 pub(all) struct ResponseSpec {
   status : Int32
   description : String
   body : @schema.Schema?
   examples : Map[String, Example]
-} derive(Eq)
+}
 
 ///|
 /// Build a response descriptor. `description` defaults to `"OK"` and there is no
@@ -163,6 +167,7 @@ pub fn ResponseSpec::new(
 /// that replaces FastAPI reading a handler's signature. Walked once for the
 /// OpenAPI operation (parameters + `requestBody` + `responses`, with every named
 /// object hoisted into `components/schemas`) and for request validation.
+#derive(Eq)
 pub(all) struct Endpoint {
   params : Array[Param]
   request_body : @schema.Schema?
@@ -170,7 +175,7 @@ pub(all) struct Endpoint {
   // Named examples of the request body (← `Body(openapi_examples=…)`).
   request_examples : Map[String, Example]
   responses : Array[ResponseSpec]
-} derive(Eq)
+}
 
 ///|
 /// Build an endpoint descriptor. Everything is optional: a bare `Endpoint::new()`

@@ -90,9 +90,10 @@ fn login(ctx : @moonapi.Context) -> @moonasgi.Response {
 // guide:typed
 
 ///|
+#derive(FromJson)
 priv struct GreetReq {
   name : String
-} derive(FromJson)
+}
 
 ///|
 fn GreetReq::schema() -> @schema.Schema {

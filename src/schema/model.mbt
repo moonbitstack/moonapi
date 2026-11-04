@@ -3,13 +3,14 @@
 ///
 /// Reported rather than dropped or guessed at: a body schema silently missing
 /// a field is a validation hole that shows up as accepted-but-wrong data.
+#derive(Eq)
 pub(all) struct Unresolved {
   /// The field that holds the reference.
   field : String
   /// The model it points at.
   model : String
   why : String
-} derive(Eq)
+}
 
 ///|
 pub extend Unresolved with Eq::{equal, not_equal}

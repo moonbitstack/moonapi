@@ -1,13 +1,14 @@
 ///|
 /// What a path parameter accepts (← Starlette's convertors). `Str` is one
 /// segment or part of one; `Path` is the rest of the path, slashes included.
+#derive(Eq, Debug)
 pub(all) enum Convertor {
   Str
   Int
   Float
   Uuid
   Path
-} derive(Eq, Debug)
+}
 
 ///|
 pub extend Convertor with Eq::{equal, not_equal}
@@ -30,10 +31,11 @@ pub fn Convertor::of(name : StringView) -> Convertor? {
 
 ///|
 /// One piece of a path template: text matched as written, or a parameter.
+#derive(Eq, Debug)
 pub(all) enum Piece {
   Literal(String)
   Param(name~ : String, convertor~ : Convertor)
-} derive(Eq, Debug)
+}
 
 ///|
 pub extend Piece with Eq::{equal, not_equal}
@@ -44,13 +46,14 @@ pub extend Piece with Debug::{to_repr}
 ///|
 /// A route path read as a template: `/users/{id:int}`, `/files/{name}.json`,
 /// `/static/{rest:path}`. A parameter without a convertor is `str`.
+#derive(Eq, Debug)
 pub(all) struct Pattern {
   source : String
   pieces : Array[Piece]
   /// What decides the match instead of `pieces`, when the route gave `regex` or
   /// `glob`.
   matcher : Matcher?
-} derive(Eq, Debug)
+}
 
 ///|
 pub extend Pattern with Eq::{equal, not_equal}

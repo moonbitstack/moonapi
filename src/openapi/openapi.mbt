@@ -147,10 +147,11 @@ pub fn Tag::to_json(self : Tag) -> Json {
 /// Which reader `/docs` serves. `Scalar` is the current generation of API
 /// reference, with a request client built in; `Swagger` is Swagger UI, the
 /// long-standing one.
+#derive(Eq, Debug)
 pub(all) enum Ui {
   Scalar
   Swagger
-} derive(Eq, Debug)
+}
 
 ///|
 pub extend Ui with Eq::{equal, not_equal}

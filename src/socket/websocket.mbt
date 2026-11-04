@@ -4,10 +4,11 @@
 
 ///|
 /// One WebSocket message: text or binary.
+#derive(Eq, Debug)
 pub(all) enum WsMessage {
   WsText(String)
   WsBinary(Bytes)
-} derive(Eq, Debug)
+}
 
 ///|
 pub extend WsMessage with Eq::{equal, not_equal}
@@ -18,9 +19,10 @@ pub extend WsMessage with Debug::{to_repr}
 ///|
 /// The peer left: its close code and reason (← Starlette's `WebSocketDisconnect`). `receive`
 /// raises it; a handler that lets it propagate simply ends.
+#derive(Eq, Debug)
 pub(all) suberror Disconnected {
   Disconnected(code~ : Int32, reason~ : String?)
-} derive(Eq, Debug)
+}
 
 ///|
 pub extend Disconnected with Eq::{equal, not_equal}

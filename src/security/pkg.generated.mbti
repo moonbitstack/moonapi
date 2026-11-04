@@ -2,6 +2,7 @@
 package "moonbitstack/moonapi/security"
 
 import {
+  "moonbitlang/core/json",
   "moonbitstack/moonapi/ctx",
   "moonbitstack/moonasgi/http",
   "moonbitstack/mooncred/jwt",
@@ -10,7 +11,7 @@ import {
 // Values
 pub fn anonymous() -> AuthenticatedUser
 
-pub fn create_access_token(String, String, Int64, scopes? : Array[String], expires_in_secs? : Int64, extra? : Map[String, Json], wins? : @jwt.Wins, clash? : @jwt.OnClash[Map[String, Json]]) -> String
+pub fn create_access_token(String, String, Int64, scopes? : Array[String], expires_in_secs? : Int64, extra? : Map[String, @json.Json], wins? : @jwt.Wins, clash? : @jwt.OnClash[Map[String, @json.Json]]) -> String
 
 pub fn forbidden(String) -> @http.Response
 
@@ -38,18 +39,19 @@ pub fn ApiKey::query(String, (String) -> Bool) -> Self
 pub fn ApiKey::read(Self, @ctx.Context) -> String?
 pub fn ApiKey::scheme(Self) -> SecurityScheme
 
+#derive(Eq)
 pub(all) enum ApiKeyIn {
   KeyHeader
   KeyQuery
   KeyCookie
-} derive(Eq)
+}
 pub fn ApiKeyIn::equal(Self, Self) -> Bool
 pub fn ApiKeyIn::not_equal(Self, Self) -> Bool
 
 pub(all) struct AuthenticatedUser {
   subject : String
   scopes : Array[String]
-  claims : Map[String, Json]
+  claims : Map[String, @json.Json]
 }
 pub fn AuthenticatedUser::has_scope(Self, String) -> Bool
 
@@ -90,14 +92,15 @@ pub fn OAuth2PasswordBearer::authenticate(Self, @ctx.Context, Int64, scopes? : A
 pub fn OAuth2PasswordBearer::new(String, String) -> Self
 pub fn OAuth2PasswordBearer::scheme(Self, scopes? : Array[(String, String)]) -> SecurityScheme
 
+#derive(Eq)
 pub(all) struct SecurityRequirement {
   scheme : String
   scopes : Array[String]
-} derive(Eq)
+}
 pub fn SecurityRequirement::equal(Self, Self) -> Bool
 pub fn SecurityRequirement::new(String, scopes? : Array[String]) -> Self
 pub fn SecurityRequirement::not_equal(Self, Self) -> Bool
-pub fn SecurityRequirement::to_json(Self) -> Json
+pub fn SecurityRequirement::to_json(Self) -> @json.Json
 
 pub(all) enum SecurityScheme {
   OAuth2Password(token_url~ : String, scopes~ : Array[(String, String)])
@@ -110,8 +113,8 @@ pub(all) enum SecurityScheme {
   HttpDigest
   OpenIdConnect(url~ : String)
 }
-pub fn SecurityScheme::to_openapi_20(Self) -> Json?
-pub fn SecurityScheme::to_openapi_3x(Self) -> Json
+pub fn SecurityScheme::to_openapi_20(Self) -> @json.Json?
+pub fn SecurityScheme::to_openapi_3x(Self) -> @json.Json
 
 pub struct SecurityScopes {
   scopes : Array[String]

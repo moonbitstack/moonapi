@@ -1,8 +1,9 @@
 ///|
+#derive(ToJson)
 struct Address {
   city : String
   zip : String
-} derive(ToJson)
+}
 
 ///|
 fn Address::schema() -> @moonapi.Schema {
@@ -15,12 +16,13 @@ fn Address::schema() -> @moonapi.Schema {
 ///|
 /// A response model. `User::schema()` is its descriptor, and the `ToSchema`
 /// bridge below lets `schema_of(user)` reach the same tree from a value.
+#derive(ToJson)
 struct User {
   id : Int32
   name : String
   address : Address
   tags : Array[String]
-} derive(ToJson)
+}
 
 ///|
 fn User::schema() -> @moonapi.Schema {

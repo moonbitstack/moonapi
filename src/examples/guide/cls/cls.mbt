@@ -149,9 +149,10 @@ impl @moonapi.View for Echo with fn post(_) {
 // end
 
 ///|
+#derive(FromJson)
 priv struct GreetReq {
   name : String
-} derive(FromJson)
+}
 
 ///|
 fn GreetReq::schema() -> @schema.Schema {

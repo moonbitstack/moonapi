@@ -157,11 +157,12 @@ pub fn OAuth2CodeBearer::scheme(
 
 ///|
 /// Where an API key travels (← `APIKeyHeader` / `APIKeyQuery` / `APIKeyCookie`).
+#derive(Eq)
 pub(all) enum ApiKeyIn {
   KeyHeader
   KeyQuery
   KeyCookie
-} derive(Eq)
+}
 
 ///|
 /// An API-key scheme: the parameter `name` the key arrives under, where it

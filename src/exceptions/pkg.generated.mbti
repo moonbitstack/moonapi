@@ -2,6 +2,7 @@
 package "moonbitstack/moonapi/exceptions"
 
 import {
+  "moonbitlang/core/json",
   "moonbitstack/moonapi/ctx",
   "moonbitstack/moonasgi/http",
 }
@@ -11,7 +12,7 @@ pub fn http_error(Int32, String, headers? : Array[(String, String)]) -> HttpExce
 
 // Errors
 pub(all) suberror HttpException {
-  HttpException(status~ : Int32, detail~ : Json, headers~ : Array[(String, String)])
+  HttpException(status~ : Int32, detail~ : @json.Json, headers~ : Array[(String, String)])
 }
 
 // Types and methods

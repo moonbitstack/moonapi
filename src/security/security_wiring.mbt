@@ -12,10 +12,11 @@
 /// declared with `App::add_security_scheme` / `App::secure_oauth2`) and the
 /// `scopes` the caller must hold. Emitted as one `{scheme: [scopes]}` entry of
 /// the operation's OpenAPI `security` array.
+#derive(Eq)
 pub(all) struct SecurityRequirement {
   scheme : String
   scopes : Array[String]
-} derive(Eq)
+}
 
 ///|
 /// Require `scheme` with the given `scopes` (default: none — authentication with

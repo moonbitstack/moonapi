@@ -1,14 +1,20 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "moonbitstack/moonapi/examples/03-openapi-versions"
 
+import {
+  "moonbitlang/core/json",
+}
+
 // Values
 
 // Errors
 
 // Types and methods
-type Price derive(ToJson)
+#derive(@json.ToJson)
+type Price
 
-type Widget derive(ToJson)
+#derive(@json.ToJson)
+type Widget
 
 // Type aliases
 

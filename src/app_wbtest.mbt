@@ -15,9 +15,10 @@ fn outcome_word(failure : Error?) -> String {
 /// `Context::body_validated` build it after the descriptor accepts the payload;
 /// its schema and struct fields agree (both require `name`), so a schema-valid
 /// body always deserialises.
+#derive(ToJson, FromJson, Eq)
 struct GreetReq {
   name : String
-} derive(ToJson, FromJson, Eq)
+}
 
 ///|
 /// The `GreetReq` descriptor — one required string field.
@@ -29,9 +30,10 @@ fn GreetReq::schema() -> @schema.Schema {
 /// The dependency value type of the greet app. A sum type wrapping every
 /// dependency this app injects — the explicit, exhaustive stand-in for FastAPI
 /// resolving heterogeneous `Depends` values dynamically.
+#derive(Eq)
 enum Dep {
   Greeting(String)
-} derive(Eq)
+}
 
 ///|
 /// Build the greet application over a caller-supplied dependency `container`, so

@@ -2,6 +2,7 @@
 package "moonbitstack/moonapi/endpoint"
 
 import {
+  "moonbitlang/core/json",
   "moonbitstack/moonapi/ctx",
   "moonbitstack/moonapi/schema",
 }
@@ -12,29 +13,32 @@ pub fn loc_str(ParamLoc) -> String
 // Errors
 
 // Types and methods
+#derive(Eq)
 pub(all) struct Endpoint {
   params : Array[Param]
   request_body : @schema.Schema?
   request_required : Bool
   request_examples : Map[String, Example]
   responses : Array[ResponseSpec]
-} derive(Eq)
+}
 pub fn Endpoint::equal(Self, Self) -> Bool
 pub fn Endpoint::new(params? : Array[Param], request_body? : @schema.Schema, request_required? : Bool, request_examples? : Map[String, Example], responses? : Array[ResponseSpec]) -> Self
 pub fn Endpoint::not_equal(Self, Self) -> Bool
 pub fn Endpoint::validate(Self, @ctx.Context) -> Array[@schema.ValidationError]
 
+#derive(Eq)
 pub(all) struct Example {
   summary : String
   description : String
-  value : Json?
+  value : @json.Json?
   external_value : String
-} derive(Eq)
+}
 pub fn Example::equal(Self, Self) -> Bool
-pub fn Example::new(value? : Json, summary? : String, description? : String, external_value? : String) -> Self
+pub fn Example::new(value? : @json.Json, summary? : String, description? : String, external_value? : String) -> Self
 pub fn Example::not_equal(Self, Self) -> Bool
-pub fn Example::to_json(Self) -> Json
+pub fn Example::to_json(Self) -> @json.Json
 
+#derive(Eq)
 pub(all) struct Param {
   name : String
   loc : ParamLoc
@@ -42,31 +46,33 @@ pub(all) struct Param {
   required : Bool
   description : String
   constraints : Array[@schema.Constraint]
-  default : Json?
+  default : @json.Json?
   alias_ : String
   examples : Map[String, Example]
-} derive(Eq)
+}
 pub fn Param::equal(Self, Self) -> Bool
 pub fn Param::is_required(Self) -> Bool
 pub fn Param::key(Self) -> String
-pub fn Param::new(String, ParamLoc, schema? : @schema.Schema, required? : Bool, description? : String, constraints? : Array[@schema.Constraint], default? : Json, alias_? : String, examples? : Map[String, Example]) -> Self
+pub fn Param::new(String, ParamLoc, schema? : @schema.Schema, required? : Bool, description? : String, constraints? : Array[@schema.Constraint], default? : @json.Json, alias_? : String, examples? : Map[String, Example]) -> Self
 pub fn Param::not_equal(Self, Self) -> Bool
 
+#derive(Eq)
 pub(all) enum ParamLoc {
   InPath
   InQuery
   InHeader
   InCookie
-} derive(Eq)
+}
 pub fn ParamLoc::equal(Self, Self) -> Bool
 pub fn ParamLoc::not_equal(Self, Self) -> Bool
 
+#derive(Eq)
 pub(all) struct ResponseSpec {
   status : Int32
   description : String
   body : @schema.Schema?
   examples : Map[String, Example]
-} derive(Eq)
+}
 pub fn ResponseSpec::equal(Self, Self) -> Bool
 pub fn ResponseSpec::new(Int32, description? : String, body? : @schema.Schema, examples? : Map[String, Example]) -> Self
 pub fn ResponseSpec::not_equal(Self, Self) -> Bool

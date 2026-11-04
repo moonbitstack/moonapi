@@ -14,9 +14,10 @@ fn outcome_word(failure : Error?) -> String {
 /// The dependency value type of the greet app. A sum type wrapping every
 /// dependency this app injects — the explicit, exhaustive stand-in for FastAPI
 /// resolving heterogeneous `Depends` values dynamically.
+#derive(Eq)
 enum Dep {
   Greeting(String)
-} derive(Eq)
+}
 
 ///|
 pub extend Dep with Eq::{not_equal, equal}

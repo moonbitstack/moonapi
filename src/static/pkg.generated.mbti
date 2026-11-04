@@ -12,10 +12,11 @@ pub fn serve(&Source, html? : Bool, ranges? : Bool) -> async (@spec.Scope, async
 // Errors
 
 // Types and methods
+#derive(Eq)
 pub(all) struct Asset {
   content : Bytes
   modified : @moondate.Moment?
-} derive(Eq)
+}
 pub fn Asset::equal(Self, Self) -> Bool
 pub fn Asset::not_equal(Self, Self) -> Bool
 

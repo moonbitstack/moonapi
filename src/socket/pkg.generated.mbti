@@ -3,6 +3,7 @@ package "moonbitstack/moonapi/socket"
 
 import {
   "moonbitlang/core/debug",
+  "moonbitlang/core/json",
   "moonbitstack/moonasgi/http",
   "moonbitstack/moonasgi/spec",
 }
@@ -10,9 +11,10 @@ import {
 // Values
 
 // Errors
+#derive(Eq, @debug.Debug)
 pub(all) suberror Disconnected {
   Disconnected(code~ : Int32, reason~ : String?)
-} derive(Eq, @debug.Debug)
+}
 pub fn Disconnected::equal(Self, Self) -> Bool
 pub fn Disconnected::not_equal(Self, Self) -> Bool
 pub fn Disconnected::to_repr(Self) -> @debug.Repr
@@ -32,17 +34,18 @@ pub fn WebSocket::offered_subprotocols(Self) -> Array[String]
 pub fn WebSocket::param(Self, String) -> String?
 pub async fn WebSocket::receive(Self) -> WsMessage
 pub async fn WebSocket::receive_bytes(Self) -> Bytes
-pub async fn WebSocket::receive_json(Self) -> Json
+pub async fn WebSocket::receive_json(Self) -> @json.Json
 pub async fn WebSocket::receive_text(Self) -> String
 pub async fn WebSocket::send(Self, WsMessage) -> Unit
 pub async fn WebSocket::send_bytes(Self, Bytes) -> Unit
-pub async fn WebSocket::send_json(Self, Json) -> Unit
+pub async fn WebSocket::send_json(Self, @json.Json) -> Unit
 pub async fn WebSocket::send_text(Self, String) -> Unit
 
+#derive(Eq, @debug.Debug)
 pub(all) enum WsMessage {
   WsText(String)
   WsBinary(Bytes)
-} derive(Eq, @debug.Debug)
+}
 pub fn WsMessage::equal(Self, Self) -> Bool
 pub fn WsMessage::not_equal(Self, Self) -> Bool
 pub fn WsMessage::to_repr(Self) -> @debug.Repr

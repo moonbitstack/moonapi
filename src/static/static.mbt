@@ -1,10 +1,11 @@
 ///|
 /// One file a source holds: its bytes and, when the source knows it, when it
 /// last changed.
+#derive(Eq)
 pub(all) struct Asset {
   content : Bytes
   modified : @moondate.Moment?
-} derive(Eq)
+}
 
 ///|
 pub extend Asset with Eq::{equal, not_equal}

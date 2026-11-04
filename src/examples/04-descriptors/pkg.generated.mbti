@@ -10,11 +10,14 @@ import {
 // Errors
 
 // Types and methods
-type Address derive(ToJson)
+#derive(@json.ToJson)
+type Address
 
-type NewUser derive(@json.FromJson)
+#derive(@json.FromJson)
+type NewUser
 
-type User derive(ToJson)
+#derive(@json.ToJson)
+type User
 
 // Type aliases
 

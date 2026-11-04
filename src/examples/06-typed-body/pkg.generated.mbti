@@ -10,7 +10,8 @@ import {
 // Errors
 
 // Types and methods
-type GreetReq derive(@json.FromJson)
+#derive(@json.FromJson)
+type GreetReq
 
 // Type aliases
 

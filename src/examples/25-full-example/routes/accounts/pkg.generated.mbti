@@ -13,8 +13,9 @@ pub fn make_router(@schema.Schema) -> @route.Router
 // Errors
 
 // Types and methods
-type GreetReq derive(@json.FromJson)
-pub fn GreetReq::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+#derive(@json.FromJson)
+type GreetReq
+pub fn GreetReq::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
 
 // Type aliases
 

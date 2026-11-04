@@ -22,9 +22,10 @@ fn body_ctx(payload : String) -> Context {
 /// `Context::body_validated` build it after the descriptor accepts the payload;
 /// its schema and struct fields agree (both require `name`), so a schema-valid
 /// body always deserialises.
+#derive(ToJson, FromJson, Eq)
 struct GreetReq {
   name : String
-} derive(ToJson, FromJson, Eq)
+}
 
 ///|
 /// The `GreetReq` descriptor — one required string field.

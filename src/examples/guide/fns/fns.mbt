@@ -68,9 +68,10 @@ pub fn openapi_app() -> @moonapi.App {
 }
 
 ///|
+#derive(FromJson)
 priv struct GreetReq {
   name : String
-} derive(FromJson)
+}
 
 ///|
 fn GreetReq::schema() -> @schema.Schema {

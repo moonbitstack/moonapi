@@ -39,13 +39,13 @@ pub fn Context::api_key_header(Self, String) -> String?
 pub fn Context::api_key_query(Self, String) -> String?
 pub fn Context::bearer_token(Self) -> String?
 pub fn[T : @json.FromJson] Context::body(Self) -> T?
-pub fn Context::body_json(Self) -> Json?
+pub fn Context::body_json(Self) -> @json.Json?
 pub fn[T : @json.FromJson] Context::body_validated(Self, @schema.Schema) -> Result[T, Array[@schema.ValidationError]]
 pub fn Context::cookie(Self, String) -> String?
 pub fn Context::digest_credentials(Self) -> String?
 pub fn Context::form(Self, limits? : @moonmime.Limits) -> @moonmime.Form?
 pub fn Context::http_basic(Self) -> HttpBasicCredentials?
-pub fn Context::json_field(Self, String) -> Json?
+pub fn Context::json_field(Self, String) -> @json.Json?
 pub fn Context::last_event_id(Self) -> String?
 pub fn Context::new(@http.Request, params? : Map[String, String], scope? : @spec.HttpScope, background? : BackgroundTasks) -> Self
 pub fn Context::oauth2_password_form(Self) -> OAuth2PasswordRequestForm?
@@ -53,13 +53,14 @@ pub fn Context::param(Self, String) -> String?
 pub fn Context::query(Self, String, limits? : @moonurl.Limits) -> String?
 pub fn Context::query_all(Self, String, limits? : @moonurl.Limits) -> Array[String]
 pub fn Context::serve(Self, Bytes, filename? : String, media_type? : String, inline? : Bool, etag? : @conditional.Tag, modified? : @moondate.Moment, ranges? : Bool) -> @http.Response
-pub fn Context::state(Self) -> Map[String, Json]
+pub fn Context::state(Self) -> Map[String, @json.Json]
 
 pub(all) struct HttpBasicCredentials {
   username : String
   password : String
 }
 
+#derive(Eq)
 pub(all) struct OAuth2PasswordRequestForm {
   grant_type : String
   username : String
@@ -67,7 +68,7 @@ pub(all) struct OAuth2PasswordRequestForm {
   scopes : Array[String]
   client_id : String?
   client_secret : String?
-} derive(Eq)
+}
 pub fn OAuth2PasswordRequestForm::equal(Self, Self) -> Bool
 pub fn OAuth2PasswordRequestForm::not_equal(Self, Self) -> Bool
 

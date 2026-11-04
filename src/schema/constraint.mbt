@@ -7,6 +7,7 @@
 
 ///|
 /// A value constraint on a field (JSON-Schema keyword ↔ Pydantic argument).
+#derive(Eq, Debug)
 pub(all) enum Constraint {
   Minimum(Double) // ge:  x >= n
   Maximum(Double) // le:  x <= n
@@ -18,7 +19,7 @@ pub(all) enum Constraint {
   Pattern(String) // pattern (regular expression)
   MinItems(Int32) // min_length on a list
   MaxItems(Int32) // max_length on a list
-} derive(Eq, Debug)
+}
 
 ///|
 pub extend Constraint with Debug::{to_repr}

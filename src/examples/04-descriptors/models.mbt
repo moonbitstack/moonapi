@@ -6,10 +6,11 @@
 ///|
 /// A nested value type, to show a `$ref` chain: `User.address` references it
 /// under `components/schemas`.
+#derive(ToJson)
 struct Address {
   city : String
   zip : String
-} derive(ToJson)
+}
 
 ///|
 fn Address::schema() -> @moonapi.Schema {
@@ -21,11 +22,12 @@ fn Address::schema() -> @moonapi.Schema {
 
 ///|
 /// The request body of `POST /users`. `age` is optional.
+#derive(FromJson)
 struct NewUser {
   name : String
   email : String
   age : Int32?
-} derive(FromJson)
+}
 
 ///|
 fn NewUser::schema() -> @moonapi.Schema {
@@ -39,6 +41,7 @@ fn NewUser::schema() -> @moonapi.Schema {
 ///|
 /// The response of both user routes. It nests `Address` and carries a list, so
 /// its schema exercises objects, `$ref`s and arrays together.
+#derive(ToJson)
 struct User {
   id : Int32
   name : String
@@ -46,7 +49,7 @@ struct User {
   age : Int32?
   address : Address
   tags : Array[String]
-} derive(ToJson)
+}
 
 ///|
 fn User::schema() -> @moonapi.Schema {

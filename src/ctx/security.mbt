@@ -13,6 +13,7 @@
 /// (the space-delimited `scope` field, split into a list) to stamp into the
 /// issued token. `grant_type` is `"password"` for this flow; `client_id` /
 /// `client_secret` are optional confidential-client credentials.
+#derive(Eq)
 pub(all) struct OAuth2PasswordRequestForm {
   grant_type : String
   username : String
@@ -20,7 +21,7 @@ pub(all) struct OAuth2PasswordRequestForm {
   scopes : Array[String]
   client_id : String?
   client_secret : String?
-} derive(Eq)
+}
 
 ///|
 /// Split a space-delimited scope string into its scopes, dropping empty runs —

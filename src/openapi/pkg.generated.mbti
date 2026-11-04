@@ -3,6 +3,7 @@ package "moonbitstack/moonapi/openapi"
 
 import {
   "moonbitlang/core/debug",
+  "moonbitlang/core/json",
 }
 
 // Values
@@ -12,7 +13,7 @@ pub fn redoc_ui(spec_url? : String, title? : String, js_url? : String, telemetry
 
 pub let scalar_js : String
 
-pub fn scalar_ui(spec_url? : String, title? : String, js_url? : String, extra? : Map[String, Json]) -> String
+pub fn scalar_ui(spec_url? : String, title? : String, js_url? : String, extra? : Map[String, @json.Json]) -> String
 
 pub let swagger_css : String
 
@@ -22,7 +23,7 @@ pub fn swagger_redirect(js_url? : String) -> String
 
 pub let swagger_redirect_js : String
 
-pub fn swagger_ui(spec_url? : String, title? : String, js_url? : String, css_url? : String, oauth2_redirect_url? : String, init_oauth? : Json, extra? : Map[String, Json]) -> String
+pub fn swagger_ui(spec_url? : String, title? : String, js_url? : String, css_url? : String, oauth2_redirect_url? : String, init_oauth? : @json.Json, extra? : Map[String, @json.Json]) -> String
 
 // Errors
 
@@ -53,7 +54,7 @@ pub(all) struct ExternalDocs {
   description : String
 }
 pub fn ExternalDocs::new(String, description? : String) -> Self
-pub fn ExternalDocs::to_json(Self) -> Json
+pub fn ExternalDocs::to_json(Self) -> @json.Json
 
 pub(all) struct License {
   name : String
@@ -74,12 +75,13 @@ pub(all) struct Tag {
   external_docs : ExternalDocs?
 }
 pub fn Tag::new(String, description? : String, external_docs? : ExternalDocs) -> Self
-pub fn Tag::to_json(Self) -> Json
+pub fn Tag::to_json(Self) -> @json.Json
 
+#derive(Eq, @debug.Debug)
 pub(all) enum Ui {
   Scalar
   Swagger
-} derive(Eq, @debug.Debug)
+}
 pub fn Ui::equal(Self, Self) -> Bool
 pub fn Ui::not_equal(Self, Self) -> Bool
 pub fn Ui::to_repr(Self) -> @debug.Repr

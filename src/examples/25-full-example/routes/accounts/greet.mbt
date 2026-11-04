@@ -1,9 +1,10 @@
 ///|
 /// The body of `POST /accounts/greet`: one required name. The descriptor checks
 /// the payload, `derive(FromJson)` reads it.
+#derive(FromJson)
 struct GreetReq {
   name : String
-} derive(FromJson)
+}
 
 ///|
 fn GreetReq::schema() -> @moonapi.Schema {

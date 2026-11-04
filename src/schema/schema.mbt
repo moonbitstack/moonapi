@@ -8,6 +8,7 @@
 /// magic (cf. Rust `serde` + macros, Go struct tags + codegen). A named object
 /// carries its fields *inline*, so the same tree is fully self-describing for
 /// validation; the name is used only to deduplicate it into `components` on emit.
+#derive(Eq, Debug)
 pub(all) enum Schema {
   SStr
   SInt
@@ -36,7 +37,7 @@ pub(all) enum Schema {
   // cannot say: `pattern`, `allOf`, `$ref`, a vocabulary of one's own. It is
   // emitted into the document as it stands and validated by `moonschema`.
   SJson(Json)
-} derive(Eq, Debug)
+}
 
 ///|
 pub extend Field with Debug::{to_repr}
@@ -51,17 +52,19 @@ pub extend Schema with Debug::{to_repr}
 /// The body of an object schema: its component `name` (empty = an anonymous
 /// inline object; non-empty = hoisted to `components/schemas` and referenced),
 /// its ordered `fields`, and an optional `description`.
+#derive(Eq, Debug)
 pub(all) struct ObjectSchema {
   name : String
   fields : Array[Field]
   description : String
-} derive(Eq, Debug)
+}
 
 ///|
 /// One field of an object schema: its `name`, its `schema`, whether it is
 /// `required`, an optional `description`, its value `constraints`, the
 /// `default` that stands in when a body leaves it out, and `examples` of its
 /// value for the reader.
+#derive(Eq, Debug)
 pub(all) struct Field {
   name : String
   schema : Schema
@@ -70,7 +73,7 @@ pub(all) struct Field {
   constraints : Array[Constraint]
   default : Json?
   examples : Array[Json]
-} derive(Eq, Debug)
+}
 
 ///|
 /// Build a field. `required` defaults to `true` (FastAPI treats a field without

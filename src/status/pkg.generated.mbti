@@ -2,6 +2,7 @@
 package "moonbitstack/moonapi/status"
 
 import {
+  "moonbitlang/core/json",
   "moonbitstack/moonasgi/http",
   "moonbitstack/mooncred/jwt",
   "moonbitstack/moondate",
@@ -178,7 +179,7 @@ pub fn file_response(Bytes, filename? : String, media_type? : String, status? : 
 
 pub fn html(Int32, String) -> @http.Response
 
-pub fn json(Int32, Json) -> @http.Response
+pub fn json(Int32, @json.Json) -> @http.Response
 
 pub fn redirect(String, status? : Int32) -> @http.Response
 
