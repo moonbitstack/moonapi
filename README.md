@@ -244,18 +244,24 @@ starts with the connection preface because it was told the server speaks HTTP/2
 
 ### HTTP/3
 
-Not served yet, and this is the state of it rather than a setting: `mooncat/quic`
-holds the QUIC endpoint — the UDP socket, the datagram loop and the TLS 1.3
-handshake QUIC performs inline — but nothing yet carries ASGI events over
-HTTP/3, so an application cannot be reached over QUIC today.
+`@quic.serve_config` serves the same application over HTTP/1.1, HTTP/2 and HTTP/3
+under one certificate, on one port number: TCP for the first two, UDP for the third,
+with `alt-svc` on every response telling a client where HTTP/3 is. Each request
+stream is one ASGI scope, so the application does not change. The QUIC half is native
+only.
 
-Nothing in moonapi stands in the way. A server needs `App::to_asgi()` and
-nothing else, which is what makes the protocol version a transport question
-here: when that loop lands, the same application answers on UDP with no change
-to this package. Until then an HTTP/3 front end is a proxy that terminates QUIC
-and speaks HTTP/1.1 or HTTP/2 to the application; behind one, the app sees the
-forwarded scheme and host, and the ASGI `root_path` under which it is mounted
-reaches `/docs`, `/redoc` and `/openapi.json` alike.
+<!-- nocheck -->
+```moonbit
+@quic.serve_config(
+  app.to_asgi(),
+  @config.Config::new(host="0.0.0.0", port=12000),
+  { certificate_file: "cert.pem", private_key_file: "key.pem" },
+)
+```
+
+Behind a proxy that terminates QUIC itself, the app sees the forwarded scheme and host,
+and the ASGI `root_path` under which it is mounted reaches `/docs`, `/redoc` and
+`/openapi.json` alike.
 
 For a runnable integration of the root API, two routers, authentication,
 validation, middleware, background work, streaming and docs, see the
