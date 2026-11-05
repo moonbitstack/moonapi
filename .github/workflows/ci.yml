@@ -71,6 +71,13 @@ jobs:
         if: runner.os == 'Linux'
         run: python3 scripts/gen_guide.py --check
 
+      - name: the OpenAPI documents pass the official validator
+        if: runner.os == 'Linux'
+        run: |
+          python3 -m venv "$RUNNER_TEMP/oas"
+          "$RUNNER_TEMP/oas/bin/pip" install --quiet openapi-spec-validator
+          "$RUNNER_TEMP/oas/bin/python" scripts/check_openapi.py
+
       - name: annotated example runs
         run: moon run src/examples/27-annotations | grep -q "PURGE /cache -> 200 purged"
 
