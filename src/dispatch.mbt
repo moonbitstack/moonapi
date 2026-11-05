@@ -113,7 +113,12 @@ fn mount_for(
 
 ///|
 /// `raw` without the octets of `prefix` it starts with; unchanged when it does not.
-fn strip_raw(raw : Bytes, prefix : String) -> Bytes {
+fn strip_raw(raw : Bytes?, prefix : String) -> Bytes? {
+  raw.map(raw => strip_bytes(raw, prefix))
+}
+
+///|
+fn strip_bytes(raw : Bytes, prefix : String) -> Bytes {
   let p = @utf8.encode(prefix)
   if raw.length() >= p.length() && raw[:p.length()] == p[:] {
     let rest = raw[p.length():].to_owned()

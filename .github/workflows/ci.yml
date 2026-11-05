@@ -84,7 +84,7 @@ jobs:
       - name: three registrations of the ecosystem example agree
         shell: bash
         run: |
-          moon run integration/src/check --target native > "$RUNNER_TEMP/ecosystem.txt"
+          (cd integration && moon run src/check --target native) > "$RUNNER_TEMP/ecosystem.txt"
           grep -q "same: all three registrations answer alike" "$RUNNER_TEMP/ecosystem.txt"
           grep -q "POST /tasks -> 201" "$RUNNER_TEMP/ecosystem.txt"
           grep -q "POST /tasks -> 422" "$RUNNER_TEMP/ecosystem.txt"

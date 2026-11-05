@@ -10,12 +10,12 @@ It is a module of its own because a program that uses `moonapi` should not downl
 an ORM and a vendored SQLite for the sake of an example.
 
 ```bash
-moon run integration/src --target native
-moon run integration/src/check --target native
+cd integration && moon run src --target native
+cd integration && moon run src/check --target native
 ```
 
 `full-example` is one service with every feature composed, served by mooncat on `http://127.0.0.1:12000`:
 
 ```bash
-moon run integration/src/full-example --target native
+cd integration && moon run src/full-example --target native
 ```

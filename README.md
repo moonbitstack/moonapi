@@ -267,7 +267,7 @@ For a runnable integration of the root API, two routers, authentication,
 validation, middleware, background work, streaming and docs, see the
 [complete application example](integration/src/full-example/). The full example list
 is in [src/examples/README.md](src/examples/README.md). On Windows, macOS or Linux, start
-the native server with `moon run integration/src/full-example --target native`, from a module of its own, since a server is not something this library depends on. The service
+the native server with `cd integration && moon run src/full-example --target native`, from a module of its own, since a server is not something this library depends on. The service
 provides the API reference at `http://127.0.0.1:12000/docs`, ReDoc at
 `http://127.0.0.1:12000/redoc`, and OpenAPI 3.0.3 at
 `http://127.0.0.1:12000/openapi.json`.

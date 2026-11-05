@@ -110,3 +110,21 @@ test "documentation and defaults come across" {
   assert_eq(body.fields[0].description, "what they pay for")
   assert_eq(body.fields[0].default, Some(Json("free")))
 }
+
+///|
+test "a byte layout says its width as a format, and the rest of it nothing" {
+  let at = (kind : @moonmodel.Type) => kind_of(kind, [], [], "f", [])
+  assert_true(
+    at(Wire(@moonmodel.Layout::new(Int, bits=16)))
+    is Some(SFormat(SInt, "int16")),
+  )
+  assert_true(
+    at(Wire(@moonmodel.Layout::new(Int, bits=8, unsigned=true)))
+    is Some(SFormat(SInt, "uint8")),
+  )
+  assert_true(
+    at(Wire(@moonmodel.Layout::new(Real, bits=32)))
+    is Some(SFormat(SFloat, "float")),
+  )
+  assert_true(at(Wire(@moonmodel.Layout::new(Text))) is Some(SStr))
+}

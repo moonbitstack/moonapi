@@ -5,7 +5,7 @@ runnable `main` package; `integration/src/full-example` is a layered native serv
 from several packages.
 
 ```bash
-moon run integration/src/full-example --target native
+cd integration && moon run src/full-example --target native
 ```
 
 Mooncat's native server runs on Windows, macOS and Linux. It listens on
@@ -36,7 +36,7 @@ error page for anything uncaught. The routes are registered three ways (`ann`,
 `fns`, `cls`) and its `check` fails when the three do not answer alike:
 
 ```bash
-moon run integration/src/check --target native
+cd integration && moon run src/check --target native
 ```
 
 ## Full Example API

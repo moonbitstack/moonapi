@@ -615,7 +615,7 @@ app.view("/echo", Echo::{ }, tags=["misc"])</code></pre></div>
   <!-- ============ 8. RUN ============ -->
   <h2 id="serve">8 · Serving it</h2>
   <p class="sub">The same application runs on a native server or compiles to WebAssembly. With the Mooncat server the application listens on <code>127.0.0.1:12000</code>; open <code>/docs</code> for the API reference, <code>/redoc</code> for ReDoc, or <code>/openapi.json</code> for the document.</p>
-  <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="hl"><code>moon run integration/src/full-example --target native</code></pre></div>
+  <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="hl"><code>cd integration &amp;&amp; moon run src/full-example --target native</code></pre></div>
   <p>The bundled <code>full-example</code> composes routers, authentication, typed bodies, response filtering, CORS and gzip layers, dependency injection, forms, files, background tasks, server-sent events, WebSockets, lifespan hooks and OpenAPI into one integrated service. The focused examples in <code>src/examples/</code> isolate each of those features.</p>
 
   <div class="note"><b>Where to go next.</b> The <a href="api.html">API reference</a> lists every public type, function and method with its parameters. The <a href="showcase.html">showcase</a> visualises how a request travels through the application.</div>

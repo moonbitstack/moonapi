@@ -15,13 +15,13 @@ description = "A full service, and one description of a task driving moonapi's v
 import {
   "moonbitlang/async@0.22.5",
   "moonbitstack/moonapi@0.17.8",
-  "moonbitstack/moonasgi@0.10.4",
-  "moonbitstack/mooncat@0.18.8",
-  "moonbitstack/moondb@0.2.5",
-  "moonbitstack/moonhttp@0.15.6",
-  "moonbitstack/moonmodel@0.1.0",
-  "moonbitstack/moonorm@0.11.6",
-  "moonbitstack/moonsqlite@0.3.4",
+  "moonbitstack/moonasgi@0.10.6",
+  "moonbitstack/mooncat@0.19.5",
+  "moonbitstack/moondb@0.2.6",
+  "moonbitstack/moonhttp@0.15.8",
+  "moonbitstack/moonmodel@0.1.3",
+  "moonbitstack/moonorm@0.11.7",
+  "moonbitstack/moonsqlite@0.3.5",
 }
 
 source = "src"

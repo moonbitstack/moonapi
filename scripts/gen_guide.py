@@ -85,8 +85,8 @@ def ecosystem():
     them is the same property on a bigger surface — a database, a document and a
     guard — so it is driven here rather than in a step of its own.
     """
-    run = subprocess.run(["moon", "run", "integration/src/check", "--target", "native"],
-                         cwd=ROOT, capture_output=True, text=True, encoding="utf-8")
+    run = subprocess.run(["moon", "run", "src/check", "--target", "native"],
+                         cwd=ROOT / "integration", capture_output=True, text=True, encoding="utf-8")
     if run.returncode != 0 or "same:" not in run.stdout:
         sys.exit("the ecosystem example's check failed://n" + run.stdout + run.stderr)
 

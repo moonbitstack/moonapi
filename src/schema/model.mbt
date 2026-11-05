@@ -107,6 +107,18 @@ fn kind_of(
         Some(inner) => Some(SMap(inner))
         None => None
       }
+    // A document has no byte order or offset, but the width is what `format` is for.
+    Wire(layout) =>
+      kind_of(layout.kind, known, open, field, missing).map(inner => {
+        let base = if inner is SFormat(base, _) { base } else { inner }
+        match layout.format() {
+          // OpenAPI's own words for these two; its integer words are moonmodel's.
+          Some("float32") => SFormat(base, "float")
+          Some("float64") => SFormat(base, "double")
+          Some(format) => SFormat(base, format)
+          None => inner
+        }
+      })
     Nest(model) => Some(object_of(model, known, open, missing))
     Ref(name) => {
       if open.contains(name) {
