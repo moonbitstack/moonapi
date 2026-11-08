@@ -29,7 +29,7 @@
   <div class="hero-inner">
     <span class="eyebrow">A typed web framework for MoonBit</span>
     <h1>Build services where the <span class="grad">route, the request and the response</span> are all types.</h1>
-    <p class="lede">moonapi is a web framework for MoonBit. You describe an application from one object, and every route handler receives a typed context and returns a typed response. The same application generates an OpenAPI document automatically, and runs on a native server or in WebAssembly.</p>
+    <p class="lede">moonapi is a web framework for MoonBit. You describe an application from one object, and every route handler receives a typed context and returns a typed response. The same application generates an OpenAPI document, serves it to four readers, offers it to agents as MCP tools, and runs on a native server or in WebAssembly.</p>
     <div class="hero-cta">
       <a class="btn btn-primary" href="guide.html">Read the guide</a>
       <a class="btn btn-ghost" href="api.html">Browse the API</a>
@@ -98,9 +98,9 @@ created
 <!-- ===================== KEY NUMBERS ===================== -->
 <section class="section">
   <div class="stats">
-    <div class="stat"><div class="n">13</div><div class="l">packages, one coherent API</div></div>
-    <div class="stat"><div class="n">555</div><div class="l">documented public items</div></div>
-    <div class="stat"><div class="n">3.1</div><div class="l">OpenAPI documents generated</div></div>
+    <div class="stat"><div class="n">14</div><div class="l">packages, one coherent API</div></div>
+    <div class="stat"><div class="n">568</div><div class="l">documented public items</div></div>
+    <div class="stat"><div class="n">4</div><div class="l">readers of one document</div></div>
     <div class="stat"><div class="n">4</div><div class="l">backends: native, wasm, wasm-gc, js</div></div>
   </div>
 </section>
@@ -128,7 +128,17 @@ created
     <div class="card feature">
       <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v5h5"/><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M9 13h6M9 17h6"/></svg></div>
       <h3>OpenAPI documents</h3>
-      <p>Each route carries a summary and tags. Call one method to emit an OpenAPI 3.1 document you can serve at <code>/openapi.json</code> or hand to a documentation UI.</p>
+      <p>Each route carries a summary and tags. Call one method to emit an OpenAPI 3.1 document — 3.0.3 or Swagger 2.0 when a tool asks for one — and serve it at <code>/openapi.json</code>.</p>
+    </div>
+    <div class="card feature">
+      <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M7 13h6M7 16h9"/></svg></div>
+      <h3>Four readers, one document</h3>
+      <p><code>/docs</code>, <code>/redoc</code> and <code>/redocly</code> render the document in Scalar, Swagger UI, ReDoc and Redocly's reference. Pick the one <code>/docs</code> serves, and every page wears the site's own theme unless you ask for the reader's.</p>
+    </div>
+    <div class="card feature">
+      <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="12" rx="3"/><path d="M9 12h.01M15 12h.01M9 16h6M12 3v4"/></svg></div>
+      <h3>An interface for agents</h3>
+      <p>One call turns the same description into an MCP service at <code>/mcp</code> and a skill at <code>/SKILL.md</code>: one tool per operation, calling the route in-process, answering exactly what a client answers.</p>
     </div>
     <div class="card feature">
       <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 6v6c0 5 3.5 8 8 10 4.5-2 8-5 8-10V6Z"/><path d="m9 12 2 2 4-4"/></svg></div>
@@ -159,11 +169,12 @@ created
   <p class="sub">The root <code>@moonapi</code> package is where you start. The others are imported by name when you need them.</p>
   <div class="pkg-grid">
     <a class="pkg-card" href="api.html#pkg-moonapi"><div class="n">@moonapi</div><div class="d">The application object, response helpers and the top-level API.</div></a>
+    <a class="pkg-card" href="api.html#pkg-agent"><div class="n">@agent</div><div class="d">The document as MCP tools and as a skill.</div></a>
     <a class="pkg-card" href="api.html#pkg-ctx"><div class="n">@ctx</div><div class="d">The request context: path, query, headers and body extraction.</div></a>
     <a class="pkg-card" href="api.html#pkg-route"><div class="n">@route</div><div class="d">The router, path matching and named routes for URL building.</div></a>
     <a class="pkg-card" href="api.html#pkg-status"><div class="n">@status</div><div class="d">Response helpers, streams, server-sent events, cookies and status constants.</div></a>
     <a class="pkg-card" href="api.html#pkg-schema"><div class="n">@schema</div><div class="d">Typed bodies, field constraints and JSON schema.</div></a>
-    <a class="pkg-card" href="api.html#pkg-openapi"><div class="n">@openapi</div><div class="d">OpenAPI document building and serialisation.</div></a>
+    <a class="pkg-card" href="api.html#pkg-openapi"><div class="n">@openapi</div><div class="d">OpenAPI document building, serialisation and the four readers.</div></a>
     <a class="pkg-card" href="api.html#pkg-security"><div class="n">@security</div><div class="d">Security schemes and request-time enforcers.</div></a>
     <a class="pkg-card" href="api.html#pkg-di"><div class="n">@di</div><div class="d">The dependency-injection container.</div></a>
     <a class="pkg-card" href="api.html#pkg-socket"><div class="n">@socket</div><div class="d">The live WebSocket connection.</div></a>

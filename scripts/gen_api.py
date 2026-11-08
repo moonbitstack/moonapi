@@ -549,7 +549,7 @@ def build():
         body="\n".join(sections),
     )
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
-    with open(OUT, "w", encoding="utf-8") as fh:
+    with open(OUT, "w", encoding="utf-8", newline="\n") as fh:
         fh.write(full)
     count = sum(n for _, _, n in nav_pkgs)
     # The homepage counts what this page lists, so the two cannot disagree after
@@ -560,6 +560,11 @@ def build():
         r'(<div class="n">)\d+(</div><div class="l">documented public items</div>)',
         lambda m: f"{m.group(1)}{count}{m.group(2)}",
         open(home, encoding="utf-8").read(),
+    )
+    page = re.sub(
+        r'(<div class="n">)\d+(</div><div class="l">packages, one coherent API</div>)',
+        lambda m: f"{m.group(1)}{len(sections)}{m.group(2)}",
+        page,
     )
     with open(home, "w", encoding="utf-8", newline="\n") as fh:
         fh.write(page)

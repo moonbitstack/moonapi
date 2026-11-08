@@ -556,7 +556,7 @@ println(app.openapi_json(version=OpenApi30))</code></pre></div>
     <article class="ex-card">
       <span class="tag">22-docs-ui</span>
       <h3>Serve the docs UI</h3>
-      <p>Enable the bundled UI and hit /openapi.json, /docs and /redoc for the live specification.</p>
+      <p>Hit /openapi.json, /docs, /redoc and /redocly for the live specification, pick which reader /docs serves, and drop the site's theme for the reader's own.</p>
       <div class="codewrap"><pre><code>let app = @moonapi.App::new()
 app.get(
   "/greet",
@@ -565,11 +565,29 @@ app.get(
 )
 app.describe(
   title="greet api",
-  description="One route, documented three ways.",
+  description="One route, documented four ways.",
   api_version="1.0.0",
 )
-for path in ["/openapi.json", "/docs", "/redoc"] {</code></pre></div>
+for path in ["/openapi.json", "/docs", "/redoc", "/redocly"] {</code></pre></div>
       <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/22-docs-ui" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
+    </article>
+    <article class="ex-card">
+      <span class="tag">29-agents</span>
+      <h3>Serve the API to agents</h3>
+      <p>The same document as an MCP service at /mcp and a skill at /SKILL.md: each operation one tool, called over the mounted endpoint, answering what a client answers.</p>
+      <div class="codewrap"><pre><code>let app = @moonapi.App::new()
+app.get(
+  "/pets",
+  _ctx =&gt; @moonapi.json(200, Json([Json("Rex"), Json("Milo")])),
+  summary="List the pets",
+  tags=["pets"],
+)
+app.get(
+  "/pets/{id}",
+  ctx =&gt; @moonapi.text(200, "pet " + ctx.param("id").unwrap_or("")),
+  summary="Fetch one pet",
+  endpoint=@endpoint.Endpoint::new(params=[</code></pre></div>
+      <a class="src" href="https://github.com/moonbitstack/moonapi/tree/master/src/examples/29-agents" target="_blank" rel="noopener">View source on GitHub &rarr;</a>
     </article>
     </div>
   </section>

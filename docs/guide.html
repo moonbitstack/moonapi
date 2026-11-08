@@ -614,9 +614,45 @@ app.view("/echo", Echo::{ }, tags=["misc"])</code></pre></div>
 
   <!-- ============ 8. RUN ============ -->
   <h2 id="serve">8 · Serving it</h2>
-  <p class="sub">The same application runs on a native server or compiles to WebAssembly. With the Mooncat server the application listens on <code>127.0.0.1:12000</code>; open <code>/docs</code> for the API reference, <code>/redoc</code> for ReDoc, or <code>/openapi.json</code> for the document.</p>
+  <p class="sub">The same application runs on a native server or compiles to WebAssembly. With the Mooncat server the application listens on <code>127.0.0.1:12000</code>; open <code>/docs</code> for the API reference, <code>/redoc</code> for ReDoc, <code>/redocly</code> for Redocly's reference, <code>/mcp</code> for the agent interface, or <code>/openapi.json</code> for the document.</p>
   <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="hl"><code>cd integration &amp;&amp; moon run src/full-example --target native</code></pre></div>
   <p>The bundled <code>full-example</code> composes routers, authentication, typed bodies, response filtering, CORS and gzip layers, dependency injection, forms, files, background tasks, server-sent events, WebSockets, lifespan hooks and OpenAPI into one integrated service. The focused examples in <code>src/examples/</code> isolate each of those features.</p>
+
+  <!-- ============ 9. DOCS AND AGENTS ============ -->
+  <h2 id="agents">9 · Documents, readers and agents</h2>
+  <p class="sub">The document is not only for reading. The application serves it to four readers, and one call offers the same description to an agent: every operation becomes an MCP tool, and the API becomes a skill the agent reads first.</p>
+
+  <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="hl"><code>// /docs serves the Scalar reference; ui picks another reader.
+app.enable_docs(ui=Swagger)
+
+// Every page wears the site's theme; Plain leaves a reader as it ships.
+app.enable_docs(theme=Plain)
+
+// /redoc and /redocly serve their own reader whatever /docs serves.
+app.enable_docs(redoc_url=None)</code></pre></div>
+
+  <p>The four readers load from a CDN at a pinned version, escape what they are given, follow the ASGI <code>root_path</code> of a mounted application, and stay out of the document they describe. Redocly's reference renders under a licence key, which reaches it through <code>ui_extra</code>.</p>
+
+  <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="hl"><code>// One call: the MCP service at /mcp, the skill at /SKILL.md.
+@agent.expose(app, exposure={
+  ..@agent.exposure,
+  document_url: Some("/openapi.json"),
+})</code></pre></div>
+
+  <p>Each documented operation becomes one tool, named after its <code>operationId</code> or after the method and the path. A tool's arguments are the operation's path and query parameters and its JSON body, with <code>$ref</code>s inlined so the schema stands on its own, and a call runs the route in-process — the answer an agent gets is the one a client gets.</p>
+
+  <div class="term">
+    <div class="term-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="title">recorded · src/examples/29-agents</span></div>
+    <div class="term-body">tools the MCP service offers:
+  get_pets
+  get_pets_id
+calling one through the same service:
+  {"jsonrpc":"2.0","id":2,"result":{"content":[{"type":"text","text":"pet 7"}],"isError":false}}
+the skill an agent reads first:
+  name: petstore
+  - MCP endpoint: `/mcp` — streamable HTTP, one tool per operation.
+  | `get_pets_id` | `GET /pets/{id}` | `id` (path, string, required) | Fetch one pet |</div>
+  </div>
 
   <div class="note"><b>Where to go next.</b> The <a href="api.html">API reference</a> lists every public type, function and method with its parameters. The <a href="showcase.html">showcase</a> visualises how a request travels through the application.</div>
 </section>

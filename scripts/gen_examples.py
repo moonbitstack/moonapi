@@ -104,7 +104,11 @@ META = {
     ),
     "22-docs-ui": (
         "OpenAPI & docs UI", "Serve the docs UI",
-        "Enable the bundled UI and hit /openapi.json, /docs and /redoc for the live specification.",
+        "Hit /openapi.json, /docs, /redoc and /redocly for the live specification, pick which reader /docs serves, and drop the site's theme for the reader's own.",
+    ),
+    "29-agents": (
+        "OpenAPI & docs UI", "Serve the API to agents",
+        "The same document as an MCP service at /mcp and a skill at /SKILL.md: each operation one tool, called over the mounted endpoint, answering what a client answers.",
     ),
     "23-lifespan": (
         "Composition & middleware", "Startup and shutdown hooks",
@@ -323,7 +327,7 @@ FOOTER = """<footer class="site">
 def build():
     blocks = [group_block(g) for g in GROUP_ORDER if any(d for d in META if META[d][0] == g)]
     doc = HEADER + "\n".join(blocks) + "\n" + FOOTER
-    with open(OUT, "w", encoding="utf-8") as fh:
+    with open(OUT, "w", encoding="utf-8", newline="\n") as fh:
         fh.write(doc)
     print(f"wrote {OUT} ({len(META)} examples across {len(GROUP_ORDER)} groups)")
 

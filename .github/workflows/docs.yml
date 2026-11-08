@@ -42,7 +42,7 @@ jobs:
           moon info --target all
           python3 scripts/gen_api.py
           python3 scripts/gen_examples.py
-          git diff --exit-code -- docs/api.html docs/examples.html
+          git diff --exit-code -- docs/api.html docs/examples.html docs/index.html
 
       - name: configure pages
         uses: actions/configure-pages@v6

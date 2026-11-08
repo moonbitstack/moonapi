@@ -27,12 +27,13 @@
   <aside class="sidebar">
     <h4>Packages</h4>
     <div class="side-nav">
-      <a href="#pkg-moonapi"><span class="at">@</span>moonapi<span class="cnt">206</span></a>
+      <a href="#pkg-moonapi"><span class="at">@</span>moonapi<span class="cnt">210</span></a>
+<a href="#pkg-agent"><span class="at">@</span>agent<span class="cnt">3</span></a>
 <a href="#pkg-ctx"><span class="at">@</span>ctx<span class="cnt">30</span></a>
 <a href="#pkg-di"><span class="at">@</span>di<span class="cnt">3</span></a>
 <a href="#pkg-endpoint"><span class="at">@</span>endpoint<span class="cnt">19</span></a>
 <a href="#pkg-exceptions"><span class="at">@</span>exceptions<span class="cnt">2</span></a>
-<a href="#pkg-openapi"><span class="at">@</span>openapi<span class="cnt">20</span></a>
+<a href="#pkg-openapi"><span class="at">@</span>openapi<span class="cnt">26</span></a>
 <a href="#pkg-route"><span class="at">@</span>route<span class="cnt">53</span></a>
 <a href="#pkg-schema"><span class="at">@</span>schema<span class="cnt">44</span></a>
 <a href="#pkg-security"><span class="at">@</span>security<span class="cnt">41</span></a>
@@ -436,6 +437,14 @@
   
 </section>
 
+<section class="api-item" id="moonapi-Theme">
+  <span class="kind kind-using">re-export</span>
+  <pre class="sig"><code>pub using @openapi {type Theme}</code></pre>
+  
+  
+  
+</section>
+
 <section class="api-item" id="moonapi-Ui">
   <span class="kind kind-using">re-export</span>
   <pre class="sig"><code>pub using @openapi {type Ui}</code></pre>
@@ -504,7 +513,7 @@
 <section class="api-item" id="moonapi-docs">
   <span class="kind kind-let">value</span>
   <pre class="sig"><code>pub let docs : Docs</code></pre>
-  <p class="doc">The documentation an app serves unless told otherwise: three routes at paths, with OpenAPI 3.1 and the Scalar reader.</p>
+  <p class="doc">The documentation an app serves unless told otherwise: three routes at paths, with OpenAPI 3.1 and the Scalar reader, and ReDoc and the Redocly reference on pages of their own.</p>
   
   
 </section>
@@ -1021,6 +1030,22 @@
   
 </section>
 
+<section class="api-item" id="moonapi-redocly_js">
+  <span class="kind kind-let">value</span>
+  <pre class="sig"><code>pub let redocly_js : String</code></pre>
+  
+  
+  
+</section>
+
+<section class="api-item" id="moonapi-theme">
+  <span class="kind kind-let">value</span>
+  <pre class="sig"><code>pub let theme : @openapi.Theme</code></pre>
+  
+  
+  
+</section>
+
 <section class="api-item" id="moonapi-WS_1000_NORMAL_CLOSURE">
   <span class="kind kind-const">constant</span>
   <pre class="sig"><code>pub const WS_1000_NORMAL_CLOSURE : Int32 = 1000</code></pre>
@@ -1264,17 +1289,25 @@
 
 <section class="api-item" id="moonapi-redoc_ui">
   <span class="kind kind-fn">function</span>
-  <pre class="sig"><code>pub fn redoc_ui(spec_url? : String, title? : String, js_url? : String, telemetry? : Bool) -&gt; String</code></pre>
+  <pre class="sig"><code>pub fn redoc_ui(spec_url? : String, title? : String, js_url? : String, telemetry? : Bool, theme? : @openapi.Theme) -&gt; String</code></pre>
   
-  <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname opt'>spec_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>title</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>js_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>telemetry</td><td><code>Bool</code></td><td class='opt'>optional</td></tr></tbody></table><p class="returns">Returns <code>String</code></p>
+  <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname opt'>spec_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>title</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>js_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>telemetry</td><td><code>Bool</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>theme</td><td><code>@openapi.Theme</code></td><td class='opt'>optional</td></tr></tbody></table><p class="returns">Returns <code>String</code></p>
+  
+</section>
+
+<section class="api-item" id="moonapi-redocly_ui">
+  <span class="kind kind-fn">function</span>
+  <pre class="sig"><code>pub fn redocly_ui(spec_url? : String, title? : String, js_url? : String, extra? : Map[String, @json.Json], theme? : @openapi.Theme) -&gt; String</code></pre>
+  
+  <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname opt'>spec_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>title</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>js_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>extra</td><td><code>Map[String, @json.Json]</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>theme</td><td><code>@openapi.Theme</code></td><td class='opt'>optional</td></tr></tbody></table><p class="returns">Returns <code>String</code></p>
   
 </section>
 
 <section class="api-item" id="moonapi-scalar_ui">
   <span class="kind kind-fn">function</span>
-  <pre class="sig"><code>pub fn scalar_ui(spec_url? : String, title? : String, js_url? : String, extra? : Map[String, @json.Json]) -&gt; String</code></pre>
+  <pre class="sig"><code>pub fn scalar_ui(spec_url? : String, title? : String, js_url? : String, extra? : Map[String, @json.Json], theme? : @openapi.Theme) -&gt; String</code></pre>
   
-  <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname opt'>spec_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>title</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>js_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>extra</td><td><code>Map[String, @json.Json]</code></td><td class='opt'>optional</td></tr></tbody></table><p class="returns">Returns <code>String</code></p>
+  <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname opt'>spec_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>title</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>js_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>extra</td><td><code>Map[String, @json.Json]</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>theme</td><td><code>@openapi.Theme</code></td><td class='opt'>optional</td></tr></tbody></table><p class="returns">Returns <code>String</code></p>
   
 </section>
 
@@ -1304,9 +1337,9 @@
 
 <section class="api-item" id="moonapi-swagger_ui">
   <span class="kind kind-fn">function</span>
-  <pre class="sig"><code>pub fn swagger_ui(spec_url? : String, title? : String, js_url? : String, css_url? : String, oauth2_redirect_url? : String, init_oauth? : @json.Json, extra? : Map[String, @json.Json]) -&gt; String</code></pre>
+  <pre class="sig"><code>pub fn swagger_ui(spec_url? : String, title? : String, js_url? : String, css_url? : String, oauth2_redirect_url? : String, init_oauth? : @json.Json, extra? : Map[String, @json.Json], theme? : @openapi.Theme) -&gt; String</code></pre>
   
-  <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname opt'>spec_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>title</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>js_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>css_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>oauth2_redirect_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>init_oauth</td><td><code>@json.Json</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>extra</td><td><code>Map[String, @json.Json]</code></td><td class='opt'>optional</td></tr></tbody></table><p class="returns">Returns <code>String</code></p>
+  <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname opt'>spec_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>title</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>js_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>css_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>oauth2_redirect_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>init_oauth</td><td><code>@json.Json</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>extra</td><td><code>Map[String, @json.Json]</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>theme</td><td><code>@openapi.Theme</code></td><td class='opt'>optional</td></tr></tbody></table><p class="returns">Returns <code>String</code></p>
   
 </section>
 
@@ -1419,10 +1452,10 @@
 
 <section class="api-item" id="moonapi-App-enable_docs">
   <span class="kind kind-fn">function</span>
-  <pre class="sig"><code>pub fn App::enable_docs(Self, openapi_url? : String?, docs_url? : String?, redoc_url? : String?, version? : @schema.OpenApiVersion, ui? : @openapi.Ui, oauth2_redirect_url? : String?, init_oauth? : @json.Json, ui_extra? : Map[String, @json.Json], root_path_in_servers? : Bool) -&gt; Unit</code></pre>
+  <pre class="sig"><code>pub fn App::enable_docs(Self, openapi_url? : String?, docs_url? : String?, redoc_url? : String?, redocly_url? : String?, version? : @schema.OpenApiVersion, ui? : @openapi.Ui, theme? : @openapi.Theme, oauth2_redirect_url? : String?, init_oauth? : @json.Json, ui_extra? : Map[String, @json.Json], root_path_in_servers? : Bool) -&gt; Unit</code></pre>
   <p class="doc">Change what the app&#x27;s documentation routes serve. They are on by default (<code>App::new(docs=None)</code> starts without them); this sets every setting at once, each left out taking <code>docs</code>&#x27;s value, and <code>None</code> for a URL leaves that route off. The routes are kept out of the document they serve, so serving docs does not change the spec a client reads.</p>
 <p class="doc">The routes are added when the app first becomes an ASGI application, after the app&#x27;s own routes, so a route the app registers at one of these paths answers instead. Settings changed after that point do not move them.</p>
-  <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname opt'>openapi_url</td><td><code>String?</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>docs_url</td><td><code>String?</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>redoc_url</td><td><code>String?</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>version</td><td><code>@schema.OpenApiVersion</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>ui</td><td><code>@openapi.Ui</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>oauth2_redirect_url</td><td><code>String?</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>init_oauth</td><td><code>@json.Json</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>ui_extra</td><td><code>Map[String, @json.Json]</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>root_path_in_servers</td><td><code>Bool</code></td><td class='opt'>optional</td></tr></tbody></table><p class="returns">Returns <code>Unit</code></p>
+  <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname opt'>openapi_url</td><td><code>String?</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>docs_url</td><td><code>String?</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>redoc_url</td><td><code>String?</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>redocly_url</td><td><code>String?</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>version</td><td><code>@schema.OpenApiVersion</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>ui</td><td><code>@openapi.Ui</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>theme</td><td><code>@openapi.Theme</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>oauth2_redirect_url</td><td><code>String?</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>init_oauth</td><td><code>@json.Json</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>ui_extra</td><td><code>Map[String, @json.Json]</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>root_path_in_servers</td><td><code>Bool</code></td><td class='opt'>optional</td></tr></tbody></table><p class="returns">Returns <code>Unit</code></p>
   
 </section>
 
@@ -1754,6 +1787,36 @@
   <p class="doc">Register a WebSocket route . The path is a template with the same parameters and convertors as an HTTP route&#x27;s.</p>
 <p class="doc"><code>security</code> is enforced and <code>dependencies</code> resolved before the handler is called. A refusal declines the handshake with the response an HTTP route would have answered — through ASGI&#x27;s <code>websocket.http.response</code> extension where the server offers it, and with close code 1008 otherwise. The dependencies are torn down when the handler returns. <code>name</code> is the handle <code>App::url_for</code> resolves.</p>
   <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname '><span class="muted">type only</span></td><td><code>String</code></td><td class=''>required</td></tr><tr><td class='pname '><span class="muted">type only</span></td><td><code>async (@socket.WebSocket) -&gt; Unit</code></td><td class=''>required</td></tr><tr><td class='pname opt'>name</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>security</td><td><code>Array[@security.SecurityRequirement]</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>dependencies</td><td><code>Array[String]</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>regex</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>glob</td><td><code>String</code></td><td class='opt'>optional</td></tr></tbody></table><p class="returns">Returns <code>Unit</code></p>
+  
+</section>
+</section>
+<section class="pkg-section" id="pkg-agent"><h2><span class="at">@</span>agent</h2><p class="pkg-desc">Package <code>moonbitstack/moonapi/agent</code>.</p>
+<h3 class="grp">Constants &amp; values</h3>
+
+<section class="api-item" id="agent-exposure">
+  <span class="kind kind-let">value</span>
+  <pre class="sig"><code>pub let exposure : Exposure</code></pre>
+  <p class="doc">The offer an application makes unless told otherwise: the MCP endpoint at <code>/mcp</code>, the skill at <code>/SKILL.md</code>, every documented operation.</p>
+  
+  
+</section>
+<h3 class="grp">Functions</h3>
+
+<section class="api-item" id="agent-expose">
+  <span class="kind kind-fn">function</span>
+  <pre class="sig"><code>pub fn expose(@moonapi.App, exposure? : Exposure) -&gt; Unit</code></pre>
+  <p class="doc">Offer <code>app</code> to agents, in one call agent rather than a person). Every documented operation becomes one MCP tool: its parameters and its body are the tool&#x27;s arguments, and calling the tool calls the route in-process, through the same ASGI path a server uses, so the answer an agent gets and the answer a client gets are the same bytes.</p>
+<p class="doc">The skill served at <code>skill_url</code> is a <code>SKILL.md</code> for the API: what it is, how to reach it, and every tool with its arguments. The MCP server carries the same document as a resource, so a client that reads resources instead of asking for them finds it there too.</p>
+<p class="doc">The tool table is built from the document as it stands at the first request, not at this call, so routes registered after it are still offered.</p>
+  <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname '><span class="muted">type only</span></td><td><code>@moonapi.App</code></td><td class=''>required</td></tr><tr><td class='pname opt'>exposure</td><td><code>Exposure</code></td><td class='opt'>optional</td></tr></tbody></table><p class="returns">Returns <code>Unit</code></p>
+  
+</section>
+
+<section class="api-item" id="agent-skill_of">
+  <span class="kind kind-fn">function</span>
+  <pre class="sig"><code>pub fn skill_of(@moonapi.App, Exposure) -&gt; String</code></pre>
+  <p class="doc">The <code>SKILL.md</code> of an API generated instead of written by hand): frontmatter naming it and saying when to read it, then how to reach the API, every tool it offers, and the rules that keep a caller from misreading an answer.</p>
+  <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname '><span class="muted">type only</span></td><td><code>@moonapi.App</code></td><td class=''>required</td></tr><tr><td class='pname '><span class="muted">type only</span></td><td><code>Exposure</code></td><td class=''>required</td></tr></tbody></table><p class="returns">Returns <code>String</code></p>
   
 </section>
 </section>
@@ -2264,6 +2327,14 @@
   
 </section>
 
+<section class="api-item" id="openapi-redocly_js">
+  <span class="kind kind-let">value</span>
+  <pre class="sig"><code>pub let redocly_js : String</code></pre>
+  <p class="doc">Redocly&#x27;s reference is served from Redocly&#x27;s own CDN and is licensed per deployment: the page carries the licence key its options name.</p>
+  
+  
+</section>
+
 <section class="api-item" id="openapi-scalar_js">
   <span class="kind kind-let">value</span>
   <pre class="sig"><code>pub let scalar_js : String</code></pre>
@@ -2295,21 +2366,37 @@
   
   
 </section>
+
+<section class="api-item" id="openapi-theme">
+  <span class="kind kind-let">value</span>
+  <pre class="sig"><code>pub let theme : Theme</code></pre>
+  <p class="doc">The theme a page wears unless told otherwise.</p>
+  
+  
+</section>
 <h3 class="grp">Functions</h3>
 
 <section class="api-item" id="openapi-redoc_ui">
   <span class="kind kind-fn">function</span>
-  <pre class="sig"><code>pub fn redoc_ui(spec_url? : String, title? : String, js_url? : String, telemetry? : Bool) -&gt; String</code></pre>
+  <pre class="sig"><code>pub fn redoc_ui(spec_url? : String, title? : String, js_url? : String, telemetry? : Bool, theme? : Theme) -&gt; String</code></pre>
   <p class="doc">A ReDoc page rendering the document served at <code>spec_url</code> <code>get_redoc_html</code>): three panels, built for reading rather than for trying calls out. ReDoc reports usage to its maker unless told not to; <code>telemetry</code> is off unless turned on, since the page is served to this API&#x27;s readers.</p>
-  <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname opt'>spec_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>title</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>js_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>telemetry</td><td><code>Bool</code></td><td class='opt'>optional</td></tr></tbody></table><p class="returns">Returns <code>String</code></p>
+  <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname opt'>spec_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>title</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>js_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>telemetry</td><td><code>Bool</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>theme</td><td><code>Theme</code></td><td class='opt'>optional</td></tr></tbody></table><p class="returns">Returns <code>String</code></p>
+  
+</section>
+
+<section class="api-item" id="openapi-redocly_ui">
+  <span class="kind kind-fn">function</span>
+  <pre class="sig"><code>pub fn redocly_ui(spec_url? : String, title? : String, js_url? : String, extra? : Map[String, @json.Json], theme? : Theme) -&gt; String</code></pre>
+  <p class="doc">A Redocly reference rendering the document served at <code>spec_url</code>: the reference and a request console on one page. <code>extra</code> is merged over the options passed to <code>RedoclyReferenceDocs.init</code>, which is where the licence key, the theming and the code samples go; Redocly refuses to render without the key its licence owes it, so a page served without one says so rather than coming up empty.</p>
+  <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname opt'>spec_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>title</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>js_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>extra</td><td><code>Map[String, @json.Json]</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>theme</td><td><code>Theme</code></td><td class='opt'>optional</td></tr></tbody></table><p class="returns">Returns <code>String</code></p>
   
 </section>
 
 <section class="api-item" id="openapi-scalar_ui">
   <span class="kind kind-fn">function</span>
-  <pre class="sig"><code>pub fn scalar_ui(spec_url? : String, title? : String, js_url? : String, extra? : Map[String, @json.Json]) -&gt; String</code></pre>
+  <pre class="sig"><code>pub fn scalar_ui(spec_url? : String, title? : String, js_url? : String, extra? : Map[String, @json.Json], theme? : Theme) -&gt; String</code></pre>
   <p class="doc">A Scalar API reference rendering the document served at <code>spec_url</code>: the reference and a request client on one page. <code>extra</code> is merged over the configuration passed to <code>Scalar.createApiReference</code>, which is where its theme, layout and authentication defaults go.</p>
-  <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname opt'>spec_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>title</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>js_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>extra</td><td><code>Map[String, @json.Json]</code></td><td class='opt'>optional</td></tr></tbody></table><p class="returns">Returns <code>String</code></p>
+  <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname opt'>spec_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>title</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>js_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>extra</td><td><code>Map[String, @json.Json]</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>theme</td><td><code>Theme</code></td><td class='opt'>optional</td></tr></tbody></table><p class="returns">Returns <code>String</code></p>
   
 </section>
 
@@ -2323,9 +2410,9 @@
 
 <section class="api-item" id="openapi-swagger_ui">
   <span class="kind kind-fn">function</span>
-  <pre class="sig"><code>pub fn swagger_ui(spec_url? : String, title? : String, js_url? : String, css_url? : String, oauth2_redirect_url? : String, init_oauth? : @json.Json, extra? : Map[String, @json.Json]) -&gt; String</code></pre>
+  <pre class="sig"><code>pub fn swagger_ui(spec_url? : String, title? : String, js_url? : String, css_url? : String, oauth2_redirect_url? : String, init_oauth? : @json.Json, extra? : Map[String, @json.Json], theme? : Theme) -&gt; String</code></pre>
   <p class="doc">A Swagger UI page rendering the document served at <code>spec_url</code> <code>get_swagger_ui_html</code>). <code>oauth2_redirect_url</code> is the page an OAuth2 flow returns to, served by <code>swagger_redirect</code>; <code>init_oauth</code> is handed to <code>initOAuth</code> to prefill the client id, scopes and the like; <code>extra</code> is merged over the settings passed to Swagger UI .</p>
-  <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname opt'>spec_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>title</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>js_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>css_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>oauth2_redirect_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>init_oauth</td><td><code>@json.Json</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>extra</td><td><code>Map[String, @json.Json]</code></td><td class='opt'>optional</td></tr></tbody></table><p class="returns">Returns <code>String</code></p>
+  <table class="params"><thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead><tbody><tr><td class='pname opt'>spec_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>title</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>js_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>css_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>oauth2_redirect_url</td><td><code>String</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>init_oauth</td><td><code>@json.Json</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>extra</td><td><code>Map[String, @json.Json]</code></td><td class='opt'>optional</td></tr><tr><td class='pname opt'>theme</td><td><code>Theme</code></td><td class='opt'>optional</td></tr></tbody></table><p class="returns">Returns <code>String</code></p>
   
 </section>
 <h3 class="grp">Methods on <code>ApiInfo</code></h3>
@@ -2396,6 +2483,31 @@
   <pre class="sig"><code>pub fn Tag::to_json(Self) -&gt; @json.Json</code></pre>
   <p class="doc">The tag object, the same in every dialect.</p>
   <p class="returns">Returns <code>@json.Json</code></p>
+  
+</section>
+<h3 class="grp">Methods on <code>Theme</code></h3>
+
+<section class="api-item" id="openapi-Theme-equal">
+  <span class="kind kind-fn">function</span>
+  <pre class="sig"><code>pub fn Theme::equal(Self, Self) -&gt; Bool</code></pre>
+  
+  <p class="returns">Returns <code>Bool</code></p>
+  
+</section>
+
+<section class="api-item" id="openapi-Theme-not_equal">
+  <span class="kind kind-fn">function</span>
+  <pre class="sig"><code>pub fn Theme::not_equal(Self, Self) -&gt; Bool</code></pre>
+  
+  <p class="returns">Returns <code>Bool</code></p>
+  
+</section>
+
+<section class="api-item" id="openapi-Theme-to_repr">
+  <span class="kind kind-fn">function</span>
+  <pre class="sig"><code>pub fn Theme::to_repr(Self) -&gt; @debug.Repr</code></pre>
+  
+  <p class="returns">Returns <code>@debug.Repr</code></p>
   
 </section>
 <h3 class="grp">Methods on <code>Ui</code></h3>
