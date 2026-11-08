@@ -5,12 +5,16 @@ description: "A typed web framework for MoonBit: routes, typed request extractio
 
 # moonapi
 
-Add `moonbitstack/moonapi`, and for serving it `moonbitstack/mooncat` plus
-`moonbitlang/async`:
+Add the package:
 
 ```
 moon add moonbitstack/moonapi
 ```
+
+Serving needs a server on top of it — `moonbitstack/mooncat`, plus `moonbitlang/async`
+for the `async fn main` that starts one. Neither is a dependency here, and
+everything below runs without them, because `App::handle` drives an application
+in-process.
 
 ```moon.pkg
 import {
