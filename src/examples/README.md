@@ -59,8 +59,9 @@ The integrated service exposes these routes:
 | `WS` | `/api/v1/catalog/ws/{room}` | WebSocket text echo |
 | `GET` | `/reject` | Demonstrate the custom exception handler |
 
-The documentation routes are `/docs`, `/redoc` and `/openapi.json`; they are
-excluded from the generated API schema.
+The documentation routes are `/docs`, `/redoc`, `/redocly` and `/openapi.json`, and
+the agent interface is `/mcp` and `/SKILL.md`; they are excluded from the generated
+API schema.
 
 The focused examples run the app in-process on native, wasm and js, through
 `App::handle` or the moonasgi test client; both go through `App::to_asgi`, the
@@ -89,13 +90,14 @@ same ASGI application `full-example` serves over Mooncat.
 | 19 | [`json-schema`](19-json-schema/) | A body written as JSON Schema — a `pattern` and a closed set the constructors cannot say — emitted into the document and validated against | `Schema::json`, `Endpoint::new`, `validate_schema` |
 | 20 | [`views`](20-views/) | A type that answers GET, PUT and DELETE on one path; a method it leaves out answers 405 with `Allow` | `View`, `App::view` |
 | 21 | [`route-table`](21-route-table/) | Routes in one table, apart from their handlers | `App::urls`, `path`, `group` |
-| 22 | [`docs-ui`](22-docs-ui/) | The three documentation pages — the spec, the API reference, ReDoc — and how to leave one off | `App::enable_docs`, `scalar_ui`, `swagger_ui`, `redoc_ui`, `html` |
+| 22 | [`docs-ui`](22-docs-ui/) | The four documented pages — the spec, Scalar, Swagger UI, ReDoc, Redocly — how to pick the reader and how to leave one off | `App::enable_docs`, `Ui`, `Theme`, `scalar_ui`, `swagger_ui`, `redoc_ui`, `redocly_ui`, `html` |
 | 23 | [`lifespan`](23-lifespan/) | Startup and shutdown hooks in order, and the lifespan state a request reads, driven by the test client | `App::on_startup`, `App::on_shutdown`, `Context::state`, `@testing.Client::lifespan` |
 | 24 | [`files`](24-files/) | Serving a file the way RFC 9110 asks: a 304 for a repeat, a 206 for a resumed download, a 416 for a range that is not there, and the `data:` URL a browser hands back | `Context::serve`, `data_response`, `data_url`, `@conditional.hash` |
 | 25 | [`full-example`](../../integration/src/full-example/) | Root endpoints plus two included routers in a multi-package layout, composed with auth, validation, middleware, forms, files, background tasks, SSE, WebSockets, lifecycle and OpenAPI | `App`, `Router`, `include_router`, `secure_oauth2`, `App::layer`, `stream`, `sse`, `websocket` |
 | 26 | [`described-model`](26-described-model/) | One moonmodel description driving both the validation and the document, a reference looked up in `known`, and the report for one that is not there | `Schema::of_model`, `Unresolved`, `Endpoint::validate`, `App::openapi_json` |
 | 27 | [`annotations`](27-annotations/) | Routes declared as `#app.get`, `#app.post`, `#app.delete`, `#app.route("PURGE", ...)` and `#router.get`, registered by the generated `routes.g.mbt` | `#app.*`, `#router.*`, `register`, `register_router`, `Other` |
 | 28 | [`templates`](28-templates/) | Pages rendered from templates that extend a base, see the request and link by route name, beside a stylesheet served from a static source | `@templates.Templates`, `url_for`, `@static.serve`, `@static.Memory`, `App::mount_asgi` |
+| 29 | [`agents`](29-agents/) | The document offered to an agent: two routes as two MCP tools, one called over the mounted endpoint, and the skill it reads first | `@agent.expose`, `Exposure`, `Server::tool` |
 | — | [`ecosystem`](../../integration/) | One description of a task driving the request body's validation, the document and the SQLite table, with the rows stored through the ORM, an API key on writes, CORS, gzip and an error page — registered three ways and served by Mooncat | `Schema::of_model`, `@moonmodel/sql.table`, `@moonorm.Session`, `App::layer`, `App::middleware`, `#app.*` |
 
 The complete application serves OpenAPI 3.0.3 at `/openapi.json`. Other examples

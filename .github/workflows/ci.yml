@@ -92,6 +92,12 @@ jobs:
       - name: templates example runs
         run: moon run src/examples/28-templates | grep -q 'href="/users/8"'
 
+      - name: the agent example answers through the mounted service
+        run: moon run src/examples/29-agents | grep -q '"text":"pet 7"'
+
+      - name: the docs example serves four readers
+        run: moon run src/examples/22-docs-ui | grep -q '/redocly -> 200'
+
       - name: lint (fmt is clean)
         run: |
           moon fmt && git -c core.autocrlf=false diff --ignore-cr-at-eol --exit-code

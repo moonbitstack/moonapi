@@ -1,0 +1,29 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonapi/agent"
+
+import {
+  "moonbitstack/moonapi",
+}
+
+// Values
+pub fn expose(@moonapi.App, exposure? : Exposure) -> Unit
+
+pub let exposure : Exposure
+
+pub fn skill_of(@moonapi.App, Exposure) -> String
+
+// Errors
+
+// Types and methods
+pub(all) struct Exposure {
+  mcp_url : String?
+  skill_url : String?
+  name : String?
+  instructions : String?
+  document_url : String?
+  tags : Array[String]
+}
+
+// Type aliases
+
+// Traits

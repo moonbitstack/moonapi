@@ -1,0 +1,24 @@
+// moonapi/agent: an application offered to agents — its own document served as
+// MCP tools and as a skill. moonmcp is a dependency of this package alone, so a
+// program that does not import it does not carry it.
+import {
+  "moonbitstack/moonapi",
+  "moonbitstack/moonasgi",
+  "moonbitstack/moonasgi/http",
+  "moonbitstack/moonmcp/server",
+  "moonbitstack/moonmcp/tools",
+  "moonbitstack/moonmcp/types",
+  "moonbitstack/moonurl",
+  "moonbitlang/core/encoding/utf8",
+}
+
+import {
+  "moonbitstack/moonapi/endpoint",
+  "moonbitstack/moonapi/schema",
+  "moonbitstack/moonasgi",
+  "moonbitstack/moonmcp/client",
+  "moonbitstack/moonmcp/types",
+  "moonbitlang/async",
+  "moonbitlang/core/encoding/utf8",
+  "moonbitlang/core/json",
+} for "wbtest"
