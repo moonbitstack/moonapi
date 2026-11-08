@@ -79,6 +79,13 @@ async test "the pages wear the site's theme, and Plain leaves them alone" {
   )
   assert_eq(page.contains("::-webkit-scrollbar"), true)
   assert_eq(page.contains("--iris:#898AC4"), true)
+  // The two readers with a page of their own wear it as well.
+  let redoc = @utf8.decode_lossy(themed.handle(mkreq("GET", "/redoc")).body)
+  assert_eq(redoc.contains("class=\"mo-bar\""), true)
+  assert_eq(redoc.contains("--iris:#898AC4"), true)
+  let redocly = @utf8.decode_lossy(themed.handle(mkreq("GET", "/redocly")).body)
+  assert_eq(redocly.contains("class=\"mo-bar\""), true)
+  assert_eq(redocly.contains("--iris:#898AC4"), true)
   let plain = App::new()
   plain.describe(title="petstore")
   plain.enable_docs(theme=Plain)
