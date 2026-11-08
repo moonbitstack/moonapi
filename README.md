@@ -13,99 +13,91 @@
 OpenAPI document. One application object holds the routes, the layers around
 them, the exception and per-status handlers, the security schemes, the lifespan
 hooks and the OpenAPI metadata; the same object compiles to a server that runs
-natively or in WebAssembly.
+natively or in WebAssembly, and to the pages and the agent interface that
+describe it.
 
 ```mermaid
 flowchart LR
   routes["typed routes<br/>App::get / post / …"] --> app["**moonapi** App"]
   app -->|"App::to_asgi()"| asgi(["moonasgi AsgiApp"])
   app -->|"App::openapi_json()"| spec["OpenAPI 3.1"]
+  app -->|"/docs /redoc /redocly"| pages["four readers"]
+  app -->|"agent::expose"| mcp["MCP tools + skill"]
   asgi --> cat["a server runs it"]
 ```
 
 ## Quickstart
 
 Routing and the OpenAPI document build on every backend. Handlers are async, and
-serving needs a socket, so the entry point is `async fn main` and the target is
-native or wasm:
+serving needs a socket, so the entry point of a program that serves is
+`async fn main`; everything below works without one, because `App::handle` drives
+an application in-process through the same path a server uses.
 
+```
+moon add moonbitstack/moonapi
+```
+
+```moonbit
+async test {
+  let app = @moonapi.App::new()
+  app.get("/", _ctx => @moonapi.text(200, "Hello from moonapi!"))
+  app.get(
+    "/users/{id}",
+    ctx => @moonapi.text(200, "user " + ctx.param("id").unwrap_or("")),
+    summary="Fetch a user",
+  )
+  app.post("/users", _ctx => @moonapi.text(201, "created"), status_code=201)
+  app.describe(title="users api", api_version="1.0.0")
+
+  let reply = app.handle({
+    http_method: "GET",
+    path: "/users/42",
+    query_string: b"",
+    headers: [],
+    body: b"",
+  })
+  assert_eq(reply.status, 200)
+  assert_eq(@utf8.decode_lossy(reply.body), "user 42")
+
+  // One set of routes, every mainstream spec version.
+  assert_eq(app.openapi_json(version=OpenApi31).contains("\"3.1.0\""), true)
+  assert_eq(app.openapi_json(version=OpenApi30).contains("\"3.0.3\""), true)
+  assert_eq(app.openapi_json(version=Swagger20).contains("\"2.0\""), true)
+}
+```
+
+A function is what a server serves: `@mooncat.serve(app.to_asgi(), port=12000)`
+runs the application above on a socket, native or wasm, and `@mooncat` is not a
+dependency of this library — `App::to_asgi()` is the whole contract, and any
+server that speaks ASGI runs it.
+
+### Without annotations
+
+Annotations generate these calls, and routes built at run time are written the same
+way. `#app.get("/", summary="Say hello")` above a handler names its verb, and the
+generator it belongs to writes the `register(app)` that registers it:
+
+<!-- nocheck -->
 ```moonbit
 #app.get("/", summary="Say hello")
 fn hello(_ctx : @moonapi.Context) -> @moonasgi.Response {
   @moonapi.text(200, "Hello from moonapi!")
 }
 
-#app.get("/users/{id}", summary="Fetch a user")
-fn user(ctx : @moonapi.Context) -> @moonasgi.Response {
-  @moonapi.text(200, "user " + ctx.param("id").unwrap_or(""))
-}
-
-#app.post("/users", status_code="201")
-fn create_user(_ctx : @moonapi.Context) -> @moonasgi.Response {
-  @moonapi.text(201, "created")
-}
-
 async fn main {
   let app = @moonapi.App::new()
   register(app)
-
-  // One set of routes, every mainstream spec version.
-  println(app.openapi_json(version=OpenApi31)) // OpenAPI 3.1.0
-  println(app.openapi_json(version=OpenApi30)) // OpenAPI 3.0.3
-  println(app.openapi_json(version=Swagger20)) // Swagger 2.0
-
-  @mooncat.serve(app.to_asgi(), port=12000) catch {
-    err => println("stopped: \{err}")
-  }
+  @mooncat.serve(app.to_asgi(), port=12000)
 }
-```
-
-`register` comes from the generator, which reads the annotations at build time. Wire
-it in once, in `moon.mod`:
-
-<!-- nocheck -->
-```
-rule(name: "routes", command: "moonx moonbitstack/moonapi/cmd/routes@0.17.9 -C \"$mod_dir\" \"$input\" -o \"$output\"")
-```
-
-and in the `moon.pkg` of the package holding the handlers:
-
-<!-- nocheck -->
-```
-dev_build(rule: "routes", input: "routes.mbt", output: "routes.g.mbt")
-formatter(ignore: [ "routes.g.mbt" ])
 ```
 
 `#app.get`, `post`, `put`, `patch`, `delete`, `head`, `options` and `trace` name their
 verb, `#app.route("PURGE", "/cache")` takes any other, `#app.websocket` a socket, and
 `#router.*` registers on a `Router` through `register_router(router)`. Each takes the
-same arguments as the method it stands for.
-
-### Without annotations
-
-Annotations generate these calls, and routes built at run time are written the same
-way:
-
-```moonbit
-async fn main {
-  let app = @moonapi.App::new()
-  app.get("/", _ctx => @moonapi.text(200, "Hello from moonapi!"))
-  app.get("/users/{id}", ctx => @moonapi.text(
-    200,
-    "user " + ctx.param("id").unwrap_or(""),
-  ), summary="fetch a user")
-  app.post("/users", _ctx => @moonapi.text(201, "created"))
-
-  // One set of routes, every mainstream spec version.
-  println(app.openapi_json(version=OpenApi31)) // OpenAPI 3.1.0
-  println(app.openapi_json(version=OpenApi30)) // OpenAPI 3.0.3
-  println(app.openapi_json(version=Swagger20)) // Swagger 2.0
-
-  @mooncat.serve(app.to_asgi(), port=12000) catch {
-    err => println("stopped: \{err}")
-  }
-}
-```
+same arguments as the method it stands for. The generator reads them at build time —
+one rule in `moon.mod` and one line in the `moon.pkg` of the package holding the
+handlers, both shown in [`src/examples/27-annotations`](src/examples/27-annotations/).
+Without them the methods below are the whole surface.
 
 ### As types
 
@@ -122,33 +114,113 @@ impl @moonapi.View for User with get(_) {
 impl @moonapi.View for User with delete(_) {
   Some(_ctx => @moonapi.text(204, ""))
 }
+```
 
-async fn main {
+```moonbit
+async test {
   let app = @moonapi.App::new()
   app.view("/users/{id}", User::{})
-  @mooncat.serve(app.to_asgi(), port=12000) catch {
-    err => println("stopped: \{err}")
-  }
+  let fetched = app.handle({
+    http_method: "GET",
+    path: "/users/7",
+    query_string: b"",
+    headers: [],
+    body: b"",
+  })
+  assert_eq(fetched.status, 200)
+  let refused = app.handle({
+    http_method: "POST",
+    path: "/users/7",
+    query_string: b"",
+    headers: [],
+    body: b"",
+  })
+  assert_eq(refused.status, 405)
+  assert_eq(refused.header("allow").unwrap_or(""), "GET, HEAD, DELETE")
 }
 ```
 
 `app.urls` takes a route table instead, kept apart from the handlers: `path`, `view` and
 `group` each make an entry.
 
-```
-moon run src/main --target native
-curl http://127.0.0.1:12000/users/233
+## Documents
+
+An application serves `/openapi.json` and four readers of it from the start:
+`/docs`, `/redoc`, `/redocly`, and the same document in each of them. `ui` picks
+which reader `/docs` serves, `theme` how the pages look, and each of the two
+readers with a page of its own can be moved or left off:
+
+```moonbit
+async test {
+  let app = @moonapi.App::new()
+  app.get("/pets", _ctx => @moonapi.text(200, "pets"), summary="List pets")
+  app.describe(title="petstore")
+  app.enable_docs(ui=Swagger)
+  let page = app.handle({
+    http_method: "GET",
+    path: "/docs",
+    query_string: b"",
+    headers: [],
+    body: b"",
+  })
+  assert_eq(page.header("content-type"), Some("text/html; charset=utf-8"))
+  let html = @utf8.decode_lossy(page.body)
+  assert_eq(html.contains("swagger-ui-dist@5.34.0"), true)
+  // The page reads the document this app publishes, not a copy of it.
+  assert_eq(html.contains("\"/openapi.json\""), true)
+  // The pages stay out of the document they describe.
+  assert_eq(app.openapi_json().contains("/docs"), false)
+}
 ```
 
-`moon.mod` needs `moonbitstack/moonapi`, and — for the serving half —
-`moonbitstack/mooncat` plus `moonbitlang/async`, which `async fn main`
-requires by name. The package importing them needs the same three in its
-`moon.pkg`. Drop the server and the app still runs in-process on native, wasm and
-js: `App::handle` drives it through the same path a server does.
+`App::new(docs=None)` starts without them and `enable_docs(...)` sets every
+setting at once; `scalar_ui()`, `swagger_ui()`, `redoc_ui()` and `redocly_ui()`
+return those pages on their own, for an application that serves them under its
+own paths or behind its own guard. Redocly's reference renders under a licence
+key, which reaches it through `ui_extra`.
 
-An app serves `/openapi.json`, `/docs` and `/redoc` from the start;
-`App::new(docs=None)` leaves them off and `enable_docs(...)` changes them.
-`scalar_ui()`, `swagger_ui()` and `redoc_ui()` return those pages on their own.
+## Agents
+
+The same document, described once, is what an agent needs as well.
+`@moonapi.agent.expose(app)` mounts an MCP service at `/mcp` and serves a skill
+at `/SKILL.md`: every documented operation becomes one tool, its parameters and
+its body are the tool's arguments, and calling a tool calls the route in-process,
+so an agent and a client get the same bytes.
+
+```moonbit
+async test {
+  let app = @moonapi.App::new()
+  app.get(
+    "/pets/{id}",
+    ctx => @moonapi.text(200, "pet " + ctx.param("id").unwrap_or("")),
+    summary="Fetch one pet",
+    endpoint=@endpoint.Endpoint::new(
+      params=[@endpoint.Param::new("id", @endpoint.InPath, schema=SStr)],
+    ),
+  )
+  app.describe(title="petstore")
+  @agent.expose(app)
+
+  let skill = app.handle({
+    http_method: "GET",
+    path: "/SKILL.md",
+    query_string: b"",
+    headers: [],
+    body: b"",
+  })
+  assert_eq(skill.header("content-type"), Some("text/markdown; charset=utf-8"))
+  let markdown = @utf8.decode_lossy(skill.body)
+  assert_eq(markdown.contains("- MCP endpoint: `/mcp`"), true)
+  assert_eq(markdown.contains("| `get_pets_id` | `GET /pets/{id}` |"), true)
+}
+```
+
+`Exposure` says where either half is served, what the API is called, and which
+tags are offered; `None` for a URL leaves that half off. Neither the service nor
+the skill joins the document, so turning them on does not change what a client
+reads. The package is imported by name — `moonbitstack/moonapi/agent` — because
+it brings the MCP library with it, which a program that does not talk to agents
+should not have to link.
 
 ## Serving
 
@@ -158,110 +230,26 @@ hooks and the disconnect handling — and every way of serving below is one call
 away from it. The server is a matter of the transport; the application does not
 change when it moves to TLS or to another protocol version.
 
-### HTTP/1.1 and WebSocket
+The server of this ecosystem is [`mooncat`](https://github.com/moonbitstack/mooncat).
+It is not a dependency here: a library of routes should not decide how its
+application listens. A program that serves adds it, and then:
 
-```moonbit
-async fn main {
-  let app = @moonapi.App::new()
-  app.get("/", _ctx => @moonapi.text(200, "Hello"))
-  @mooncat.serve(app.to_asgi(), port=12000) catch {
-    err => println("stopped: \{err}")
-  }
-}
-```
-
-### HTTP/2 over TLS
-
-`@mooncat.serve_tls` serves the same application over TLS 1.3. The listener
-offers `h2` and `http/1.1` by ALPN, so a client that negotiates `h2` is served
-HTTP/2 on the port that answers HTTP/1.1 to everyone else — `wss://` included,
-a WebSocket upgrade over TLS speaking whichever of the two it asked for. The
-streams of one connection run concurrently, each in a task of its own, so a slow
-handler delays its own reply and nobody else's. The certificate and the key are
-PEM files read once at startup, the leaf first and any intermediates after it,
-and a key that is not the certificate's is refused there rather than at the
-first connection.
-
-```moonbit
-async fn main {
-  let app = @moonapi.App::new()
-  app.get("/", _ctx => @moonapi.text(200, "Hello over TLS"))
-  @mooncat.serve_tls(
-    app.to_asgi(),
-    certificate_file="certs/cert.pem",
-    private_key_file="certs/key.pem",
-    port=12000,
-  ) catch {
-    err => println("stopped: \{err}")
-  }
-}
-```
-
-By default the same port also answers cleartext, so a client that reaches it
-with `http://` is served HTTP/1.1 or h2c and the redirect to `https` is the
-application's to make — `app.layer(@mid.HttpsRedirect::new())` is that layer.
-`cleartext=false` makes the port TLS only, and the HTTP/2 limits come from
-`Config`:
-
-```moonbit
-async fn main {
-  let app = @moonapi.App::new()
-  app.get("/", _ctx => @moonapi.text(200, "Hello over TLS"))
-  let config = @mooncat.Config::new(
-    port=8443,
-    cleartext=false,
-    h2=@mooncat.H2Config::new(max_streams=250),
-  )
-  @mooncat.serve_tls_config(
-    app.to_asgi(),
-    config,
-    { certificate_file: "certs/cert.pem", private_key_file: "certs/key.pem" },
-  ) catch {
-    err => println("stopped: \{err}")
-  }
-}
-```
-
-| `Config.h2` | Default | Meaning |
-|:--|:--:|:--|
-| `max_streams` | 100 | concurrent streams; the next one is refused, not queued |
-| `max_header_list` | 64 KiB | fields a request head may carry |
-| `max_frame` | 16 KiB | largest frame accepted |
-| `window`, `connection_window` | 1 MiB | how far a client may run ahead, per stream and per connection |
+- `@mooncat.serve(app.to_asgi(), port=12000)` — HTTP/1.1 and WebSocket.
+- `@mooncat.serve_tls(app.to_asgi(), certificate_file=..., private_key_file=..., port=12000)`
+  — HTTP/2 over TLS 1.3, `h2` and `http/1.1` by ALPN, `wss://` included; the same
+  port answers cleartext unless `cleartext=false`.
+- `@mooncat.serve_config(app.to_asgi(), @mooncat.Config::new(port=8443, ...))` — the
+  same with the connection limits and the HTTP/2 settings spelled out.
+- `@quic.serve_config(app.to_asgi(), @config.Config::new(port=12000), certs)` — HTTP/3
+  on the port number the other two use, UDP rather than TCP.
 
 The limits a plain server applies hold per stream: past `limit_concurrency` a
 stream is answered `503`, every stream counts toward `limit_max_requests`, and a
-connection with nothing open for `timeout_keep_alive` is ended with a GOAWAY.
-
-A listener that speaks HTTP/2 and nothing else is `serve_h2c`, for a client that
-starts with the connection preface because it was told the server speaks HTTP/2
-— what a gRPC client does over a plaintext port:
-
-<!-- nocheck -->
-```moonbit
-@mooncat.serve_h2c(app.to_asgi(), port=12000)
-```
-
-### HTTP/3
-
-`@quic.serve_config` serves the same application over HTTP/1.1, HTTP/2 and HTTP/3
-under one certificate, on one port number: TCP for the first two, UDP for the third,
-with `alt-svc` on every response telling a client where HTTP/3 is. Each request
-stream is one ASGI scope, so the application does not change. The QUIC half is native
-only.
-
-<!-- nocheck -->
-```moonbit
-@quic.serve_config(
-  app.to_asgi(),
-  @config.Config::new(host="0.0.0.0", port=12000),
-  { certificate_file: "cert.pem", private_key_file: "key.pem" },
-)
-```
-
-Behind a proxy that terminates QUIC itself, the app sees the forwarded scheme and host,
-and the ASGI `root_path` under which it is mounted reaches `/docs`, `/redoc` and
-`/openapi.json` alike.
+connection with nothing open for `timeout_keep_alive` is ended with a GOAWAY. Each
+request stream is one ASGI scope, so the application does not change with the
+transport, and behind a proxy that terminates QUIC itself the app sees the
+forwarded scheme and host: the ASGI `root_path` under which it is mounted reaches
+`/docs`, `/redoc`, `/openapi.json` and `/mcp` alike.
 
 For a runnable integration of the root API, two routers, authentication,
 validation, middleware, background work, streaming and docs, see the
@@ -269,7 +257,9 @@ validation, middleware, background work, streaming and docs, see the
 is in [src/examples/README.md](src/examples/README.md). On Windows, macOS or Linux, start
 the native server with `cd integration && moon run src/full-example --target native`, from a module of its own, since a server is not something this library depends on. The service
 provides the API reference at `http://127.0.0.1:12000/docs`, ReDoc at
-`http://127.0.0.1:12000/redoc`, and OpenAPI 3.0.3 at
+`http://127.0.0.1:12000/redoc`, Redocly's reference at
+`http://127.0.0.1:12000/redocly`, the MCP service at
+`http://127.0.0.1:12000/mcp` and OpenAPI 3.0.3 at
 `http://127.0.0.1:12000/openapi.json`.
 
 ## Examples
@@ -306,6 +296,7 @@ numbered example has a runnable `main` package that isolates one feature:
 | `26-described-model` | describing a model once, using it four ways |
 | `27-annotations` | registering routes from annotated functions |
 | `28-templates` | rendering HTML templates |
+| `29-agents` | the MCP service and the skill |
 | [`integration`](integration/) | one description driving validation, the document, the table and the rows |
 
 Run any of them with, for example:
@@ -318,17 +309,18 @@ moon run src/examples/02-routing --target native
 
 Each concern is its own subpackage, so a program links the parts it uses. The
 root re-exports all of them, so `@moonapi.App`, `@moonapi.text` and the rest work
-as they always did. `templates` and `static` are the exception: they bring
+as they always did. `templates`, `static` and `agent` are the exception: they bring
 dependencies of their own, so a program imports them by name.
 
 |  Package  | What it holds | Depends on |
 |:--:|:--|:--|
 | `moonapi` | `App` and its methods, the façade | everything below |
+| `moonapi/agent` | `expose`: the document as MCP tools and as a skill | moonmcp |
 | `moonapi/templates` | `Templates`: pages rendered into responses, with `request` and `url_for`; `load_directory` (native) | moonpug, `ctx` |
 | `moonapi/static` | `serve`, a `Source` trait, `Memory` and `Directory` (native) | `ctx` |
 | `moonapi/route` | `Route`, `WsRoute`, `Router`, path templates; `Method` from moonhttp | `ctx`, `endpoint`, `security`, `socket` |
 | `moonapi/cmd/routes` | the annotation generator, run as a build rule | moonast |
-| `moonapi/openapi` | the document's info block, routes as operations | `route`, `schema` |
+| `moonapi/openapi` | the document's info block, routes as operations, the four readers | `route`, `schema` |
 | `moonapi/security` | schemes, guards, per-operation requirements, tokens | `ctx`, `schema`, `status` |
 | `moonapi/exceptions` | `HttpException` and exception handlers | `ctx` |
 | `moonapi/endpoint` | `Param`, `ResponseSpec`, `Endpoint` and its validation | `ctx`, `schema` |
@@ -362,12 +354,13 @@ is not known is a raised error, where the subpackage is named:
 - **Middleware & exception handlers** — two kinds of middleware. `App::layer` takes any moonasgi `@mid.Layer`, which wraps the ASGI application and sees every event, so streams stay streams and WebSocket traffic passes through: moonasgi ships `Cors`, `Gzip`, `TrustedHosts`, `HttpsRedirect` and `ServerErrors`, and `Wrap` turns any function from app to app into one. `App::middleware` is a function of the request and `call_next` that returns the response, whole. Layers and middleware wrap the app in one list, in registration order with the first outermost, and they wrap mounted applications too. Exception handlers (`App::exception_handler`): a handler `raise`s an `HttpException` and the app maps it to a response, falling through to a built-in `{"detail": ...}` for `HttpException` and a `500` for anything else. `App::add_status_handler(code, ...)` swaps in a custom response for any error status — a routing `404` / `405` or a raised exception's status — so an app can serve its own error pages.
 - **Per-operation security** — a route carries `security=[SecurityRequirement::new(scheme, scopes=[...])]`, and every scheme shape has a guard: `secure_oauth2`, `secure_oauth2_code`, `secure_bearer`, `secure_api_key` (header / query / cookie), `secure_basic`, `secure_digest`, `secure_openid`. Each surfaces the scheme in the spec *and* registers the check that runs **before** the handler — `401` with the `WWW-Authenticate` challenge the scheme owes (a scoped bearer route names the scope it wanted), `403` on a missing scope or a rejected API key. Every one takes `description=` and `auto_error=` (with the flag off, the guard admits an anonymous caller and leaves the decision to the route). A bare `add_security_scheme` documents without enforcing.
 - **Background tasks** — every handler has `ctx.background`; `add_task` defers async work that the app runs, in order, **after** the last body event is sent, so a slow write never delays the client.
-- **Sub-application mounting** — `App::mount(prefix, subapp)` composes applications: a request under `prefix` reaches the sub-app with the prefix moved from `path` to `root_path` (its own layers, security and background tasks apply), and the sub-app's routes and security schemes fold into the parent's merged OpenAPI document under the prefix. Mounts nest, and a sub-app's lifespan hooks run with the parent's. `App::mount_asgi(prefix, app)` mounts any other ASGI application the same way — a third-party component, or static files — which the app routes to but does not document.
+- **Sub-application mounting** — `App::mount(prefix, subapp)` composes applications: a request under `prefix` reaches the sub-app with the prefix moved from `path` to `root_path` (its own layers, security and background tasks apply), and the sub-app's routes and security schemes fold into the parent's merged OpenAPI document under the prefix. Mounts nest, and a sub-app's lifespan hooks run with the parent's. `App::mount_asgi(prefix, app)` mounts any other ASGI application the same way — a third-party component, static files, or the MCP service above — which the app routes to but does not document.
 - **Streaming responses** — `App::stream(path, handler)` / `App::route_stream(verb, ...)` register a route returning a `Stream`, whose body writes through a `Writer`: each `write` is one body event, so a client reads the first long before the last one exists, and HTTP trailers follow the body when the route declares them. A client that leaves cancels the body. Layers see each event as it goes; an `App::middleware` gets the response whole, so the stream is gathered for it.
 - **Server-Sent Events** — `moonhttp/sse` frames an event per the WHATWG event-stream format (`id` / `event` / `retry` / multi-line `data` / `:` comments); `sse(body)` is a `text/event-stream` `Stream` whose body sends those frames through `Events::send` and `ping`, **one body event per frame**, so each dispatches on arrival. A client that reconnects sends the last id it saw, and `ctx.last_event_id()` lets the stream pick up after it.
 - **WebSocket routes** — `App::websocket(path, handler)` over the moonasgi WebSocket protocol. The async handler holds the live connection: `accept` (with a subprotocol and headers), `receive` / `receive_text` / `receive_bytes` / `receive_json`, the matching `send_*`, and `close`. It can speak first and answer as messages arrive; a client that leaves raises `Disconnected(code~, reason~)` out of `receive`, which ends the handler quietly unless it catches it. A route takes `security`, `dependencies` and a `name` like an HTTP route; a refused connection is declined at the handshake with the HTTP answer where the server allows it, or close code 1008. The moonasgi test client's `websocket` drives a route in-process.
 - **Security schemes** — the six OpenAPI shapes (OAuth2 password and authorization-code flows, HTTP bearer / basic / digest, an API key in a header / query / cookie, and OpenID Connect) are emitted in each dialect's form: `components/securitySchemes` in 3.x, `securityDefinitions` in 2.0, where an `http` scheme becomes the standard `apiKey`-in-`Authorization` workaround and OpenID Connect — which 2.0 cannot express — is left out rather than described as something it is not.
-- **Documentation UI** — `/openapi.json`, `/docs` and `/redoc` are on by default (`App::new(docs=None)` to leave them off, `enable_docs(...)` or a `Docs` record to change them), all three with `include_in_schema=false` so turning documentation on does not change the document. `/docs` is the Scalar reference by default and Swagger UI with `ui=Swagger` (with its OAuth2 redirect page and `init_oauth`); every reader is loaded at a pinned version, and behind a proxy the pages and the document's servers follow the ASGI `root_path`. `scalar_ui()`, `swagger_ui()` and `redoc_ui()` return the pages alone, for an app that serves them under its own paths or behind its own guard.
+- **Documentation readers** — `/openapi.json`, `/docs`, `/redoc` and `/redocly` are on by default (`App::new(docs=None)` to leave them off, `enable_docs(...)` or a `Docs` record to change them), all of them with `include_in_schema=false` so turning documentation on does not change the document. `/docs` serves the Scalar reference by default and Swagger UI with `ui=Swagger`, ReDoc with `ui=Redoc` and Redocly's reference with `ui=Redocly` (with its OAuth2 redirect page and `init_oauth` where the reader has a flow to start); `/redoc` and `/redocly` serve those two whatever `/docs` serves, so one application can offer several. Every reader is loaded at a pinned version from a CDN and every page wears the same theme — the palette, the faces, the mark, the thin scrollbars and a bar naming the application — with `theme=Plain` leaving the reader exactly as its maker ships it. Behind a proxy the pages and the document's servers follow the ASGI `root_path`, and Redocly's licence key arrives through `ui_extra`. `scalar_ui()`, `swagger_ui()`, `redoc_ui()` and `redocly_ui()` return the pages alone, for an app that serves them under its own paths or behind its own guard.
+- **Agent interface** — `@moonapi.agent.expose(app)` turns the document into an MCP service mounted at `/mcp` and a `SKILL.md` served at `/SKILL.md` (← the shape `api-to-mcp` and `oas2mcp` established). Each documented operation is one tool named after its `operationId`, or after the method and the path when it has none; its path and query parameters and its JSON body are the tool's arguments, with `$ref`s inlined so a schema stands on its own; and a call runs the route in-process, so the answer is the one a client gets, byte for byte. A status of 400 or above comes back marked as an error with the body intact. `Exposure` moves either half, renames the API and limits the offer to some tags; the MCP server also carries the skill as a resource, so a client that reads resources finds it there.
 - **Templates** — `moonapi/templates` renders moonpug templates into responses: every page sees `request`, `url_for` resolves named routes, context processors add names to every page, and where the call's `context` and a processor name the same thing the rule is published (`wins`, `clash`). `load_directory` reads a template tree once on native.
 - **Static files** — `moonapi/static` serves a `Source` under a mount with the same conditional and range handling as `Context::serve`, a `405` for anything but `GET` and `HEAD`, no way out of the source, and an `html` mode with indexes, the trailing-slash redirect and a `404.html`. `Memory` works on every target, `Directory` reads the disk on native, and a source of your own is one trait implementation.
 - **Lifespan hooks** — `App::on_startup` / `App::on_shutdown`, driven over the ASGI lifespan protocol. Startup in registration order, shutdown in reverse, so a resource is released before whatever opened it. A hook gets the lifespan state, and what it stores there reaches every request as `ctx.state()`. The moonasgi test client's `lifespan` runs the same thing in-process.
@@ -381,18 +374,12 @@ is not known is a raised error, where the subpackage is named:
 ## Configuration
 
 Nothing here decides for you twice. Every bound is an argument with a published
-default, and every default is a sensible one.
-
-<!-- nocheck -->
-```moonbit
-ctx.query("tag")                                       // the preset bound
-ctx.query("tag", limits=@moonurl.Limits::new(pairs=100000))
-ctx.form(limits=@moonmime.Limits::new(part_size=8 << 20))  // an upload endpoint
-
-@moonapi.create_access_token(sub, secret, now, extra={ "tenant": Json::string("acme") })
-@moonapi.sse(body, headers=[("cache-control", "no-store")])
-@moonapi.sse(body, space=false)
-```
+default, and every default is a sensible one: `ctx.query("tag")` takes the preset
+bounds and `ctx.query("tag", limits=@moonurl.Limits::new(pairs=100000))` a wider
+one; `ctx.form(limits=@moonmime.Limits::new(part_size=8 << 20))` is an upload
+endpoint; `create_access_token(sub, secret, now, extra=...)` adds claims beside
+the four it computes; `sse(body, headers=[("cache-control", "no-store")])` adds a
+header to the three a stream needs.
 
 | Setting | Default | Why that one |
 |:--:|:--:|:--|
@@ -402,6 +389,8 @@ ctx.form(limits=@moonmime.Limits::new(part_size=8 << 20))  // an upload endpoint
 | `expires_in_secs` | 3600 | the hour a token grant issues |
 | `space` on a stream | on | the space after a colon is universal on the wire and stripped by every reader |
 | `redirect_slashes` | on | a link written with or without its trailing slash still arrives |
+| `mcp_url`, `skill_url` | `/mcp`, `/SKILL.md` | the paths an MCP client and a skill reader look for first |
+| `tags` on an exposure | none | every operation, until an application says which corner to show |
 
 ### Where a setting can arrive twice
 
@@ -422,8 +411,9 @@ meanings.
 
 ## Design notes
 
-- **One path for every caller.** `App::to_asgi` is the application; `App::handle`, the test client and a server all go through it, so a test exercises the layers, mounts, lifespan state and disconnect handling a server does, not a shortcut beside them.
+- **One path for every caller.** `App::to_asgi` is the application; `App::handle`, the test client, a server and the tools an agent calls all go through it, so a test exercises the layers, mounts, lifespan state and disconnect handling a server does, not a shortcut beside them.
 - **Middleware that is not moonapi's lives in moonasgi.** CORS, gzip and the host checks are ASGI layers, so a moonapi app and any other ASGI application share one implementation and one configuration.
+- **One description, four surfaces.** The document, the pages, the tools and the skill are all written from the routes the application holds, at the moment they are asked for — so a route added late is still described, still documented and still callable by an agent.
 
 ## Roadmap
 
