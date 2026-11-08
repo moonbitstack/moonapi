@@ -9,11 +9,15 @@ import {
 // Values
 pub let redoc_js : String
 
-pub fn redoc_ui(spec_url? : String, title? : String, js_url? : String, telemetry? : Bool) -> String
+pub fn redoc_ui(spec_url? : String, title? : String, js_url? : String, telemetry? : Bool, theme? : Theme) -> String
+
+pub let redocly_js : String
+
+pub fn redocly_ui(spec_url? : String, title? : String, js_url? : String, extra? : Map[String, @json.Json], theme? : Theme) -> String
 
 pub let scalar_js : String
 
-pub fn scalar_ui(spec_url? : String, title? : String, js_url? : String, extra? : Map[String, @json.Json]) -> String
+pub fn scalar_ui(spec_url? : String, title? : String, js_url? : String, extra? : Map[String, @json.Json], theme? : Theme) -> String
 
 pub let swagger_css : String
 
@@ -23,7 +27,9 @@ pub fn swagger_redirect(js_url? : String) -> String
 
 pub let swagger_redirect_js : String
 
-pub fn swagger_ui(spec_url? : String, title? : String, js_url? : String, css_url? : String, oauth2_redirect_url? : String, init_oauth? : @json.Json, extra? : Map[String, @json.Json]) -> String
+pub fn swagger_ui(spec_url? : String, title? : String, js_url? : String, css_url? : String, oauth2_redirect_url? : String, init_oauth? : @json.Json, extra? : Map[String, @json.Json], theme? : Theme) -> String
+
+pub let theme : Theme
 
 // Errors
 
@@ -78,9 +84,20 @@ pub fn Tag::new(String, description? : String, external_docs? : ExternalDocs) ->
 pub fn Tag::to_json(Self) -> @json.Json
 
 #derive(Eq, @debug.Debug)
+pub(all) enum Theme {
+  Site
+  Plain
+}
+pub fn Theme::equal(Self, Self) -> Bool
+pub fn Theme::not_equal(Self, Self) -> Bool
+pub fn Theme::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug)
 pub(all) enum Ui {
   Scalar
   Swagger
+  Redoc
+  Redocly
 }
 pub fn Ui::equal(Self, Self) -> Bool
 pub fn Ui::not_equal(Self, Self) -> Bool

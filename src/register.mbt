@@ -7,9 +7,17 @@
 /// swagger_ui_init_oauth=…, swagger_ui_parameters=…, root_path_in_servers=…)`).
 /// Each URL set to `None` leaves that route off.
 ///
-/// `ui` picks the reader at `docs_url`. With `Swagger`, `oauth2_redirect_url` is
-/// where an OAuth2 flow started from the page returns to, and `init_oauth`
-/// prefills it; `ui_extra` is merged over the reader's own settings either way.
+/// `ui` picks the reader at `docs_url`; `redoc_url` serves ReDoc and
+/// `redocly_url` Redocly's reference whatever `docs_url` serves, so an
+/// application can put two or three readers in front of the same document and
+/// let its readers choose. With `Swagger`, `oauth2_redirect_url` is where an
+/// OAuth2 flow started from the page returns to, and `init_oauth` prefills it;
+/// `ui_extra` is merged over the settings of whichever reader `docs_url` serves
+/// — which is where Redocly's `licenseKey` goes.
+///
+/// `theme` is how the three pages look: the site's own theme by default, the
+/// reader's own look with `Plain`.
+///
 /// Behind a proxy that mounts the app under a prefix, the server reports that
 /// prefix as the ASGI `root_path`; the pages then fetch the document from under
 /// it, and with `root_path_in_servers` the document names it as its first
@@ -18,8 +26,10 @@ pub(all) struct Docs {
   openapi_url : String?
   docs_url : String?
   redoc_url : String?
+  redocly_url : String?
   version : @schema.OpenApiVersion
   ui : @openapi.Ui
+  theme : @openapi.Theme
   oauth2_redirect_url : String?
   init_oauth : Json?
   ui_extra : Map[String, Json]?
@@ -28,13 +38,16 @@ pub(all) struct Docs {
 
 ///|
 /// The documentation an app serves unless told otherwise: FastAPI's three
-/// routes at FastAPI's paths, with OpenAPI 3.1 and the Scalar reader.
+/// routes at FastAPI's paths, with OpenAPI 3.1 and the Scalar reader, and
+/// ReDoc and the Redocly reference on pages of their own.
 pub let docs : Docs = {
   openapi_url: Some("/openapi.json"),
   docs_url: Some("/docs"),
   redoc_url: Some("/redoc"),
+  redocly_url: Some("/redocly"),
   version: OpenApi31,
   ui: Scalar,
+  theme: Site,
   oauth2_redirect_url: Some("/docs/oauth2-redirect"),
   init_oauth: None,
   ui_extra: None,
@@ -56,8 +69,10 @@ pub fn App::enable_docs(
   openapi_url~ : String? = docs.openapi_url,
   docs_url~ : String? = docs.docs_url,
   redoc_url~ : String? = docs.redoc_url,
+  redocly_url~ : String? = docs.redocly_url,
   version~ : @schema.OpenApiVersion = docs.version,
   ui~ : @openapi.Ui = docs.ui,
+  theme~ : @openapi.Theme = docs.theme,
   oauth2_redirect_url~ : String? = docs.oauth2_redirect_url,
   init_oauth? : Json,
   ui_extra? : Map[String, Json],
@@ -67,8 +82,10 @@ pub fn App::enable_docs(
     openapi_url,
     docs_url,
     redoc_url,
+    redocly_url,
     version,
     ui,
+    theme,
     oauth2_redirect_url,
     init_oauth,
     ui_extra,
@@ -111,7 +128,13 @@ fn App::serve_docs(self : App) -> Unit {
         let spec_url = root + spec_path
         let title = self.info.title
         let page = match d.ui {
-          Scalar => @openapi.scalar_ui(spec_url~, title~, extra?=d.ui_extra)
+          Scalar =>
+            @openapi.scalar_ui(
+              spec_url~,
+              title~,
+              extra?=d.ui_extra,
+              theme=d.theme,
+            )
           Swagger =>
             @openapi.swagger_ui(
               spec_url~,
@@ -119,6 +142,15 @@ fn App::serve_docs(self : App) -> Unit {
               oauth2_redirect_url?=d.oauth2_redirect_url.map(r => root + r),
               init_oauth?=d.init_oauth,
               extra?=d.ui_extra,
+              theme=d.theme,
+            )
+          Redoc => @openapi.redoc_ui(spec_url~, title~, theme=d.theme)
+          Redocly =>
+            @openapi.redocly_ui(
+              spec_url~,
+              title~,
+              extra?=d.ui_extra,
+              theme=d.theme,
             )
         }
         @status.html(200, page)
@@ -138,7 +170,28 @@ fn App::serve_docs(self : App) -> Unit {
       url,
       ctx => {
         let spec_url = ctx.scope.root_path + spec_path
-        @status.html(200, @openapi.redoc_ui(spec_url~, title=self.info.title))
+        @status.html(
+          200,
+          @openapi.redoc_ui(spec_url~, title=self.info.title, theme=d.theme),
+        )
+      },
+      include_in_schema=false,
+    )
+  }
+  if d.redocly_url is Some(url) {
+    self.get(
+      url,
+      ctx => {
+        let spec_url = ctx.scope.root_path + spec_path
+        @status.html(
+          200,
+          @openapi.redocly_ui(
+            spec_url~,
+            title=self.info.title,
+            extra?=d.ui_extra,
+            theme=d.theme,
+          ),
+        )
       },
       include_in_schema=false,
     )

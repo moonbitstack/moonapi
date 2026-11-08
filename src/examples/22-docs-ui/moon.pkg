@@ -1,6 +1,7 @@
 import {
   "moonbitlang/async",
   "moonbitstack/moonapi",
+  "moonbitstack/moonapi/openapi",
 }
 
 pkgtype(kind: "executable")

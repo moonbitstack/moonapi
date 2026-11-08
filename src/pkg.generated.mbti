@@ -214,9 +214,13 @@ pub let query_limits : @moonurl.Limits
 
 pub fn redirect(String, status? : Int32) -> @http.Response
 
-pub fn redoc_ui(spec_url? : String, title? : String, js_url? : String, telemetry? : Bool) -> String
+pub fn redoc_ui(spec_url? : String, title? : String, js_url? : String, telemetry? : Bool, theme? : @openapi.Theme) -> String
 
-pub fn scalar_ui(spec_url? : String, title? : String, js_url? : String, extra? : Map[String, @json.Json]) -> String
+pub let redocly_js : String
+
+pub fn redocly_ui(spec_url? : String, title? : String, js_url? : String, extra? : Map[String, @json.Json], theme? : @openapi.Theme) -> String
+
+pub fn scalar_ui(spec_url? : String, title? : String, js_url? : String, extra? : Map[String, @json.Json], theme? : @openapi.Theme) -> String
 
 pub fn[T : @schema.ToSchema] schema_of(T) -> @schema.Schema
 
@@ -226,9 +230,11 @@ pub fn sse(async (@status.Events) -> Unit, status? : Int32, headers? : Array[(St
 
 pub fn swagger_redirect(js_url? : String) -> String
 
-pub fn swagger_ui(spec_url? : String, title? : String, js_url? : String, css_url? : String, oauth2_redirect_url? : String, init_oauth? : @json.Json, extra? : Map[String, @json.Json]) -> String
+pub fn swagger_ui(spec_url? : String, title? : String, js_url? : String, css_url? : String, oauth2_redirect_url? : String, init_oauth? : @json.Json, extra? : Map[String, @json.Json], theme? : @openapi.Theme) -> String
 
 pub fn text(Int32, String) -> @http.Response
+
+pub let theme : @openapi.Theme
 
 pub fn token_response(String) -> @http.Response
 
@@ -270,7 +276,7 @@ pub fn App::add_status_handler(Self, Int32, (@ctx.Context) -> @http.Response) ->
 pub fn App::delete(Self, String, async (@ctx.Context) -> @http.Response, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, response_class? : @status.ResponseClass, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : @json.Json, callbacks? : Array[@route.Route], hoops? : Array[async (@ctx.Context, async (@ctx.Context) -> @route.Reply) -> @route.Reply], regex? : String, glob? : String) -> Unit
 pub fn App::depends(Self, @di.Deps) -> Unit
 pub fn App::describe(Self, title? : String, summary? : String, api_version? : String, description? : String, terms_of_service? : String, contact? : @openapi.Contact?, license? : @openapi.License?, servers? : Array[@openapi.Server], tags? : Array[@openapi.Tag], external_docs? : @openapi.ExternalDocs?) -> Unit
-pub fn App::enable_docs(Self, openapi_url? : String?, docs_url? : String?, redoc_url? : String?, version? : @schema.OpenApiVersion, ui? : @openapi.Ui, oauth2_redirect_url? : String?, init_oauth? : @json.Json, ui_extra? : Map[String, @json.Json], root_path_in_servers? : Bool) -> Unit
+pub fn App::enable_docs(Self, openapi_url? : String?, docs_url? : String?, redoc_url? : String?, redocly_url? : String?, version? : @schema.OpenApiVersion, ui? : @openapi.Ui, theme? : @openapi.Theme, oauth2_redirect_url? : String?, init_oauth? : @json.Json, ui_extra? : Map[String, @json.Json], root_path_in_servers? : Bool) -> Unit
 pub fn App::exception_handler(Self, (@ctx.Context, Error) -> @http.Response?) -> Unit
 pub fn App::get(Self, String, async (@ctx.Context) -> @http.Response, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, response_class? : @status.ResponseClass, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : @json.Json, callbacks? : Array[@route.Route], hoops? : Array[async (@ctx.Context, async (@ctx.Context) -> @route.Reply) -> @route.Reply], regex? : String, glob? : String) -> Unit
 pub async fn App::handle(Self, @http.Request) -> @http.Response
@@ -311,8 +317,10 @@ pub(all) struct Docs {
   openapi_url : String?
   docs_url : String?
   redoc_url : String?
+  redocly_url : String?
   version : @schema.OpenApiVersion
   ui : @openapi.Ui
+  theme : @openapi.Theme
   oauth2_redirect_url : String?
   init_oauth : @json.Json?
   ui_extra : Map[String, @json.Json]?
@@ -415,6 +423,8 @@ pub using @status {type Stream}
 pub type StreamHandler = async (@ctx.Context) -> @status.Stream
 
 pub using @openapi {type Tag}
+
+pub using @openapi {type Theme}
 
 pub using @openapi {type Ui}
 
