@@ -48,24 +48,24 @@ pub let theme : Theme = Site
 /// The pages load their readers from a CDN at an exact version, so a page does
 /// not change under an application that did not change. Self-hosting is a
 /// matter of passing other URLs.
-pub let swagger_js : String = "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.34.0/swagger-ui-bundle.js"
+pub let swagger_js : String = "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.34.1/swagger-ui-bundle.js"
 
 ///|
-pub let swagger_css : String = "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.34.0/swagger-ui.css"
+pub let swagger_css : String = "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.34.1/swagger-ui.css"
 
 ///|
-pub let swagger_redirect_js : String = "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.34.0/oauth2-redirect.js"
+pub let swagger_redirect_js : String = "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.34.1/oauth2-redirect.js"
 
 ///|
-pub let redoc_js : String = "https://cdn.jsdelivr.net/npm/redoc@3.0.1/bundles/redoc.standalone.js"
+pub let redoc_js : String = "https://cdn.jsdelivr.net/npm/redoc@3.1.0/bundles/redoc.standalone.js"
 
 ///|
-pub let scalar_js : String = "https://cdn.jsdelivr.net/npm/@scalar/api-reference@1.76.0/dist/browser/standalone.js"
+pub let scalar_js : String = "https://cdn.jsdelivr.net/npm/@scalar/api-reference@1.77.0/dist/browser/standalone.js"
 
 ///|
 /// Redocly's reference is served from Redocly's own CDN and is licensed per
 /// deployment: the page carries the licence key its options name.
-pub let redocly_js : String = "https://cdn.redoc.ly/reference-docs/v1.5.2/redocly-reference-docs.min.js"
+pub let redocly_js : String = "https://cdn.redoc.ly/reference-docs/v2.45.14/redocly-reference-docs.min.js"
 
 ///|
 /// The faces the site's theme is set in. Only the weights the pages use are
@@ -116,8 +116,13 @@ fn site_mark() -> String {
 ///|
 /// The same mark as a data URL, so a page carries its tab icon with it: a
 /// library that serves HTML has no directory to put an icon file in.
+///
+/// An image read on its own needs the namespace the inline mark leaves out, and
+/// the attribute's own double quotes rule them out inside it.
 fn site_favicon() -> String {
   let svg = site_mark()
+    .replace_all(old="<svg ", new="<svg xmlns='http://www.w3.org/2000/svg' ")
+    .replace_all(old="\"", new="'")
     .replace_all(old="<", new="%3C")
     .replace_all(old=">", new="%3E")
     .replace_all(old="#", new="%23")
@@ -276,9 +281,8 @@ pub fn redoc_ui(
 /// A Redocly reference rendering the document served at `spec_url`: the
 /// reference and a request console on one page. `extra` is merged over the
 /// options passed to `RedoclyReferenceDocs.init`, which is where the licence
-/// key, the theming and the code samples go; Redocly refuses to render without
-/// the key its licence owes it, so a page served without one says so rather
-/// than coming up empty.
+/// key, the theming and the code samples go; without a key the reference
+/// renders under Redocly's banner.
 pub fn redocly_ui(
   spec_url~ : String = "/openapi.json",
   title~ : String = "moonapi",

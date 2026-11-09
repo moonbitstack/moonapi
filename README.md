@@ -165,7 +165,7 @@ async test {
   })
   assert_eq(page.header("content-type"), Some("text/html; charset=utf-8"))
   let html = @utf8.decode_lossy(page.body)
-  assert_eq(html.contains("swagger-ui-dist@5.34.0"), true)
+  assert_eq(html.contains("swagger-ui-dist@5.34.1"), true)
   // The page reads the document this app publishes, not a copy of it.
   assert_eq(html.contains("\"/openapi.json\""), true)
   // The pages stay out of the document they describe.

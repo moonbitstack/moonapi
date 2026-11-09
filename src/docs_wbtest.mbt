@@ -127,3 +127,18 @@ async test "the Redocly route can be moved or left off" {
   assert_eq(moved.status, 200)
   assert_eq(@utf8.decode_lossy(moved.body).contains(@openapi.redocly_js), true)
 }
+
+///|
+/// The tab icon is one attribute: its quotes end where the drawing ends, and the
+/// drawing names its namespace, which an image read on its own needs.
+async test "the tab icon is a whole SVG inside its attribute" {
+  let app = App::new()
+  let page = @utf8.decode_lossy(app.handle(mkreq("GET", "/docs")).body)
+  let head = "<link rel=\"icon\" href=\""
+  guard page.find(head) is Some(at) else { fail("no tab icon") }
+  let rest = page[at + head.length():].to_owned()
+  guard rest.find("\"") is Some(end) else { fail("the attribute does not end") }
+  let href = rest[:end].to_owned()
+  assert_eq(href.has_prefix("data:image/svg+xml,%3Csvg%20xmlns="), true)
+  assert_eq(href.has_suffix("%3C/svg%3E"), true)
+}
