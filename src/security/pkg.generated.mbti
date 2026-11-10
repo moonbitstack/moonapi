@@ -6,12 +6,13 @@ import {
   "moonbitstack/moonapi/ctx",
   "moonbitstack/moonasgi/http",
   "moonbitstack/mooncred/jwt",
+  "moonbitstack/moonknob",
 }
 
 // Values
 pub fn anonymous() -> AuthenticatedUser
 
-pub fn create_access_token(String, String, Int64, scopes? : Array[String], expires_in_secs? : Int64, extra? : Map[String, @json.Json], wins? : @jwt.Wins, clash? : @jwt.OnClash[Map[String, @json.Json]]) -> String
+pub fn create_access_token(String, String, Int64, scopes? : Array[String], expires_in_secs? : Int64, extra? : Map[String, @json.Json], wins? : @moonknob.Wins, clash? : @moonknob.OnClash[Map[String, @json.Json]]) -> String
 
 pub fn forbidden(String) -> @http.Response
 

@@ -79,9 +79,11 @@ test "processors add names; the call's context wins a clash by default" {
     ctx,
     "a.txt",
     context=Map([("user", "leo")]),
-    clash=Handle((base, merged) => {
-      let out = merged.copy()
-      out["user"] = Json(text(base["user"]) + "+" + text(merged["user"]))
+    clash=Handle(clash => {
+      let out = clash.merged.copy()
+      out["user"] = Json(
+        text(clash.base["user"]) + "+" + text(clash.merged["user"]),
+      )
       out
     }),
   )

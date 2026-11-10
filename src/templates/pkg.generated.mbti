@@ -5,7 +5,7 @@ import {
   "moonbitlang/core/json",
   "moonbitstack/moonapi/ctx",
   "moonbitstack/moonasgi/http",
-  "moonbitstack/mooncred/jwt",
+  "moonbitstack/moonknob",
   "moonbitstack/moonpug",
   "moonbitstack/moonpug/spec",
 }
@@ -20,7 +20,7 @@ pub struct Templates {
   // private fields
 }
 pub fn Templates::new(@moonpug.Env, processors? : Array[(@ctx.Context) -> Map[String, @json.Json]], url_for? : (String, Map[String, String]) -> String?) -> Self
-pub fn Templates::response(Self, @ctx.Context, String, context? : Map[String, @json.Json], status? : Int32, media_type? : String, wins? : @jwt.Wins, clash? : @jwt.OnClash[Map[String, @json.Json]]) -> @http.Response raise @spec.Refused
+pub fn Templates::response(Self, @ctx.Context, String, context? : Map[String, @json.Json], status? : Int32, media_type? : String, wins? : @moonknob.Wins, clash? : @moonknob.OnClash[Map[String, @json.Json]]) -> @http.Response raise @spec.Refused
 
 // Type aliases
 pub type Processor = (@ctx.Context) -> Map[String, @json.Json]

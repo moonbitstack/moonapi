@@ -7,5 +7,6 @@ import {
   "moonbitstack/mooncrypt/hash/sha2",
   "moonbitstack/mooncrypt/mac/hmac",
   "moonbitstack/mooncred/jwt",
+  "moonbitstack/moonknob",
   "moonbitlang/core/encoding/utf8",
 }

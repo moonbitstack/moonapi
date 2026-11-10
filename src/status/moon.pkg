@@ -9,7 +9,7 @@ import {
   "moonbitstack/moonhttp/cookie",
   "moonbitstack/moondate",
   "moonbitlang/core/encoding/utf8",
-  "moonbitstack/mooncred/jwt",
+  "moonbitstack/moonknob",
   "moonbitstack/moonhttp/sse",
 }
 

@@ -16,10 +16,10 @@ import {
   "moonbitstack/moonasgi/http",
   "moonbitstack/moonasgi/mid",
   "moonbitstack/moonasgi/spec",
-  "moonbitstack/mooncred/jwt",
   "moonbitstack/moondate",
   "moonbitstack/moonhttp/cookie",
   "moonbitstack/moonhttp/method",
+  "moonbitstack/moonknob",
   "moonbitstack/moonurl",
 }
 
@@ -182,7 +182,7 @@ pub const WS_1015_TLS_HANDSHAKE : Int32 = 1015
 
 pub fn check_constraints(@json.Json, Array[@schema.Constraint], Array[String], Array[@schema.ValidationError]) -> Unit
 
-pub fn create_access_token(String, String, Int64, scopes? : Array[String], expires_in_secs? : Int64, extra? : Map[String, @json.Json], wins? : @jwt.Wins, clash? : @jwt.OnClash[Map[String, @json.Json]]) -> String
+pub fn create_access_token(String, String, Int64, scopes? : Array[String], expires_in_secs? : Int64, extra? : Map[String, @json.Json], wins? : @moonknob.Wins, clash? : @moonknob.OnClash[Map[String, @json.Json]]) -> String
 
 pub fn data_response(String, filename? : String, status? : Int32, inline? : Bool) -> @http.Response?
 
@@ -226,7 +226,7 @@ pub fn[T : @schema.ToSchema] schema_of(T) -> @schema.Schema
 
 pub fn set_cookie(@http.Response, String, String, max_age? : Int32, expires? : @moondate.Moment, path? : String?, domain? : String, secure? : Bool, http_only? : Bool, same_site? : @cookie.SameSite?) -> @http.Response
 
-pub fn sse(async (@status.Events) -> Unit, status? : Int32, headers? : Array[(String, String)], space? : Bool, wins? : @jwt.Wins, clash? : @jwt.OnClash[Array[(String, String)]]) -> @status.Stream
+pub fn sse(async (@status.Events) -> Unit, status? : Int32, headers? : Array[(String, String)], space? : Bool, wins? : @moonknob.Wins, clash? : @moonknob.OnClash[Array[(String, String)]]) -> @status.Stream
 
 pub fn swagger_redirect(js_url? : String) -> String
 

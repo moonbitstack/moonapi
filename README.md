@@ -405,9 +405,10 @@ thing, the rule is published rather than implied:
 | `sse` | the caller's header | replaces ours, so a response never carries two `content-type` headers |
 
 Both take `wins` to turn the direction around and `clash` to choose between
-merging in silence, aborting, and handing the decision to a callback of your
-own. They are the same `wins` and `clash` `mooncred` uses, with the same
-meanings.
+merging in silence, merging with a warning passed to a function of yours,
+aborting, and handing the decision to a callback. Both are
+[moonknob](https://github.com/moonbitstack/moonknob)'s, the same in every
+library of the family, and a name given the same value twice is not a clash.
 
 ## Design notes
 

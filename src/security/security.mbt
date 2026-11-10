@@ -142,7 +142,8 @@ pub fn OAuth2PasswordBearer::authenticate(
 /// `iat`, `exp`, `scopes` — the arguments win and saying it twice aborts, because
 /// a token whose subject is not the `subject` passed in is a mistake in the
 /// program rather than a choice about configuration. `wins=Extra` hands the
-/// decision to `extra`, and `clash` can silence it or take a callback.
+/// decision to `extra`, and `clash` (moonknob's) can silence it, warn, or take a
+/// callback. A claim `extra` repeats with the same value is not a clash.
 pub fn create_access_token(
   subject : String,
   secret : String,
@@ -150,8 +151,8 @@ pub fn create_access_token(
   scopes~ : Array[String] = [],
   expires_in_secs~ : Int64 = 3600,
   extra~ : Map[String, Json] = Map([]),
-  wins~ : @jwt.Wins = Base,
-  clash~ : @jwt.OnClash[Map[String, Json]] = Panic,
+  wins~ : @moonknob.Wins = Base,
+  clash~ : @moonknob.OnClash[Map[String, Json]] = Panic,
 ) -> String {
   // `iat` / `exp` are RFC 7519 NumericDates — JSON numbers, so an off-the-shelf
   // verifier reads them (`Int64::to_json` would emit a string).
@@ -166,32 +167,13 @@ pub fn create_access_token(
     }
     base["scopes"] = Json(arr)
   }
-  let merged : Map[String, Json] = Map([])
-  for k, v in base {
-    merged[k] = v
-  }
-  let mut clashed = false
-  for k, v in extra {
-    if base.get(k) is Some(_) {
-      clashed = true
-      if wins is Base {
-        continue
-      }
-    }
-    merged[k] = v
-  }
-  let claims = if clashed {
-    match clash {
-      Ignore => merged
-      Panic =>
-        abort(
-          "create_access_token: `extra` names a claim the arguments already set",
-        )
-      Handle(decide) => decide(base, merged)
-    }
-  } else {
-    merged
-  }
+  let merge = @moonknob.Merge::new(wins)
+  let claims = merge.settle(
+    clash,
+    base,
+    merge.union(base, extra),
+    "create_access_token: the arguments and `extra`",
+  )
   @jwt.sign(claims, HS256, hs256(secret))
 }
 

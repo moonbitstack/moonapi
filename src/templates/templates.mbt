@@ -34,10 +34,10 @@ pub fn Templates::new(
 /// A template's names come in three layers: `request`, then what each processor
 /// returns in order, then `context`. Where a later layer names what an earlier
 /// one did, the later one wins by default, the call being the most specific of
-/// the three. `wins=Base` keeps the processors' and ours instead; `clash` can
-/// abort or hand the decision to a callback, which receives the processors'
-/// names and the merged ones. `url_for` is added last, unless a layer already
-/// named it.
+/// the three. `wins=Base` keeps the processors' and ours instead; `clash`
+/// (moonknob's) can warn, abort, or hand the decision to a callback, and is
+/// asked only about a name given two different values. `url_for` is added
+/// last, unless a layer already named it.
 ///
 /// A template that does not load or does not render raises `Refused`, which the
 /// app answers with a `500` like any other error a handler raises.
@@ -48,8 +48,8 @@ pub fn Templates::response(
   context~ : Map[String, Json] = Map([]),
   status~ : Int32 = 200,
   media_type~ : String = "text/html; charset=utf-8",
-  wins~ : @jwt.Wins = Extra,
-  clash~ : @jwt.OnClash[Map[String, Json]] = Ignore,
+  wins~ : @moonknob.Wins = Extra,
+  clash~ : @moonknob.OnClash[Map[String, Json]] = Ignore,
 ) -> @moonasgi.Response raise @spec.Refused {
   let base : Map[String, Json] = { "request": request_json(ctx) }
   for processor in self.processors {
@@ -57,27 +57,13 @@ pub fn Templates::response(
       base[k] = v
     }
   }
-  let merged = base.copy()
-  let mut clashed = false
-  for k, v in context {
-    if merged.contains(k) {
-      clashed = true
-      if wins is Extra {
-        merged[k] = v
-      }
-    } else {
-      merged[k] = v
-    }
-  }
-  let names = if clashed {
-    match clash {
-      Ignore => merged
-      Panic => abort("templates: `context` names what a processor already did")
-      Handle(decide) => decide(base, merged)
-    }
-  } else {
-    merged
-  }
+  let merge = @moonknob.Merge::new(wins)
+  let names = merge.settle(
+    clash,
+    base,
+    merge.union(base, context),
+    "templates: the processors and `context`",
+  )
   let values : Map[String, @spec.Value] = Map([])
   for k, v in names {
     values[k] = @spec.Value::of_json(v)
