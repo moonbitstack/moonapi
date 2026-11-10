@@ -1,6 +1,6 @@
 name = "moonbitstack/moonapi"
 
-version = "0.17.9"
+version = "0.17.10"
 
 readme = "README.md"
 
@@ -61,20 +61,20 @@ description = "A typed web framework for MoonBit."
 import {
   "moonbitlang/async@0.22.5",
   "moonbitlang/parser@0.4.6",
-  "moonbitstack/moonasgi@0.10.6",
-  "moonbitstack/moonast@0.2.6",
-  "moonbitstack/moonbase@0.4.3",
-  "moonbitstack/mooncred@0.6.9",
-  "moonbitstack/mooncrypt@0.4.11",
-  "moonbitstack/moondate@0.1.4",
-  "moonbitstack/moonhttp@0.15.8",
-  "moonbitstack/moonjson@0.4.3",
-  "moonbitstack/moonmime@0.2.2",
-  "moonbitstack/moonmodel@0.1.3",
-  "moonbitstack/moonpug@0.1.4",
-  "moonbitstack/moonregex@0.1.3",
-  "moonbitstack/moonschema@0.2.4",
-  "moonbitstack/moonurl@0.2.5",
-  "moonbitstack/moonzip@0.3.6",
-  "moonbitstack/moonmcp@0.1.11",
+  "moonbitstack/moonasgi@0.10.8",
+  "moonbitstack/moonast@0.2.7",
+  "moonbitstack/moonbase@0.4.4",
+  "moonbitstack/mooncred@0.6.13",
+  "moonbitstack/mooncrypt@0.4.15",
+  "moonbitstack/moondate@0.1.6",
+  "moonbitstack/moonhttp@0.15.10",
+  "moonbitstack/moonjson@0.4.4",
+  "moonbitstack/moonmime@0.2.4",
+  "moonbitstack/moonmodel@0.1.4",
+  "moonbitstack/moonpug@0.1.5",
+  "moonbitstack/moonregex@0.1.5",
+  "moonbitstack/moonschema@0.2.5",
+  "moonbitstack/moonurl@0.2.6",
+  "moonbitstack/moonzip@0.3.8",
+  "moonbitstack/moonmcp@0.1.12",
 }
