@@ -4,12 +4,14 @@
 
   /* ---------- theme ---------- */
   var root = document.documentElement;
+  /* A theme picked by hand lasts the visit: a reload goes back to following
+     the system, which is what a reader who never picks one expects. */
   function applyTheme(t) {
     root.setAttribute("data-theme", t);
-    try { localStorage.setItem("moonapi-theme", t); } catch (e) {}
+    try { sessionStorage.setItem("moonapi-theme", t); } catch (e) {}
   }
   var saved;
-  try { saved = localStorage.getItem("moonapi-theme"); } catch (e) {}
+  try { saved = sessionStorage.getItem("moonapi-theme"); } catch (e) {}
   if (!saved) saved = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   applyTheme(saved);
   document.addEventListener("click", function (e) {
