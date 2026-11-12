@@ -143,6 +143,45 @@ async test {
 `app.urls` takes a route table instead, kept apart from the handlers: `path`, `view` and
 `group` each make an entry.
 
+### What the router decides
+
+Two ways to ask an application what it answers, both without running anything:
+`route_for` reports the decision a request meets — the route it reaches with the
+parameters its template bound, the methods a path owns when the method is not one
+of them, or nothing — and `routes` lists what the application serves, in the
+order it tries them.
+
+```moonbit
+async test {
+  let app = @moonapi.App::new()
+  app.get(
+    "/pets/{id}",
+    ctx => @moonapi.text(200, "pet " + ctx.param("id").unwrap_or("")),
+  )
+  app.post("/pets", _ctx => @moonapi.text(201, "created"), status_code=201)
+
+  assert_true(app.route_for("GET", "/pets/7") is Reached(_, _))
+  match app.route_for("GET", "/pets/7") {
+    Reached(route, params) => {
+      assert_eq(route.path, "/pets/{id}")
+      assert_eq(params.get("id"), Some("7"))
+    }
+    _ => ()
+  }
+  // A path that answers other methods names them, which is the 405's `Allow`.
+  assert_true(app.route_for("DELETE", "/pets/7") is MethodNotAllowed(_))
+  assert_true(app.route_for("GET", "/nope") is NotFound)
+  // The routes, in the order they are tried.
+  assert_eq(app.routes().map(r => r.verb.name() + " " + r.path), [
+    "GET /pets/{id}",
+    "POST /pets",
+  ])
+}
+```
+
+The same decision answers `App::handle`, so a page that shows what an
+application answers and a test that asserts a `405` read one implementation.
+
 ## Documents
 
 An application serves `/openapi.json` and four readers of it from the start:
@@ -428,7 +467,11 @@ The site at [moonbitstack.github.io/moonapi](https://moonbitstack.github.io/moon
 [guide](https://moonbitstack.github.io/moonapi/guide.html), the full
 [API reference](https://moonbitstack.github.io/moonapi/api.html) generated from the package
 interfaces and source comments, an [examples gallery](https://moonbitstack.github.io/moonapi/examples.html)
-and a [request lifecycle showcase](https://moonbitstack.github.io/moonapi/showcase.html).
+and a [request lifecycle showcase](https://moonbitstack.github.io/moonapi/showcase.html). The
+showcase's request box is this library compiled to JavaScript — the page sends
+each request to a real application and shows the answer it gives, so the 404,
+the 405 and the trailing-slash redirect on that page are the ones a server
+answers.
 
 ## License
 

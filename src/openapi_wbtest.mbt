@@ -1008,7 +1008,7 @@ test "openapi: the served document is indented" {
   let app = App::new()
   app.get("/pets", _ctx => @status.text(200, "pets"))
   let text = app.openapi_json()
-  assert_true(text.starts_with("{\n  \"openapi\": \"3.1.0\""))
+  assert_true(text.has_prefix("{\n  \"openapi\": \"3.1.0\""))
   assert_true(text.contains("\n  \"paths\": {"))
   assert_true(text.has_suffix("\n}"))
 }
