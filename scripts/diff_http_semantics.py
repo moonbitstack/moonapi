@@ -230,7 +230,10 @@ def main():
         for failure in FAILURES:
             print("  " + failure)
         raise SystemExit(1)
-    print(f"all {len(CASES)} requests agree with both implementations")
+    print(
+        f"all {len(CASES)} requests agree with Starlette, "
+        f"{len(CASES) - len(STARLETTE_ONLY)} of them with FastAPI too"
+    )
 
 
 if __name__ == "__main__":
