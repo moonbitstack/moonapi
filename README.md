@@ -332,11 +332,12 @@ numbered example has a runnable `main` package that isolates one feature:
 | `22-docs-ui` | the documentation pages |
 | `23-lifespan` | startup and shutdown hooks |
 | `24-files` | serving files with range and conditional handling |
+| [`25-full-example`](integration/src/full-example/) | a complete application in several packages, with auth, validation, middleware, forms and files |
 | `26-described-model` | describing a model once, using it four ways |
 | `27-annotations` | registering routes from annotated functions |
 | `28-templates` | rendering HTML templates |
 | `29-agents` | the MCP service and the skill |
-| [`integration`](integration/) | one description driving validation, the document, the table and the rows |
+| [`ecosystem`](integration/) | one description driving validation, the document, the table and the rows |
 
 Run any of them with, for example:
 
@@ -454,12 +455,6 @@ library of the family, and a name given the same value twice is not a clash.
 - **One path for every caller.** `App::to_asgi` is the application; `App::handle`, the test client, a server and the tools an agent calls all go through it, so a test exercises the layers, mounts, lifespan state and disconnect handling a server does, not a shortcut beside them.
 - **Middleware that is not moonapi's lives in moonasgi.** CORS, gzip and the host checks are ASGI layers, so a moonapi app and any other ASGI application share one implementation and one configuration.
 - **One description, four surfaces.** The document, the pages, the tools and the skill are all written from the routes the application holds, at the moment they are asked for — so a route added late is still described, still documented and still callable by an agent.
-
-## Roadmap
-
-Next: writing a request's descriptor from the struct it deserialises into, rather
-than by hand, and splitting the router from the OpenAPI writer so a program that
-builds an application and never serves a document links only what it uses.
 
 ## Documentation
 
