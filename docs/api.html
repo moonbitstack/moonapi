@@ -27,19 +27,19 @@
   <aside class="sidebar">
     <h4>Packages</h4>
     <div class="side-nav">
-      <a href="#pkg-moonapi"><span class="at">@</span>moonapi<span class="cnt">210</span></a>
-<a href="#pkg-agent"><span class="at">@</span>agent<span class="cnt">3</span></a>
-<a href="#pkg-ctx"><span class="at">@</span>ctx<span class="cnt">30</span></a>
-<a href="#pkg-di"><span class="at">@</span>di<span class="cnt">3</span></a>
-<a href="#pkg-endpoint"><span class="at">@</span>endpoint<span class="cnt">19</span></a>
+      <a href="#pkg-moonapi"><span class="at">@</span>moonapi<span class="cnt">211</span></a>
+<a href="#pkg-agent"><span class="at">@</span>agent<span class="cnt">4</span></a>
+<a href="#pkg-ctx"><span class="at">@</span>ctx<span class="cnt">33</span></a>
+<a href="#pkg-di"><span class="at">@</span>di<span class="cnt">5</span></a>
+<a href="#pkg-endpoint"><span class="at">@</span>endpoint<span class="cnt">24</span></a>
 <a href="#pkg-exceptions"><span class="at">@</span>exceptions<span class="cnt">2</span></a>
-<a href="#pkg-openapi"><span class="at">@</span>openapi<span class="cnt">26</span></a>
-<a href="#pkg-route"><span class="at">@</span>route<span class="cnt">53</span></a>
-<a href="#pkg-schema"><span class="at">@</span>schema<span class="cnt">44</span></a>
-<a href="#pkg-security"><span class="at">@</span>security<span class="cnt">41</span></a>
-<a href="#pkg-socket"><span class="at">@</span>socket<span class="cnt">23</span></a>
-<a href="#pkg-static"><span class="at">@</span>static<span class="cnt">7</span></a>
-<a href="#pkg-status"><span class="at">@</span>status<span class="cnt">103</span></a>
+<a href="#pkg-openapi"><span class="at">@</span>openapi<span class="cnt">34</span></a>
+<a href="#pkg-route"><span class="at">@</span>route<span class="cnt">59</span></a>
+<a href="#pkg-schema"><span class="at">@</span>schema<span class="cnt">51</span></a>
+<a href="#pkg-security"><span class="at">@</span>security<span class="cnt">47</span></a>
+<a href="#pkg-socket"><span class="at">@</span>socket<span class="cnt">24</span></a>
+<a href="#pkg-static"><span class="at">@</span>static<span class="cnt">8</span></a>
+<a href="#pkg-status"><span class="at">@</span>status<span class="cnt">105</span></a>
 <a href="#pkg-templates"><span class="at">@</span>templates<span class="cnt">4</span></a>
     </div>
   </aside>
@@ -171,6 +171,17 @@
   
   
   
+</section>
+
+<section class="api-item" id="moonapi-Docs">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct Docs { openapi_url : String? docs_url : String? redoc_url : String? redocly_url : String? version : @schema.OpenApiVersion ui : @openapi.Ui theme : @openapi.Theme oauth2_redirect_url : String? init_oauth : @json.Json? ui_extra : Map[String, @json.Json]? root_path_in_servers : Bool }</code></pre>
+  <p class="doc">What the documentation routes serve docs_url=…, redoc_url=…, swagger_ui_oauth2_redirect_url=…, swagger_ui_init_oauth=…, swagger_ui_parameters=…, root_path_in_servers=…)<code>). Each URL set to </code>None` leaves that route off.</p>
+<p class="doc"><code>ui</code> picks the reader at <code>docs_url</code>; <code>redoc_url</code> serves ReDoc and <code>redocly_url</code> Redocly&#x27;s reference whatever <code>docs_url</code> serves, so an application can put two or three readers in front of the same document and let its readers choose. With <code>Swagger</code>, <code>oauth2_redirect_url</code> is where an OAuth2 flow started from the page returns to, and <code>init_oauth</code> prefills it; <code>ui_extra</code> is merged over the settings of whichever reader <code>docs_url</code> serves — which is where Redocly&#x27;s <code>licenseKey</code> goes.</p>
+<p class="doc"><code>theme</code> is how the three pages look: the site&#x27;s own theme by default, the reader&#x27;s own look with <code>Plain</code>.</p>
+<p class="doc">Behind a proxy that mounts the app under a prefix, the server reports that prefix as the ASGI <code>root_path</code>; the pages then fetch the document from under it, and with <code>root_path_in_servers</code> the document names it as its first server, so a call tried from the page goes where the app actually is.</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>openapi_url</td><td><code>String?</code></td></tr><tr><td class='pname'>docs_url</td><td><code>String?</code></td></tr><tr><td class='pname'>redoc_url</td><td><code>String?</code></td></tr><tr><td class='pname'>redocly_url</td><td><code>String?</code></td></tr><tr><td class='pname'>version</td><td><code>@schema.OpenApiVersion</code></td></tr><tr><td class='pname'>ui</td><td><code>@openapi.Ui</code></td></tr><tr><td class='pname'>theme</td><td><code>@openapi.Theme</code></td></tr><tr><td class='pname'>oauth2_redirect_url</td><td><code>String?</code></td></tr><tr><td class='pname'>init_oauth</td><td><code>@json.Json?</code></td></tr><tr><td class='pname'>ui_extra</td><td><code>Map[String, @json.Json]?</code></td></tr><tr><td class='pname'>root_path_in_servers</td><td><code>Bool</code></td></tr></tbody></table>
 </section>
 
 <section class="api-item" id="moonapi-Endpoint">
@@ -1791,6 +1802,16 @@
 </section>
 </section>
 <section class="pkg-section" id="pkg-agent"><h2><span class="at">@</span>agent</h2><p class="pkg-desc">Package <code>moonbitstack/moonapi/agent</code>.</p>
+<h3 class="grp">Types</h3>
+
+<section class="api-item" id="agent-Exposure">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct Exposure { mcp_url : String? skill_url : String? name : String? instructions : String? document_url : String? tags : Array[String] }</code></pre>
+  <p class="doc">What an application offers agents. <code>mcp_url</code> is where the MCP endpoint answers (streamable HTTP), <code>skill_url</code> where the skill document is served; <code>None</code> leaves that one off.</p>
+<p class="doc"><code>name</code> is what the tools and the skill call the API — the document&#x27;s own title when left out. <code>instructions</code> is added to the skill and to the MCP server&#x27;s own instructions, for what a description cannot say. <code>document_url</code> is the document the skill points at, when the application publishes one. <code>tags</code> limits both to the operations carrying one of them, so an application can show an agent a corner of itself rather than all of it.</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>mcp_url</td><td><code>String?</code></td></tr><tr><td class='pname'>skill_url</td><td><code>String?</code></td></tr><tr><td class='pname'>name</td><td><code>String?</code></td></tr><tr><td class='pname'>instructions</td><td><code>String?</code></td></tr><tr><td class='pname'>document_url</td><td><code>String?</code></td></tr><tr><td class='pname'>tags</td><td><code>Array[String]</code></td></tr></tbody></table>
+</section>
 <h3 class="grp">Constants &amp; values</h3>
 
 <section class="api-item" id="agent-exposure">
@@ -1831,6 +1852,14 @@
   
 </section>
 
+<section class="api-item" id="ctx-Context">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct Context { request : @http.Request params : Map[String, String] scope : @spec.HttpScope background : BackgroundTasks }</code></pre>
+  <p class="doc">The per-request context handed to a handler: the request with its body read, the path parameters the matched route extracted (its <code>{name}</code> pieces), the ASGI scope it arrived on (<code>root_path</code>, the peer, the lifespan <code>state</code>, the extensions), and the request&#x27;s background tasks.</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>request</td><td><code>@http.Request</code></td></tr><tr><td class='pname'>params</td><td><code>Map[String, String]</code></td></tr><tr><td class='pname'>scope</td><td><code>@spec.HttpScope</code></td></tr><tr><td class='pname'>background</td><td><code>BackgroundTasks</code></td></tr></tbody></table>
+</section>
+
 <section class="api-item" id="ctx-Form">
   <span class="kind kind-using">re-export</span>
   <pre class="sig"><code>pub using @moonmime {type Form}</code></pre>
@@ -1839,12 +1868,28 @@
   
 </section>
 
+<section class="api-item" id="ctx-HttpBasicCredentials">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct HttpBasicCredentials { username : String password : String }</code></pre>
+  <p class="doc">The credentials carried in an HTTP Basic <code>Authorization</code> header <code>HTTPBasicCredentials</code>): the username and password from <code>base64(username:password)</code>.</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>username</td><td><code>String</code></td></tr><tr><td class='pname'>password</td><td><code>String</code></td></tr></tbody></table>
+</section>
+
 <section class="api-item" id="ctx-Limits">
   <span class="kind kind-using">re-export</span>
   <pre class="sig"><code>pub using @moonmime {type Limits}</code></pre>
   
   
   
+</section>
+
+<section class="api-item" id="ctx-OAuth2PasswordRequestForm">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct OAuth2PasswordRequestForm { grant_type : String username : String password : String scopes : Array[String] client_id : String? client_secret : String? }</code></pre>
+  <p class="doc">The parsed OAuth2 password-grant form . The token endpoint reads <code>username</code> / <code>password</code> to authenticate and <code>scopes</code> (the space-delimited <code>scope</code> field, split into a list) to stamp into the issued token. <code>grant_type</code> is <code>&quot;password&quot;</code> for this flow; <code>client_id</code> / <code>client_secret</code> are optional confidential-client credentials.</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>grant_type</td><td><code>String</code></td></tr><tr><td class='pname'>username</td><td><code>String</code></td></tr><tr><td class='pname'>password</td><td><code>String</code></td></tr><tr><td class='pname'>scopes</td><td><code>Array[String]</code></td></tr><tr><td class='pname'>client_id</td><td><code>String?</code></td></tr><tr><td class='pname'>client_secret</td><td><code>String?</code></td></tr></tbody></table>
 </section>
 
 <section class="api-item" id="ctx-Upload">
@@ -2112,6 +2157,14 @@
 <section class="pkg-section" id="pkg-di"><h2><span class="at">@</span>di</h2><p class="pkg-desc">Dependency-injection container, providers, and scopes resolved per request.</p>
 <h3 class="grp">Types</h3>
 
+<section class="api-item" id="di-Container">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct Container[V] { providers : Map[String, Provider[V]] overrides : Map[String, Provider[V]] }</code></pre>
+  <p class="doc">The provider registry: <code>key -&gt; Provider</code>, plus a separate <code>overrides</code> map that shadows it. Overrides are <code>app.dependency_overrides</code> — a test swaps a real dependency (a live DB session) for a fake without touching the routes. A registered override always wins over the base provider.</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>providers</td><td><code>Map[String, Provider[V]]</code></td></tr><tr><td class='pname'>overrides</td><td><code>Map[String, Provider[V]]</code></td></tr></tbody></table>
+</section>
+
 <section class="api-item" id="di-Deps">
   <span class="kind kind-struct">struct</span>
   <pre class="sig"><code>pub struct Deps { open : () -&gt; DepsScope }</code></pre>
@@ -2128,6 +2181,14 @@
   <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>resolve</td><td><code>(String) -&gt; Bool</code></td></tr><tr><td class='pname'>close</td><td><code>(Error?) -&gt; Unit</code></td></tr></tbody></table>
 </section>
 
+<section class="api-item" id="di-Provider">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct Provider[V] { factory : (Scope[V]) -&gt; V teardown : (V, Error?) -&gt; Unit }</code></pre>
+  <p class="doc">A provider: a keyed factory that builds a request-scoped dependency value, with an optional teardown run after the handler ( <code>yield</code> dependencies, whose post-<code>yield</code> body is cleanup). The <code>factory</code> runs at most once per request scope; the <code>teardown</code> receives the produced value and the error that ended the request, <code>None</code> when it succeeded — the exception a <code>yield</code> dependency sees when it wraps its <code>yield</code> in a <code>try</code>. The factory is handed the <code>Scope</code> so it can resolve *sub-dependencies* through it — <code>Depends(a)</code> where <code>a</code> itself declares <code>Depends(b)</code>.</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>factory</td><td><code>(Scope[V]) -&gt; V</code></td></tr><tr><td class='pname'>teardown</td><td><code>(V, Error?) -&gt; Unit</code></td></tr></tbody></table>
+</section>
+
 <section class="api-item" id="di-Scope">
   <span class="kind kind-struct">struct</span>
   <pre class="sig"><code>pub struct Scope[V] { container : Container[V] cache : Map[String, V] building : Map[String, Bool] teardowns : Array[(Error?) -&gt; Unit] }</code></pre>
@@ -2137,6 +2198,47 @@
 </section>
 </section>
 <section class="pkg-section" id="pkg-endpoint"><h2><span class="at">@</span>endpoint</h2><p class="pkg-desc">Typed request parameters and response specifications that describe and validate a route.</p>
+<h3 class="grp">Types</h3>
+
+<section class="api-item" id="endpoint-Endpoint">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct Endpoint { params : Array[Param] request_body : @schema.Schema? request_required : Bool request_examples : Map[String, Example] responses : Array[ResponseSpec] }</code></pre>
+  <p class="doc">The runtime endpoint descriptor a route can carry — the one first-class value that replaces reading a handler&#x27;s signature. Walked once for the OpenAPI operation (parameters + <code>requestBody</code> + <code>responses</code>, with every named object hoisted into <code>components/schemas</code>) and for request validation.</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>params</td><td><code>Array[Param]</code></td></tr><tr><td class='pname'>request_body</td><td><code>@schema.Schema?</code></td></tr><tr><td class='pname'>request_required</td><td><code>Bool</code></td></tr><tr><td class='pname'>request_examples</td><td><code>Map[String, Example]</code></td></tr><tr><td class='pname'>responses</td><td><code>Array[ResponseSpec]</code></td></tr></tbody></table>
+</section>
+
+<section class="api-item" id="endpoint-Example">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct Example { summary : String description : String value : @json.Json? external_value : String }</code></pre>
+  <p class="doc">A named example of a value (the OpenAPI Example Object, <code>openapi_examples</code>): a <code>summary</code> and a <code>description</code> for the reader, and either the <code>value</code> itself or an <code>external_value</code> URL where it can be fetched. Documentation viewers offer the examples of a parameter or a body by name.</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>summary</td><td><code>String</code></td></tr><tr><td class='pname'>description</td><td><code>String</code></td></tr><tr><td class='pname'>value</td><td><code>@json.Json?</code></td></tr><tr><td class='pname'>external_value</td><td><code>String</code></td></tr></tbody></table>
+</section>
+
+<section class="api-item" id="endpoint-Param">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct Param { name : String loc : ParamLoc schema : @schema.Schema required : Bool description : String constraints : Array[@schema.Constraint] default : @json.Json? alias_ : String examples : Map[String, Example] }</code></pre>
+  <p class="doc">A single request parameter descriptor: its <code>name</code>, <code>loc</code>ation, scalar <code>schema</code>, whether it is <code>required</code>, an optional <code>description</code>, its value <code>constraints</code>, the <code>default</code> that stands in when the request omits it, and the <code>alias</code> it travels under on the wire. Path parameters are always required (OpenAPI requires it); the constructor keeps the caller&#x27;s value but validation treats path params as mandatory.</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>name</td><td><code>String</code></td></tr><tr><td class='pname'>loc</td><td><code>ParamLoc</code></td></tr><tr><td class='pname'>schema</td><td><code>@schema.Schema</code></td></tr><tr><td class='pname'>required</td><td><code>Bool</code></td></tr><tr><td class='pname'>description</td><td><code>String</code></td></tr><tr><td class='pname'>constraints</td><td><code>Array[@schema.Constraint]</code></td></tr><tr><td class='pname'>default</td><td><code>@json.Json?</code></td></tr><tr><td class='pname'>alias_</td><td><code>String</code></td></tr><tr><td class='pname'>examples</td><td><code>Map[String, Example]</code></td></tr></tbody></table>
+</section>
+
+<section class="api-item" id="endpoint-ParamLoc">
+  <span class="kind kind-enum">enum</span>
+  <pre class="sig"><code>pub(all) enum ParamLoc { InPath InQuery InHeader InCookie }</code></pre>
+  <p class="doc">Where a parameter is carried, the OpenAPI <code>in</code> locations: the path, the query string, a header, or a cookie.</p>
+  
+  <ul class="variants"><li><code>InPath</code></li><li><code>InQuery</code></li><li><code>InHeader</code></li><li><code>InCookie</code></li></ul>
+</section>
+
+<section class="api-item" id="endpoint-ResponseSpec">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct ResponseSpec { status : Int32 description : String body : @schema.Schema? examples : Map[String, Example] }</code></pre>
+  <p class="doc">A single response descriptor: the HTTP <code>status</code>, a human <code>description</code>, an optional body <code>schema</code> (<code>None</code> for an empty body, e.g. <code>204</code>), and named <code>examples</code> of that body.</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>status</td><td><code>Int32</code></td></tr><tr><td class='pname'>description</td><td><code>String</code></td></tr><tr><td class='pname'>body</td><td><code>@schema.Schema?</code></td></tr><tr><td class='pname'>examples</td><td><code>Map[String, Example]</code></td></tr></tbody></table>
+</section>
 <h3 class="grp">Functions</h3>
 
 <section class="api-item" id="endpoint-loc_str">
@@ -2317,6 +2419,71 @@
 </section>
 </section>
 <section class="pkg-section" id="pkg-openapi"><h2><span class="at">@</span>openapi</h2><p class="pkg-desc">The OpenAPI document model and the bundled documentation UIs.</p>
+<h3 class="grp">Types</h3>
+
+<section class="api-item" id="openapi-ApiInfo">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct ApiInfo { title : String summary : String api_version : String description : String terms_of_service : String contact : Contact? license : License? servers : Array[Server] tags : Array[Tag] external_docs : ExternalDocs? }</code></pre>
+  <p class="doc">What the document says about the API itself — <code>info</code> block plus <code>servers</code>, the tag descriptions and the external documentation. An app carries one (<code>App::describe</code> sets it) so that every emission of the document, including the route <code>enable_docs</code> registers, agrees.</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>title</td><td><code>String</code></td></tr><tr><td class='pname'>summary</td><td><code>String</code></td></tr><tr><td class='pname'>api_version</td><td><code>String</code></td></tr><tr><td class='pname'>description</td><td><code>String</code></td></tr><tr><td class='pname'>terms_of_service</td><td><code>String</code></td></tr><tr><td class='pname'>contact</td><td><code>Contact?</code></td></tr><tr><td class='pname'>license</td><td><code>License?</code></td></tr><tr><td class='pname'>servers</td><td><code>Array[Server]</code></td></tr><tr><td class='pname'>tags</td><td><code>Array[Tag]</code></td></tr><tr><td class='pname'>external_docs</td><td><code>ExternalDocs?</code></td></tr></tbody></table>
+</section>
+
+<section class="api-item" id="openapi-Contact">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct Contact { name : String url : String email : String }</code></pre>
+  <p class="doc">OpenAPI <code>contact</code> info : every field optional, emitted only when non-empty.</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>name</td><td><code>String</code></td></tr><tr><td class='pname'>url</td><td><code>String</code></td></tr><tr><td class='pname'>email</td><td><code>String</code></td></tr></tbody></table>
+</section>
+
+<section class="api-item" id="openapi-ExternalDocs">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct ExternalDocs { url : String description : String }</code></pre>
+  <p class="doc">A link to documentation kept elsewhere: the <code>externalDocs</code> object, on the document or on a tag.</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>url</td><td><code>String</code></td></tr><tr><td class='pname'>description</td><td><code>String</code></td></tr></tbody></table>
+</section>
+
+<section class="api-item" id="openapi-License">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct License { name : String url : String identifier : String }</code></pre>
+  <p class="doc">OpenAPI <code>license</code> info : <code>name</code> required, then either a <code>url</code> or, in OpenAPI 3.1, an SPDX <code>identifier</code>. The two exclude each other in 3.1, so there an <code>identifier</code> is written and the <code>url</code> is not; the older dialects have no <code>identifier</code> and get the <code>url</code>.</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>name</td><td><code>String</code></td></tr><tr><td class='pname'>url</td><td><code>String</code></td></tr><tr><td class='pname'>identifier</td><td><code>String</code></td></tr></tbody></table>
+</section>
+
+<section class="api-item" id="openapi-Server">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct Server { url : String description : String }</code></pre>
+  <p class="doc">A <code>servers</code> entry : a base URL and an optional description.</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>url</td><td><code>String</code></td></tr><tr><td class='pname'>description</td><td><code>String</code></td></tr></tbody></table>
+</section>
+
+<section class="api-item" id="openapi-Tag">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct Tag { name : String description : String external_docs : ExternalDocs? }</code></pre>
+  <p class="doc">What the document says about one operation tag : documentation viewers group operations by tag, in the order the tags are listed here, and show this description above each group.</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>name</td><td><code>String</code></td></tr><tr><td class='pname'>description</td><td><code>String</code></td></tr><tr><td class='pname'>external_docs</td><td><code>ExternalDocs?</code></td></tr></tbody></table>
+</section>
+
+<section class="api-item" id="openapi-Theme">
+  <span class="kind kind-enum">enum</span>
+  <pre class="sig"><code>pub(all) enum Theme { Site Plain }</code></pre>
+  <p class="doc">How a page looks. <code>Site</code> is the theme of this library&#x27;s own site: the periwinkle paper, the iris accent, the display face and the thin scrollbars, on a bar naming the application and pointing at its document. <code>Plain</code> is the reader as its maker ships it — no bar, no fonts, no colours of ours — for a page that is dropped into a site of its own.</p>
+  
+  <ul class="variants"><li><code>Site</code></li><li><code>Plain</code></li></ul>
+</section>
+
+<section class="api-item" id="openapi-Ui">
+  <span class="kind kind-enum">enum</span>
+  <pre class="sig"><code>pub(all) enum Ui { Scalar Swagger Redoc Redocly }</code></pre>
+  <p class="doc">Which reader a page serves. <code>Scalar</code> is the current generation of API reference, with a request client built in; <code>Swagger</code> is Swagger UI, the long-standing one; <code>Redoc</code> reads without letting a caller try anything, and <code>Redocly</code> is Redocly&#x27;s own reference, which needs a licence key.</p>
+  
+  <ul class="variants"><li><code>Scalar</code></li><li><code>Swagger</code></li><li><code>Redoc</code></li><li><code>Redocly</code></li></ul>
+</section>
 <h3 class="grp">Constants &amp; values</h3>
 
 <section class="api-item" id="openapi-redoc_js">
@@ -2547,6 +2714,14 @@
   
 </section>
 
+<section class="api-item" id="route-Convertor">
+  <span class="kind kind-enum">enum</span>
+  <pre class="sig"><code>pub(all) enum Convertor { Str Int Float Uuid Path }</code></pre>
+  <p class="doc">What a path parameter accepts . <code>Str</code> is one segment or part of one; <code>Path</code> is the rest of the path, slashes included.</p>
+  
+  <ul class="variants"><li><code>Str</code></li><li><code>Int</code></li><li><code>Float</code></li><li><code>Uuid</code></li><li><code>Path</code></li></ul>
+</section>
+
 <section class="api-item" id="route-Hoop">
   <span class="kind kind-type">type</span>
   <pre class="sig"><code>pub type Hoop = async (@ctx.Context, async (@ctx.Context) -&gt; Reply) -&gt; Reply</code></pre>
@@ -2569,6 +2744,39 @@
   <p class="doc">The request method a route binds to: the nine standard ones and any other token, from moonhttp.</p>
   
   
+</section>
+
+<section class="api-item" id="route-Pattern">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct Pattern { source : String pieces : Array[Piece] matcher : Matcher? }</code></pre>
+  <p class="doc">A route path read as a template: <code>/users/{id:int}</code>, <code>/files/{name}.json</code>, <code>/static/{rest:path}</code>. A parameter without a convertor is <code>str</code>.</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>source</td><td><code>String</code></td></tr><tr><td class='pname'>pieces</td><td><code>Array[Piece]</code></td></tr><tr><td class='pname'>matcher</td><td><code>Matcher?</code></td></tr></tbody></table>
+</section>
+
+<section class="api-item" id="route-Piece">
+  <span class="kind kind-enum">enum</span>
+  <pre class="sig"><code>pub(all) enum Piece { Literal(String) Param(name~ : String, convertor~ : Convertor) }</code></pre>
+  <p class="doc">One piece of a path template: text matched as written, or a parameter.</p>
+  
+  <ul class="variants"><li><code>Literal(String)</code></li><li><code>Param(name~ : String, convertor~ : Convertor)</code></li></ul>
+</section>
+
+<section class="api-item" id="route-Reply">
+  <span class="kind kind-enum">enum</span>
+  <pre class="sig"><code>pub(all) enum Reply { Buffered(@http.Response) Streamed(@status.Stream) }</code></pre>
+  <p class="doc">What a route produced: a response with its body in hand, or one that writes its body as it goes.</p>
+  
+  <ul class="variants"><li><code>Buffered(@http.Response)</code></li><li><code>Streamed(@status.Stream)</code></li></ul>
+</section>
+
+<section class="api-item" id="route-Route">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct Route { verb : @method.Method path : String pattern : Pattern run : async (@ctx.Context) -&gt; Reply summary : String description : String tags : Array[String] deprecated : Bool operation_id : String status_code : Int32? response_class : @status.ResponseClass responses : Array[@endpoint.ResponseSpec] name : String openapi_extra : @json.Json? endpoint : @endpoint.Endpoint? security : Array[@security.SecurityRequirement] dependencies : Array[String] callbacks : Array[Route] hoops : Array[async (@ctx.Context, async (@ctx.Context) -&gt; Reply) -&gt; Reply] include_in_schema : Bool validate : Bool }</code></pre>
+  <p class="doc">One registered route, the record an app keeps for each operation — what calls <code>APIRoute</code>. Public so a program can list and inspect an app&#x27;s routes; building one by hand is possible but the <code>App</code> methods are the way.</p>
+<p class="doc"><code>security</code> is the per-operation requirements (emitted as OpenAPI <code>security</code> and enforced before the handler when their scheme has an enforcer).</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>verb</td><td><code>@method.Method</code></td></tr><tr><td class='pname'>path</td><td><code>String</code></td></tr><tr><td class='pname'>pattern</td><td><code>Pattern</code></td></tr><tr><td class='pname'>run</td><td><code>async (@ctx.Context) -&gt; Reply</code></td></tr><tr><td class='pname'>summary</td><td><code>String</code></td></tr><tr><td class='pname'>description</td><td><code>String</code></td></tr><tr><td class='pname'>tags</td><td><code>Array[String]</code></td></tr><tr><td class='pname'>deprecated</td><td><code>Bool</code></td></tr><tr><td class='pname'>operation_id</td><td><code>String</code></td></tr><tr><td class='pname'>status_code</td><td><code>Int32?</code></td></tr><tr><td class='pname'>response_class</td><td><code>@status.ResponseClass</code></td></tr><tr><td class='pname'>responses</td><td><code>Array[@endpoint.ResponseSpec]</code></td></tr><tr><td class='pname'>name</td><td><code>String</code></td></tr><tr><td class='pname'>openapi_extra</td><td><code>@json.Json?</code></td></tr><tr><td class='pname'>endpoint</td><td><code>@endpoint.Endpoint?</code></td></tr><tr><td class='pname'>security</td><td><code>Array[@security.SecurityRequirement]</code></td></tr><tr><td class='pname'>dependencies</td><td><code>Array[String]</code></td></tr><tr><td class='pname'>callbacks</td><td><code>Array[Route]</code></td></tr><tr><td class='pname'>hoops</td><td><code>Array[async (@ctx.Context, async (@ctx.Context) -&gt; Reply) -&gt; Reply]</code></td></tr><tr><td class='pname'>include_in_schema</td><td><code>Bool</code></td></tr><tr><td class='pname'>validate</td><td><code>Bool</code></td></tr></tbody></table>
 </section>
 
 <section class="api-item" id="route-Router">
@@ -2612,6 +2820,14 @@ impl @moonapi.View for Articles with post(self) {
 app.view(&quot;/articles&quot;, Articles::{ db })</code></pre></div>
   
   
+</section>
+
+<section class="api-item" id="route-WsRoute">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct WsRoute { path : String pattern : Pattern handler : async (@socket.WebSocket) -&gt; Unit name : String security : Array[@security.SecurityRequirement] dependencies : Array[String] }</code></pre>
+  <p class="doc">One registered WebSocket route . <code>security</code> and <code>dependencies</code> are settled before the handler is called, so a connection they turn away is declined at the handshake rather than accepted and dropped.</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>path</td><td><code>String</code></td></tr><tr><td class='pname'>pattern</td><td><code>Pattern</code></td></tr><tr><td class='pname'>handler</td><td><code>async (@socket.WebSocket) -&gt; Unit</code></td></tr><tr><td class='pname'>name</td><td><code>String</code></td></tr><tr><td class='pname'>security</td><td><code>Array[@security.SecurityRequirement]</code></td></tr><tr><td class='pname'>dependencies</td><td><code>Array[String]</code></td></tr></tbody></table>
 </section>
 <h3 class="grp">Functions</h3>
 
@@ -2988,12 +3204,69 @@ app.view(&quot;/articles&quot;, Articles::{ db })</code></pre></div>
 <section class="pkg-section" id="pkg-schema"><h2><span class="at">@</span>schema</h2><p class="pkg-desc">JSON Schema types, constraints, and validation used for bodies and documents.</p>
 <h3 class="grp">Types</h3>
 
+<section class="api-item" id="schema-Constraint">
+  <span class="kind kind-enum">enum</span>
+  <pre class="sig"><code>pub(all) enum Constraint { Minimum(Double) Maximum(Double) ExclusiveMinimum(Double) ExclusiveMaximum(Double) MultipleOf(Double) MinLength(Int32) MaxLength(Int32) Pattern(String) MinItems(Int32) MaxItems(Int32) }</code></pre>
+  <p class="doc">A value constraint on a field (JSON-Schema keyword ↔ Pydantic argument).</p>
+  
+  <ul class="variants"><li><code>Minimum(Double)</code></li><li><code>Maximum(Double)</code></li><li><code>ExclusiveMinimum(Double)</code></li><li><code>ExclusiveMaximum(Double)</code></li><li><code>MultipleOf(Double)</code></li><li><code>MinLength(Int32)</code></li><li><code>MaxLength(Int32)</code></li><li><code>Pattern(String)</code></li><li><code>MinItems(Int32)</code></li><li><code>MaxItems(Int32)</code></li></ul>
+</section>
+
+<section class="api-item" id="schema-Field">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct Field { name : String schema : Schema required : Bool description : String constraints : Array[Constraint] default : @json.Json? examples : Array[@json.Json] }</code></pre>
+  <p class="doc">One field of an object schema: its <code>name</code>, its <code>schema</code>, whether it is <code>required</code>, an optional <code>description</code>, its value <code>constraints</code>, the <code>default</code> that stands in when a body leaves it out, and <code>examples</code> of its value for the reader.</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>name</td><td><code>String</code></td></tr><tr><td class='pname'>schema</td><td><code>Schema</code></td></tr><tr><td class='pname'>required</td><td><code>Bool</code></td></tr><tr><td class='pname'>description</td><td><code>String</code></td></tr><tr><td class='pname'>constraints</td><td><code>Array[Constraint]</code></td></tr><tr><td class='pname'>default</td><td><code>@json.Json?</code></td></tr><tr><td class='pname'>examples</td><td><code>Array[@json.Json]</code></td></tr></tbody></table>
+</section>
+
+<section class="api-item" id="schema-ObjectSchema">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct ObjectSchema { name : String fields : Array[Field] description : String }</code></pre>
+  <p class="doc">The body of an object schema: its component <code>name</code> (empty = an anonymous inline object; non-empty = hoisted to <code>components/schemas</code> and referenced), its ordered <code>fields</code>, and an optional <code>description</code>.</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>name</td><td><code>String</code></td></tr><tr><td class='pname'>fields</td><td><code>Array[Field]</code></td></tr><tr><td class='pname'>description</td><td><code>String</code></td></tr></tbody></table>
+</section>
+
+<section class="api-item" id="schema-OpenApiVersion">
+  <span class="kind kind-enum">enum</span>
+  <pre class="sig"><code>pub(all) enum OpenApiVersion { Swagger20 OpenApi30 OpenApi31 }</code></pre>
+  <p class="doc">Target OpenAPI / Swagger document version. moonapi emits every mainstream version from the same route descriptors — a &quot;good &quot; is not pinned to one spec version.</p>
+  
+  <ul class="variants"><li><code>Swagger20</code></li><li><code>OpenApi30</code></li><li><code>OpenApi31</code></li></ul>
+</section>
+
+<section class="api-item" id="schema-Schema">
+  <span class="kind kind-enum">enum</span>
+  <pre class="sig"><code>pub(all) enum Schema { SStr SInt SFloat SBool SNull SArray(Schema) SObject(ObjectSchema) SEnum(Schema, Array[@json.Json]) SNullable(Schema) SMap(Schema) SAny SFormat(Schema, String) SJson(@json.Json) }</code></pre>
+  <p class="doc">A JSON-Schema type descriptor — the runtime, first-class value that stands in for from-signature reflection. One <code>Schema</code> tree is *walked once* to (a) emit a complete OpenAPI request/response body schema — objects, arrays and scalars, with <code>required</code>, and named objects hoisted under <code>components/schemas</code> and referenced by <code>$ref</code> — and (b) drive validation of an inbound JSON value. This is the explicit, MoonBit-idiomatic equivalent of pydantic&#x27;s type-driven magic (cf. Rust <code>serde</code> + macros, Go struct tags + codegen). A named object carries its fields *inline*, so the same tree is fully self-describing for validation; the name is used only to deduplicate it into <code>components</code> on emit.</p>
+  
+  <ul class="variants"><li><code>SStr</code></li><li><code>SInt</code></li><li><code>SFloat</code></li><li><code>SBool</code></li><li><code>SNull</code></li><li><code>SArray(Schema)</code></li><li><code>SObject(ObjectSchema)</code></li><li><code>SEnum(Schema, Array[@json.Json])</code></li><li><code>SNullable(Schema)</code></li><li><code>SMap(Schema)</code></li><li><code>SAny</code></li><li><code>SFormat(Schema, String)</code></li><li><code>SJson(@json.Json)</code></li></ul>
+</section>
+
 <section class="api-item" id="schema-ToSchema">
   <span class="kind kind-trait">trait</span>
   <pre class="sig"><code>pub(open) trait ToSchema { fn to_schema(Self) -&gt; Schema }</code></pre>
   <p class="doc">The <code>impl</code>-able version of a type&#x27;s descriptor. A user struct implements it — the value is ignored; it exists so descriptor-carrying code can be generic over &quot;a type that knows its own schema&quot;. The primary, mctl-friendly shape is still a plain associated function <code>T::schema() -&gt; Schema</code> (no instance needed, mirroring referencing the model *class*); this trait bridges to it.</p>
   
   
+</section>
+
+<section class="api-item" id="schema-Unresolved">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct Unresolved { field : String model : String why : String }</code></pre>
+  <p class="doc">A reference that could not be written into the schema, and why.</p>
+<p class="doc">Reported rather than dropped or guessed at: a body schema silently missing a field is a validation hole that shows up as accepted-but-wrong data.</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>field</td><td><code>String</code></td></tr><tr><td class='pname'>model</td><td><code>String</code></td></tr><tr><td class='pname'>why</td><td><code>String</code></td></tr></tbody></table>
+</section>
+
+<section class="api-item" id="schema-ValidationError">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct ValidationError { loc : Array[String] msg : String kind : String }</code></pre>
+  <p class="doc">One entry in a <code>422</code> response&#x27;s <code>detail</code> array, mirroring / pydantic v2: where the error is (<code>loc</code>, e.g. <code>[&quot;query&quot;, &quot;q&quot;]</code>), a human <code>msg</code>, and a machine <code>kind</code> (serialised as the JSON key <code>type</code>).</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>loc</td><td><code>Array[String]</code></td></tr><tr><td class='pname'>msg</td><td><code>String</code></td></tr><tr><td class='pname'>kind</td><td><code>String</code></td></tr></tbody></table>
 </section>
 <h3 class="grp">Constants &amp; values</h3>
 
@@ -3364,12 +3637,36 @@ app.view(&quot;/articles&quot;, Articles::{ db })</code></pre></div>
   <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>loc</td><td><code>ApiKeyIn</code></td></tr><tr><td class='pname'>name</td><td><code>String</code></td></tr><tr><td class='pname'>verify</td><td><code>(String) -&gt; Bool</code></td></tr></tbody></table>
 </section>
 
+<section class="api-item" id="security-ApiKeyIn">
+  <span class="kind kind-enum">enum</span>
+  <pre class="sig"><code>pub(all) enum ApiKeyIn { KeyHeader KeyQuery KeyCookie }</code></pre>
+  <p class="doc">Where an API key travels .</p>
+  
+  <ul class="variants"><li><code>KeyHeader</code></li><li><code>KeyQuery</code></li><li><code>KeyCookie</code></li></ul>
+</section>
+
+<section class="api-item" id="security-AuthenticatedUser">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct AuthenticatedUser { subject : String scopes : Array[String] claims : Map[String, @json.Json] }</code></pre>
+  <p class="doc">The identity a verified token carries, injected into a protected handler . <code>subject</code> is the <code>sub</code> claim, <code>scopes</code> the granted scopes, and <code>claims</code> the whole verified payload for anything else the handler needs (<code>exp</code>, custom claims).</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>subject</td><td><code>String</code></td></tr><tr><td class='pname'>scopes</td><td><code>Array[String]</code></td></tr><tr><td class='pname'>claims</td><td><code>Map[String, @json.Json]</code></td></tr></tbody></table>
+</section>
+
 <section class="api-item" id="security-BasicAuth">
   <span class="kind kind-struct">struct</span>
   <pre class="sig"><code>pub struct BasicAuth { realm : String verify : (@ctx.HttpBasicCredentials) -&gt; Bool }</code></pre>
   <p class="doc">An HTTP Basic scheme : the <code>realm</code> named in the challenge, and the predicate that accepts a presented username/password.</p>
   
   <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>realm</td><td><code>String</code></td></tr><tr><td class='pname'>verify</td><td><code>(@ctx.HttpBasicCredentials) -&gt; Bool</code></td></tr></tbody></table>
+</section>
+
+<section class="api-item" id="security-DeclaredScheme">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct DeclaredScheme { name : String kind : SecurityScheme description : String }</code></pre>
+  <p class="doc">A security scheme as an application declares it: the <code>name</code> routes refer to it by, the <code>kind</code> that shapes the emitted object, and the prose beside it .</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>name</td><td><code>String</code></td></tr><tr><td class='pname'>kind</td><td><code>SecurityScheme</code></td></tr><tr><td class='pname'>description</td><td><code>String</code></td></tr></tbody></table>
 </section>
 
 <section class="api-item" id="security-DigestAuth">
@@ -3388,12 +3685,36 @@ app.view(&quot;/articles&quot;, Articles::{ db })</code></pre></div>
   <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>authorization_url</td><td><code>String</code></td></tr><tr><td class='pname'>token_url</td><td><code>String</code></td></tr><tr><td class='pname'>refresh_url</td><td><code>String</code></td></tr><tr><td class='pname'>secret</td><td><code>String</code></td></tr></tbody></table>
 </section>
 
+<section class="api-item" id="security-OAuth2PasswordBearer">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct OAuth2PasswordBearer { token_url : String secret : String }</code></pre>
+  <p class="doc">An OAuth2 password-bearer security scheme . Holds the <code>token_url</code> (the endpoint that issues tokens, surfaced to API docs) and the shared HS256 <code>secret</code> used to verify presented tokens.</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>token_url</td><td><code>String</code></td></tr><tr><td class='pname'>secret</td><td><code>String</code></td></tr></tbody></table>
+</section>
+
 <section class="api-item" id="security-SecurityEnforcer">
   <span class="kind kind-type">type</span>
   <pre class="sig"><code>pub type SecurityEnforcer = (@ctx.Context, SecurityScopes, Int64) -&gt; Result[AuthenticatedUser, @http.Response]</code></pre>
   <p class="doc">The runtime guard behind a named scheme: given the request context, the scopes the route required at this call site, and the verification time (Unix seconds), either the authenticated user or the 401/403 response to return. Registered by the <code>App::secure_*</code> functions; a documentation-only scheme (a bare <code>add_security_scheme</code>) has none, so it is described in the spec but not enforced — exactly split between a declared scheme and a wired dependency.</p>
   
   
+</section>
+
+<section class="api-item" id="security-SecurityRequirement">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct SecurityRequirement { scheme : String scopes : Array[String] }</code></pre>
+  <p class="doc">A security requirement on a route: the <code>scheme</code> name (which must match a name declared with <code>App::add_security_scheme</code> / <code>App::secure_oauth2</code>) and the <code>scopes</code> the caller must hold. Emitted as one <code>{scheme: [scopes]}</code> entry of the operation&#x27;s OpenAPI <code>security</code> array.</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>scheme</td><td><code>String</code></td></tr><tr><td class='pname'>scopes</td><td><code>Array[String]</code></td></tr></tbody></table>
+</section>
+
+<section class="api-item" id="security-SecurityScheme">
+  <span class="kind kind-enum">enum</span>
+  <pre class="sig"><code>pub(all) enum SecurityScheme { OAuth2Password(token_url~ : String, scopes~ : Array[(String, String)]) OAuth2Code(authorization_url~ : String, token_url~ : String, refresh_url~ : String, scopes~ : Array[(String, String)]) HttpBearer(bearer_format~ : String) ApiKeyHeader(name~ : String) ApiKeyQuery(name~ : String) ApiKeyCookie(name~ : String) HttpBasic HttpDigest OpenIdConnect(url~ : String) }</code></pre>
+  <p class="doc">A security scheme describing how a client authenticates. Mirrors the OpenAPI scheme types: the two OAuth2 flows a browser or a service actually uses (password and authorization code), HTTP bearer / basic / digest, an API key in a header / query / cookie, and OpenID Connect discovery.</p>
+  
+  <ul class="variants"><li><code>OAuth2Password(token_url~ : String, scopes~ : Array[(String, String)])</code></li><li><code>OAuth2Code(authorization_url~ : String, token_url~ : String, refresh_url~ : String, scopes~ : Array[(String, String)])</code></li><li><code>HttpBearer(bearer_format~ : String)</code></li><li><code>ApiKeyHeader(name~ : String)</code></li><li><code>ApiKeyQuery(name~ : String)</code></li><li><code>ApiKeyCookie(name~ : String)</code></li><li><code>HttpBasic</code></li><li><code>HttpDigest</code></li><li><code>OpenIdConnect(url~ : String)</code></li></ul>
 </section>
 
 <section class="api-item" id="security-SecurityScopes">
@@ -3718,6 +4039,14 @@ app.view(&quot;/articles&quot;, Articles::{ db })</code></pre></div>
   
   
 </section>
+
+<section class="api-item" id="socket-WsMessage">
+  <span class="kind kind-enum">enum</span>
+  <pre class="sig"><code>pub(all) enum WsMessage { WsText(String) WsBinary(Bytes) }</code></pre>
+  <p class="doc">One WebSocket message: text or binary.</p>
+  
+  <ul class="variants"><li><code>WsText(String)</code></li><li><code>WsBinary(Bytes)</code></li></ul>
+</section>
 <h3 class="grp">Methods on <code>Disconnected</code></h3>
 
 <section class="api-item" id="socket-Disconnected-equal">
@@ -3820,7 +4149,7 @@ app.view(&quot;/articles&quot;, Articles::{ db })</code></pre></div>
 <section class="api-item" id="socket-WebSocket-receive_json">
   <span class="kind kind-fn">function</span>
   <pre class="sig"><code>pub async fn WebSocket::receive_json(Self) -&gt; @json.Json</code></pre>
-  <p class="doc">The next message parsed as JSON.</p>
+  <p class="doc">The next message parsed as JSON. A text message that is not JSON ends the connection rather than the handler: the wire said text, so the fault is the peer&#x27;s.</p>
   <p class="returns">Returns <code>@json.Json</code></p>
   
 </section>
@@ -3892,6 +4221,14 @@ app.view(&quot;/articles&quot;, Articles::{ db })</code></pre></div>
 </section>
 <section class="pkg-section" id="pkg-static"><h2><span class="at">@</span>static</h2><p class="pkg-desc">Static file serving with content types and range support.</p>
 <h3 class="grp">Types</h3>
+
+<section class="api-item" id="static-Asset">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct Asset { content : Bytes modified : @moondate.Moment? }</code></pre>
+  <p class="doc">One file a source holds: its bytes and, when the source knows it, when it last changed.</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>content</td><td><code>Bytes</code></td></tr><tr><td class='pname'>modified</td><td><code>@moondate.Moment?</code></td></tr></tbody></table>
+</section>
 
 <section class="api-item" id="static-Memory">
   <span class="kind kind-struct">struct</span>
@@ -3982,12 +4319,30 @@ app.view(&quot;/articles&quot;, Articles::{ db })</code></pre></div>
   
 </section>
 
+<section class="api-item" id="status-ResponseClass">
+  <span class="kind kind-enum">enum</span>
+  <pre class="sig"><code>pub(all) enum ResponseClass { Json Text Html Xml EventStream Bytes }</code></pre>
+  <p class="doc">The kind of body a route&#x27;s success response carries, named after the helper that writes one: <code>Json</code> is <code>json</code>, <code>Text</code> is <code>text</code>, <code>Html</code> is <code>html</code>, <code>EventStream</code> is <code>sse</code>, <code>Bytes</code> is <code>file_response</code>. A route names one in its <code>response_class</code>, and the OpenAPI document keys the success response&#x27;s content under that media type, so a client generating code from the document knows what to parse.</p>
+<p class="doc">Documentation only. The handler still builds the response it returns, so a route that names <code>Html</code> and answers JSON is a contradiction this cannot catch — the class says what the route promises, not what it enforces.</p>
+  
+  <ul class="variants"><li><code>Json</code></li><li><code>Text</code></li><li><code>Html</code></li><li><code>Xml</code></li><li><code>EventStream</code></li><li><code>Bytes</code></li></ul>
+</section>
+
 <section class="api-item" id="status-SameSite">
   <span class="kind kind-using">re-export</span>
   <pre class="sig"><code>pub using @cookie {type SameSite}</code></pre>
   
   
   
+</section>
+
+<section class="api-item" id="status-Stream">
+  <span class="kind kind-struct">struct</span>
+  <pre class="sig"><code>pub(all) struct Stream { status : Int32 headers : Array[(String, String)] body : async (Writer) -&gt; Unit early_hints : Array[Array[String]] trailers : Bool }</code></pre>
+  <p class="doc">A response whose body is written while it is sent : the head goes out first, then whatever <code>body</code> writes, a chunk per write. The app runs <code>body</code> beside a watch on the connection and cancels it when the client goes, so an endless stream ends with its reader.</p>
+<p class="doc"><code>early_hints</code> go out as <code>103</code> responses before the head (RFC 8297). <code>trailers</code> announces trailing fields, which <code>body</code> sets with [<code>Writer::trailer</code>] and the app sends after the last chunk.</p>
+  
+  <table class="params fields"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class='pname'>status</td><td><code>Int32</code></td></tr><tr><td class='pname'>headers</td><td><code>Array[(String, String)]</code></td></tr><tr><td class='pname'>body</td><td><code>async (Writer) -&gt; Unit</code></td></tr><tr><td class='pname'>early_hints</td><td><code>Array[Array[String]]</code></td></tr><tr><td class='pname'>trailers</td><td><code>Bool</code></td></tr></tbody></table>
 </section>
 
 <section class="api-item" id="status-Writer">

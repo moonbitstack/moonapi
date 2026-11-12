@@ -39,12 +39,15 @@ PKG_BLURB = {
 EXCLUDE_DIRS = ("examples", "cmd")
 GITHUB_URL = "https://github.com/moonbitstack/moonapi"
 
+# `pub(all)` is how an .mbti spells a type whose fields or constructors a
+# caller may see; it is as public as `pub` and must reach the page.
+VIS = r"pub(?:\((?:open|all)\))?"
 RE_PUB = re.compile(
-    r"^pub(?:\(open\))?\s+(?:async\s+)?fn\s+([A-Za-z_]\w*)(?:::([A-Za-z_]\w*))?"
+    r"^" + VIS + r"\s+(?:async\s+)?fn\s+([A-Za-z_]\w*)(?:::([A-Za-z_]\w*))?"
 )
-RE_STRUCT = re.compile(r"^pub(?:\(open\))?\s+struct\s+([A-Za-z_]\w*)")
-RE_ENUM = re.compile(r"^pub(?:\(open\))?\s+enum\s+([A-Za-z_]\w*)")
-RE_TRAIT = re.compile(r"^pub(?:\(open\))?\s+trait\s+([A-Za-z_]\w*)")
+RE_STRUCT = re.compile(r"^" + VIS + r"\s+struct\s+([A-Za-z_]\w*)")
+RE_ENUM = re.compile(r"^" + VIS + r"\s+enum\s+([A-Za-z_]\w*)")
+RE_TRAIT = re.compile(r"^" + VIS + r"\s+trait\s+([A-Za-z_]\w*)")
 RE_TYPE = re.compile(r"^pub\s+type\s+([A-Za-z_]\w*)")
 RE_CONST = re.compile(r"^pub\s+const\s+([A-Za-z_]\w*)")
 RE_LET = re.compile(r"^pub\s+let\s+([A-Za-z_]\w*)")
@@ -55,7 +58,7 @@ RE_PARAM = re.compile(r"^([A-Za-z_]\w*)(\?)?\s*:\s*(.+)$")
 # --------------------------------------------------------------------------- #
 # mbti parsing
 # --------------------------------------------------------------------------- #
-RE_ITEM_START = re.compile(r"^pub(?:\(open\))?\s")
+RE_ITEM_START = re.compile(r"^" + VIS + r"\s")
 
 
 def split_items(text: str):
@@ -455,6 +458,49 @@ def render_item(it, docs):
 </section>"""
 
 
+# The completeness check reads the interface with a rule of its own rather than
+# with the renderer's, so that a regex which stops recognising a shape of
+# declaration cannot hide the items it silently drops: the two disagree and the
+# build fails instead.
+RE_DECLARED = re.compile(
+    r"^pub(?:\([a-z]+\))?\s+(?:async\s+)?(?:fn|struct|enum|trait|type|const|let)\s+"
+    r"([A-Za-z_]\w*)(?:::([A-Za-z_]\w*))?"
+)
+
+
+def declared_items(text):
+    # Line by line, so this owes nothing to the block splitter either: every
+    # declaration an .mbti writes puts its name on the line that starts it.
+    for line in text.split("\n"):
+        m = RE_DECLARED.match(line.strip())
+        if m:
+            yield (m.group(1) + "::" + m.group(2)) if m.group(2) else m.group(1)
+
+
+def check_complete(pkgs, full):
+    """Every item an interface file declares is on the page.
+
+    A reference a reader trusts to be the whole surface must be exactly that:
+    this fails the build when the page would leave something out.
+    """
+    anchors = set(re.findall(r'id="([^"]+)"', full))
+    missing = []
+    declared = 0
+    for d in pkgs:
+        alias = "moonapi" if d == SRC else os.path.basename(d)
+        with open(os.path.join(d, "pkg.generated.mbti"), encoding="utf-8") as fh:
+            text = fh.read()
+        for name in declared_items(text):
+            declared += 1
+            if f"{alias}-{name.replace('::', '-')}" not in anchors:
+                missing.append(f"{alias}: {name}")
+    if missing:
+        raise SystemExit(
+            f"docs/api.html lists {declared - len(missing)} of {declared} declared items;"
+            " these are missing://n  " + "\n  ".join(missing)
+        )
+
+
 def build():
     # discover packages
     pkgs = []
@@ -548,6 +594,7 @@ def build():
         sidebar=sidebar_html,
         body="\n".join(sections),
     )
+    check_complete(pkgs, full)
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w", encoding="utf-8", newline="\n") as fh:
         fh.write(full)
