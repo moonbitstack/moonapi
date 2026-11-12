@@ -1,0 +1,14 @@
+// One application, eight requests, and the answers written out: the Python side
+// of `scripts/diff_http_semantics.py` builds the same application from the same
+// route table in two mature frameworks and compares the answers line for line.
+import {
+  "moonbitstack/moonapi",
+  "moonbitstack/moonasgi",
+  "moonbitstack/moonjson",
+  "moonbitlang/async",
+  "moonbitlang/core/encoding/utf8",
+}
+
+supported_targets = "native"
+
+pkgtype(kind: "executable")

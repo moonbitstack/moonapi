@@ -1,5 +1,6 @@
 import {
   "moonbitstack/moonapi",
+  "moonbitstack/moonapi/agent",
   "moonbitstack/moonapi-ecosystem/full-example/routes/accounts",
   "moonbitstack/moonapi-ecosystem/full-example/routes/catalog",
   "moonbitstack/moonapi-ecosystem/full-example/services",

@@ -120,3 +120,32 @@ jobs:
       - name: the code in the docs compiles
         if: runner.os == 'Linux'
         run: python3 scripts/check_snippets.py
+
+      # The routing rules this framework follows are the ones two mature
+      # implementations follow: the same routes, the same requests, the same
+      # answers, compared rather than asserted.
+      - name: the answers match two mature implementations
+        if: runner.os == 'Linux'
+        run: |
+          python3 -m venv "$RUNNER_TEMP/peers"
+          "$RUNNER_TEMP/peers/bin/pip" install --quiet fastapi httpx
+          (cd integration && moon run src/differential --target native) > "$RUNNER_TEMP/ours.jsonl"
+          "$RUNNER_TEMP/peers/bin/python" scripts/diff_http_semantics.py "$RUNNER_TEMP/ours.jsonl"
+
+      # And other people's software reads what a served application says: the
+      # HTTP client in Python's standard library, its WebSocket client, and the
+      # reference MCP client, over real sockets.
+      - name: a served application talks to other clients
+        if: runner.os == 'Linux'
+        run: |
+          python3 -m venv "$RUNNER_TEMP/live"
+          "$RUNNER_TEMP/live/bin/pip" install --quiet websockets mcp
+          (cd integration && moon run src/full-example --target native) &
+          server=$!
+          for _ in $(seq 1 300); do
+            if (exec 3<>/dev/tcp/127.0.0.1/12000) 2>/dev/null; then exec 3>&-; break; fi
+            sleep 1
+          done
+          "$RUNNER_TEMP/live/bin/python" scripts/check_live_interop.py
+          kill "$server" 2>/dev/null || true
+          pkill -f full-example 2>/dev/null || true

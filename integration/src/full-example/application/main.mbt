@@ -65,6 +65,9 @@ pub fn build() -> @moonapi.App {
     prefix="/api/v1/catalog",
     tags=["catalog"],
   )
+  // The same description an agent reads: every operation as a tool at `/mcp`
+  // and the skill at `/SKILL.md`, beside the pages a person opens.
+  @agent.expose(app)
   app
 }
 

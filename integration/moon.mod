@@ -19,6 +19,8 @@ import {
   "moonbitstack/mooncat@0.19.5",
   "moonbitstack/moondb@0.2.6",
   "moonbitstack/moonhttp@0.15.8",
+  "moonbitstack/moonjson@0.4.4",
+  "moonbitstack/moonmcp@0.1.12",
   "moonbitstack/moonmodel@0.1.3",
   "moonbitstack/moonorm@0.11.7",
   "moonbitstack/moonsqlite@0.3.5",
