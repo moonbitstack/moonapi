@@ -8,6 +8,7 @@ import {
   "moonbitstack/moonmcp/server",
   "moonbitstack/moonmcp/tools",
   "moonbitstack/moonmcp/types",
+  "moonbitstack/moonjson",
   "moonbitstack/moonurl",
   "moonbitlang/core/encoding/utf8",
 }

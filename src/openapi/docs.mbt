@@ -93,7 +93,7 @@ fn html_escape(s : String) -> String {
 /// `j` as a script literal. JSON is a subset of JavaScript; `<` is escaped too,
 /// so no value can close the `<script>` it sits in.
 fn script_json(j : Json) -> String {
-  j.stringify().replace_all(old="<", new="\\u003c")
+  @moonjson.dumps(j).replace_all(old="<", new="\\u003c")
 }
 
 ///|

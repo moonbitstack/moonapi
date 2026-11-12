@@ -297,7 +297,7 @@ pub fn enum_expected(values : Array[Json]) -> String {
     parts.push(
       match v {
         String(s) => "'" + s + "'"
-        _ => v.stringify()
+        _ => @moonjson.dumps(v)
       },
     )
   }

@@ -6,6 +6,7 @@ import {
   "moonbitstack/moonasgi",
   "moonbitstack/moonurl",
   "moonbitstack/moonschema",
+  "moonbitstack/moonjson",
   "moonbitlang/core/string",
 }
 

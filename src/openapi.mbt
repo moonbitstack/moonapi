@@ -420,7 +420,7 @@ pub fn App::openapi_json(
   self : App,
   version~ : @schema.OpenApiVersion = OpenApi31,
 ) -> String {
-  self.openapi(version~).stringify(indent=2)
+  @moonjson.dumps(self.openapi(version~), indent=2)
 }
 
 ///|

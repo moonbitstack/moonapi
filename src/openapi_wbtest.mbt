@@ -976,3 +976,27 @@ async test "openapi: a mounted sub-application's webhooks join the parent docume
   assert_eq(app.handle(mkreq("POST", "/billing/invoice-paid")).status, 404)
   assert_eq(app.handle(mkreq("POST", "invoice-paid")).status, 404)
 }
+
+///|
+/// What the writer emits, the family's own reader takes back, and the tree it
+/// reads is the tree that was written. The two cannot drift apart: a document
+/// with a number in it stays a number, and no character is left unescaped that
+/// would end the text early.
+test "openapi: every document reads back unchanged" {
+  let app = App::new()
+  app.get("/pets/{id}", _ctx => @status.text(200, "pet"), summary="Fetch a pet")
+  app.post("/pets", _ctx => @status.text(201, ""), status_code=201)
+  let versions : Array[@schema.OpenApiVersion] = [
+    OpenApi31,
+    OpenApi30,
+    Swagger20,
+  ]
+  for version in versions {
+    let written = app.openapi(version~)
+    let text = app.openapi_json(version~)
+    let back = @moonjson.loads(text[:], @moonjson.strict) catch {
+      e => abort("moonapi: the document is not JSON: " + e.message())
+    }
+    assert_eq(@moonjson.dumps(back), @moonjson.dumps(written))
+  }
+}

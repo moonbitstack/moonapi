@@ -1,3 +1,4 @@
 // The OpenAPI document: its info block and how routes become operations.
 import {
+  "moonbitstack/moonjson",
 }

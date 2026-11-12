@@ -174,3 +174,28 @@ async test "ws: deny closes with 1008 without the extension, and after accept" {
     c.wait()
   })
 }
+
+///|
+/// The text a JSON message arrived as survives the round trip: a number is not
+/// a double that was formatted again, so an identifier too long for one and a
+/// trailing zero both come back as they were sent.
+async test "ws: receive_json and send_json keep a number's own text" {
+  let handler : WsHandler = ws => {
+    ws.accept()
+    ws.send_json(ws.receive_json())
+  }
+  @testing.communicate(served(handler), ws_scope(), c => {
+    c.send(WebSocketConnect)
+    ignore(c.receive())
+    c.send(
+      WebSocketReceive(
+        text=Some("{\"id\":12345678901234567890,\"rate\":1.50}"),
+        bytes=None,
+      ),
+    )
+    assert_true(
+      c.receive()
+      is WebSocketSendText("{\"id\":12345678901234567890,\"rate\":1.50}"),
+    )
+  })
+}

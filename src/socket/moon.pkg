@@ -1,8 +1,8 @@
 // WebSocket handling: the connection and its messages.
 import {
   "moonbitstack/moonasgi",
+  "moonbitstack/moonjson",
   "moonbitlang/core/encoding/utf8",
-  "moonbitlang/core/json",
 }
 
 import {

@@ -137,9 +137,14 @@ pub async fn WebSocket::receive_bytes(self : WebSocket) -> Bytes {
 }
 
 ///|
-/// The next message parsed as JSON.
+/// The next message parsed as JSON. A text message that is not JSON ends the
+/// connection rather than the handler: the wire said text, so the fault is the
+/// peer's.
 pub async fn WebSocket::receive_json(self : WebSocket) -> Json {
-  @json.parse(self.receive_text())
+  let text = self.receive_text()
+  @moonjson.loads(text[:], @moonjson.strict) catch {
+    _ => abort("moonapi: a WebSocket text message is not JSON")
+  }
 }
 
 ///|
@@ -166,7 +171,7 @@ pub async fn WebSocket::send_bytes(self : WebSocket, bytes : Bytes) -> Unit {
 ///|
 /// Send `value` serialised as a text message.
 pub async fn WebSocket::send_json(self : WebSocket, value : Json) -> Unit {
-  self.send(WsText(value.stringify()))
+  self.send(WsText(@moonjson.dumps(value)))
 }
 
 ///|

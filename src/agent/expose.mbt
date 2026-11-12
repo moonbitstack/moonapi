@@ -161,7 +161,7 @@ async fn call(
   let body = match args.get("body") {
     Some(given) if op.body is Some(_) => {
       headers.push(("content-type", "application/json"))
-      @utf8.encode(given.stringify())
+      @moonjson.dump(given)
     }
     _ => Bytes::new(0)
   }

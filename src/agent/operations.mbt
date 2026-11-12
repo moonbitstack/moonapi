@@ -314,6 +314,6 @@ fn argument_text(v : Json) -> String {
   match v {
     String(s) => s
     Null => ""
-    _ => v.stringify()
+    _ => @moonjson.dumps(v)
   }
 }
