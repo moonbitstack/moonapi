@@ -280,6 +280,16 @@ fn App::named(self : App, name : String, prefix : String) -> String? {
 }
 
 ///|
+/// The HTTP routes this application answers, in the order it tries them. The
+/// documentation pages are not here — they answer without being described —
+/// and neither are the mounted applications, which are applications of their
+/// own. A router included into this one contributes its routes, because
+/// including is what makes them this app's.
+pub fn App::routes(self : App) -> Array[@route.Route] {
+  self.router.routes.copy()
+}
+
+///|
 /// Fold `router`'s routes into this app (FastAPI's `include_router`, and the
 /// same name — `include` is a reserved word). Each is registered under `prefix`
 /// and becomes one of the app's own routes, with the arguments given here

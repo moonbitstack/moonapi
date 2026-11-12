@@ -2,6 +2,7 @@
 package "moonbitstack/moonapi"
 
 import {
+  "moonbitlang/core/debug",
   "moonbitlang/core/json",
   "moonbitstack/moonapi/ctx",
   "moonbitstack/moonapi/di",
@@ -296,7 +297,9 @@ pub fn App::patch(Self, String, async (@ctx.Context) -> @http.Response, summary?
 pub fn App::post(Self, String, async (@ctx.Context) -> @http.Response, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, response_class? : @status.ResponseClass, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : @json.Json, callbacks? : Array[@route.Route], hoops? : Array[async (@ctx.Context, async (@ctx.Context) -> @route.Reply) -> @route.Reply], regex? : String, glob? : String) -> Unit
 pub fn App::put(Self, String, async (@ctx.Context) -> @http.Response, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, response_class? : @status.ResponseClass, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : @json.Json, callbacks? : Array[@route.Route], hoops? : Array[async (@ctx.Context, async (@ctx.Context) -> @route.Reply) -> @route.Reply], regex? : String, glob? : String) -> Unit
 pub fn App::route(Self, @method.Method, String, async (@ctx.Context) -> @http.Response, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, response_class? : @status.ResponseClass, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : @json.Json, callbacks? : Array[@route.Route], hoops? : Array[async (@ctx.Context, async (@ctx.Context) -> @route.Reply) -> @route.Reply], regex? : String, glob? : String) -> Unit
+pub fn App::route_for(Self, String, String) -> RouteMatch
 pub fn App::route_stream(Self, @method.Method, String, async (@ctx.Context) -> @status.Stream, summary? : String, description? : String, tags? : Array[String], deprecated? : Bool, operation_id? : String, status_code? : Int32, response_class? : @status.ResponseClass, responses? : Array[@endpoint.ResponseSpec], name? : String, endpoint? : @endpoint.Endpoint, security? : Array[@security.SecurityRequirement], dependencies? : Array[String], include_in_schema? : Bool, validate? : Bool, openapi_extra? : @json.Json, callbacks? : Array[@route.Route], hoops? : Array[async (@ctx.Context, async (@ctx.Context) -> @route.Reply) -> @route.Reply], regex? : String, glob? : String) -> Unit
+pub fn App::routes(Self) -> Array[@route.Route]
 pub fn App::secure_api_key(Self, String, @security.ApiKey, description? : String, auto_error? : Bool) -> Unit
 pub fn App::secure_basic(Self, String, @security.BasicAuth, description? : String, auto_error? : Bool) -> Unit
 pub fn App::secure_bearer(Self, String, String, bearer_format? : String, description? : String, auto_error? : Bool) -> Unit
@@ -328,6 +331,14 @@ pub(all) struct Docs {
 }
 
 type Mount
+
+pub(all) enum RouteMatch {
+  Reached(@route.Route, Map[String, String])
+  MethodNotAllowed(Array[String])
+  NotFound
+}
+pub fn RouteMatch::to_repr(Self) -> @debug.Repr
+pub impl @debug.Debug for RouteMatch
 
 // Type aliases
 pub type ApiHandler = async (@ctx.Context) -> @http.Response

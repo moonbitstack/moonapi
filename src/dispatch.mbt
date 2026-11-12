@@ -66,6 +66,64 @@ pub async fn App::handle(
 }
 
 ///|
+/// What a request reaches before anything runs: the route that answers it with
+/// the parameters its template bound, or — when the path belongs to a route but
+/// the method does not — the methods the path does answer, or nothing.
+pub(all) enum RouteMatch {
+  Reached(@route.Route, Map[String, String])
+  MethodNotAllowed(Array[String])
+  NotFound
+}
+
+///|
+pub impl Debug for RouteMatch with fn to_repr(self) {
+  match self {
+    Reached(route, params) =>
+      Debug::to_repr(
+        "reached \{route.verb.name()} \{route.path} with \{params.length()} parameter(s)",
+      )
+    MethodNotAllowed(methods) =>
+      Debug::to_repr("405, allowing " + methods.join(", "))
+    NotFound => Debug::to_repr("404")
+  }
+}
+
+///|
+pub extend RouteMatch with Debug::{to_repr}
+
+///|
+/// The decision `App::handle` makes for a request, without running anything.
+///
+/// A page that lists what an application answers and a test that asserts a
+/// `405` ask this rather than repeating the rule: the first route whose path
+/// and method match reaches, a `GET` route also answers `HEAD`, and the methods
+/// a path owns are what the `405` carries in `Allow`.
+pub fn App::route_for(
+  self : App,
+  http_method : String,
+  path : String,
+) -> RouteMatch {
+  let verb = parse_method(http_method)
+  let allowed : Array[String] = []
+  for route in self.router.routes {
+    guard route.pattern.bind(path) is Some(params) else { continue }
+    // A GET route answers HEAD too, as Starlette's does.
+    if verb is Some(v) && (route.verb == v || (v is Head && route.verb is Get)) {
+      return Reached(route, params)
+    }
+    allowed.push(route.verb.name())
+    if route.verb is Get {
+      allowed.push("HEAD")
+    }
+  }
+  if allowed.length() > 0 {
+    MethodNotAllowed(dedupe(allowed))
+  } else {
+    NotFound
+  }
+}
+
+///|
 /// The method a request names. A name that is not a token matches no route.
 fn parse_method(s : String) -> @route.Method? {
   try @method.Method::of(s) catch {
@@ -234,18 +292,10 @@ async fn App::serve_http(
   mounted : Array[(String, @moonasgi.AsgiApp)],
 ) -> Unit {
   let verb = parse_method(hs.http_method)
-  let allowed : Array[String] = []
-  for route in self.router.routes {
-    guard route.pattern.bind(hs.path) is Some(params) else { continue }
-    // A GET route answers HEAD too, as Starlette's does.
-    if verb is Some(v) && (route.verb == v || (v is Head && route.verb is Get)) {
-      self.answer(route, params, hs, receive, send, head=verb is Some(Head))
-      return
-    }
-    allowed.push(route.verb.name())
-    if route.verb is Get {
-      allowed.push("HEAD")
-    }
+  let decision = self.route_for(hs.http_method, hs.path)
+  if decision is Reached(route, params) {
+    self.answer(route, params, hs, receive, send, head=verb is Some(Head))
+    return
   }
   if mount_for(mounted, hs.path) is Some((app, rest, prefix)) {
     let scope : @moonasgi.HttpScope = {
@@ -257,7 +307,7 @@ async fn App::serve_http(
     app(Http(scope), receive, send)
     return
   }
-  if allowed.is_empty() &&
+  if decision is NotFound &&
     self.redirect_slashes &&
     self.slash_twin(hs.path) is Some(twin) {
     let query = @utf8.decode_lossy(hs.query_string)
@@ -268,14 +318,14 @@ async fn App::serve_http(
     return
   }
   let ctx = @ctx.Context::new(request_of(hs, b""), scope=hs)
-  let resp = if allowed.length() > 0 {
+  let resp = match decision {
     // RFC 9110 §15.5.6 requires the Allow header on a 405; a client that probes
     // a resource reads it rather than guessing.
-    http_exception_response(405, Json("Method Not Allowed"), [
-      ("allow", dedupe(allowed).join(", ")),
-    ])
-  } else {
-    http_exception_response(404, Json("Not Found"), [])
+    MethodNotAllowed(methods) =>
+      http_exception_response(405, Json("Method Not Allowed"), [
+        ("allow", methods.join(", ")),
+      ])
+    _ => http_exception_response(404, Json("Not Found"), [])
   }
   send_response(send, self.apply_status(ctx, resp))
 }

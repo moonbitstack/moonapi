@@ -145,3 +145,119 @@ async test "an included router's regex and glob sit under its prefix" {
   assert_eq(app.handle(mkreq("GET", "/users/5")).status, 404)
   assert_eq(app.handle(mkreq("GET", "/api/files/a.txt")).status, 200)
 }
+
+///|
+test "route_for: a path and method that match report the route and its parameters" {
+  let app = App::new(docs=None)
+  app.get("/users/{id}", _ctx => @status.text(200, "user"), name="get_user")
+  app.post("/users", _ctx => @status.text(201, "made"), status_code=201)
+  match app.route_for("GET", "/users/42") {
+    Reached(route, params) => {
+      assert_eq(route.path, "/users/{id}")
+      assert_eq(route.verb.name(), "GET")
+      assert_eq(params.get("id"), Some("42"))
+    }
+    other =>
+      fail(
+        "expected the route to be reached, got " +
+        Debug::to_repr(other).to_string(),
+      )
+  }
+  // A method name is case-sensitive (RFC 9110 §9.1), so `get` is a method of
+  // its own that this path does not answer.
+  match app.route_for("get", "/users/42") {
+    MethodNotAllowed(methods) => assert_eq(methods, ["GET", "HEAD"])
+    other =>
+      fail(
+        "a lower-case verb is another method, got " +
+        Debug::to_repr(other).to_string(),
+      )
+  }
+}
+
+///|
+test "route_for: a GET route answers HEAD, and a path without the method lists what it has" {
+  let app = App::new(docs=None)
+  app.get("/items", _ctx => @status.text(200, ""))
+  app.post("/items", _ctx => @status.text(201, ""), status_code=201)
+  app.delete("/items", _ctx => @status.text(204, ""))
+  assert_true(app.route_for("HEAD", "/items") is Reached(_, _))
+  match app.route_for("PUT", "/items") {
+    MethodNotAllowed(methods) =>
+      assert_eq(methods, ["GET", "HEAD", "POST", "DELETE"])
+    other =>
+      fail(
+        "expected 405 with the methods, got " +
+        Debug::to_repr(other).to_string(),
+      )
+  }
+}
+
+///|
+test "route_for: a path no route owns is not found" {
+  let app = App::new(docs=None)
+  app.get("/items", _ctx => @status.text(200, ""))
+  assert_true(app.route_for("GET", "/missing") is NotFound)
+  // A method this parser does not know is still a method the path does not
+  // answer, which is a 405; only a path no route owns is a 404.
+  assert_true(app.route_for("PURGE", "/items") is MethodNotAllowed(_))
+  assert_true(app.route_for("NOT A METHOD", "/items") is MethodNotAllowed(_))
+}
+
+///|
+test "routes: the list is the registration order, with the included and without the pages" {
+  let router = @route.Router::new()
+  router.get("/health", _ctx => @status.text(200, "ok"))
+  let app = App::new()
+  app.get("/", _ctx => @status.text(200, "root"))
+  app.post("/pets", _ctx => @status.text(201, ""), status_code=201)
+  app.include_router(router, prefix="/api")
+  let listed = app.routes()
+  assert_eq(listed.map(r => r.verb.name() + " " + r.path), [
+    "GET /", "POST /pets", "GET /api/health",
+  ])
+  // The documentation pages answer without being routes, so they are not here.
+  assert_eq(listed.any(r => r.path.contains("docs")), false)
+}
+
+///|
+async test "route_for agrees with what handle answers" {
+  let app = App::new(docs=None)
+  app.get("/", _ctx => @status.text(200, "root"))
+  app.get("/items/{id:int}", _ctx => @status.text(200, "item"))
+  app.post("/items", _ctx => @status.text(201, "made"), status_code=201)
+  let cases : Array[(String, String, Int32)] = [
+    ("GET", "/", 200),
+    ("GET", "/items/7", 200),
+    ("HEAD", "/items/7", 200),
+    ("POST", "/items", 201),
+    ("GET", "/items", 405),
+    ("DELETE", "/items/7", 405),
+    ("GET", "/nope", 404),
+    ("BREW", "/", 405),
+  ]
+  for entry in cases {
+    let (http_method, path, expected) = entry
+    let resp = app.handle({
+      http_method,
+      path,
+      query_string: b"",
+      headers: [],
+      body: b"",
+    })
+    assert_eq(resp.status, expected)
+    let decision = app.route_for(http_method, path)
+    if expected == 405 {
+      guard decision is MethodNotAllowed(methods) else {
+        fail(
+          http_method + " " + path + " answers 405 without saying which methods",
+        )
+      }
+      assert_eq(Some(methods.join(", ")), header_of(resp.headers, "allow"))
+    } else if expected == 404 {
+      assert_true(decision is NotFound)
+    } else {
+      assert_true(decision is Reached(_, _))
+    }
+  }
+}
