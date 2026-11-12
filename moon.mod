@@ -61,11 +61,11 @@ description = "A typed web framework for MoonBit."
 import {
   "moonbitlang/async@0.22.5",
   "moonbitlang/parser@0.4.8",
-  "moonbitstack/moonasgi@0.11.0",
+  "moonbitstack/moonasgi@0.11.1",
   "moonbitstack/moonast@0.2.8",
   "moonbitstack/moonbase@0.4.5",
   "moonbitstack/mooncred@0.6.14",
-  "moonbitstack/mooncrypt@0.4.16",
+  "moonbitstack/mooncrypt@0.4.15",
   "moonbitstack/moondate@0.1.7",
   "moonbitstack/moonhttp@0.15.10",
   "moonbitstack/moonjson@0.4.4",
