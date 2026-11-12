@@ -1,0 +1,16 @@
+// The site's request playground: a real application, compiled to JavaScript, so
+// the page runs this library's router rather than a second copy of it written
+// in JavaScript.
+import {
+  "moonbitstack/moonapi",
+  "moonbitstack/moonasgi",
+  "moonbitstack/moonjson",
+  "moonbitlang/async/js_async",
+  "moonbitlang/core/encoding/utf8",
+}
+
+supported_targets = "+js"
+
+options(
+  link: { "js": { "exports": [ "dispatch", "routes" ], "format": "esm" } },
+)

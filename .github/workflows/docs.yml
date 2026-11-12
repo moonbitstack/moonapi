@@ -44,6 +44,14 @@ jobs:
           python3 scripts/gen_examples.py
           git diff --exit-code -- docs/api.html docs/examples.html docs/index.html
 
+      # The showcase page sends its requests to this library compiled to
+      # JavaScript, so the routing it shows is the routing a server runs.
+      - name: build the playground engine
+        run: |
+          moon build --target js --release src/examples/browser
+          mkdir -p docs/engine
+          cp _build/js/release/build/examples/browser/browser.js docs/engine/moonapi.js
+
       - name: configure pages
         uses: actions/configure-pages@v6
         with:

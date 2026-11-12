@@ -260,88 +260,73 @@ flowchart TB
   document.getElementById("runBtn").addEventListener("click", run);
   document.getElementById("resetBtn").addEventListener("click", reset);
 
-  // ---- request simulator (real 404/405 rules) ----
-  var routes = [
-    { m: "GET",    p: "/" },
-    { m: "POST",   p: "/users" },
-    { m: "GET",    p: "/users/{id}" },
-    { m: "GET",    p: "/search" },
-    { m: "GET",    p: "/items/{id}" },
-    { m: "POST",   p: "/items" },
-    { m: "PUT",    p: "/items/{id}" },
-    { m: "PATCH",  p: "/items/{id}" },
-    { m: "DELETE", p: "/items/{id}" },
-    { m: "HEAD",   p: "/items" },
-    { m: "OPTIONS",p: "/items" }
-  ];
-  function segs(s) { return s.split("/").filter(function (x) { return x.length; }); }
-  function matchPath(pat, path) {
-    var a = segs(pat), b = segs(path);
-    if (a.length !== b.length) return null;
-    var params = {};
-    for (var i = 0; i < a.length; i++) {
-      if (a[i][0] === "{") params[a[i].slice(1, -1)] = b[i];
-      else if (a[i] !== b[i]) return null;
-    }
-    return params;
-  }
-  function dispatch(method, rawPath) {
-    var path = rawPath.split("?")[0];
-    if (path.length > 1 && path[path.length - 1] === "/") path = path.slice(0, -1);
-    var exact = null, pathMatched = false;
-    for (var i = 0; i < routes.length; i++) {
-      var p = matchPath(routes[i].p, path);
-      if (p) {
-        if (routes[i].m === method) { exact = { route: routes[i], params: p }; break; }
-        pathMatched = true;
-      }
-    }
-    if (exact) {
-      var body = "hello";
-      if (exact.route.p === "/users/{id}") body = "user " + exact.params.id;
-      else if (exact.route.p === "/search") body = "{\"q\":\"cat\",\"limit\":\"5\"}";
-      else if (exact.route.p === "/items/{id}") body = "item " + exact.params.id;
-      else if (exact.route.p === "/") body = "Hello from moonapi";
-      else if (exact.route.p === "/users") body = "created";
-      else if (exact.route.p === "/items") body = "created";
-      return { status: exact.route.m === "POST" ? 201 : 200, body: body, route: exact.route, params: exact.params };
-    }
-    if (pathMatched) {
-      var allow = routes.filter(function (r) { return matchPath(r.p, path); })
-                       .map(function (r) { return r.m; });
-      return { status: 405, body: "{\"detail\":\"Method Not Allowed\"}", allow: allow, route: null };
-    }
-    return { status: 404, body: "{\"detail\":\"Not Found\"}", route: null };
-  }
+  // ---- the request simulator: this library's router, compiled to JavaScript ----
+  // The page holds no copy of the routing rules: it asks an application built
+  // from moonapi itself, so a 405 here is the same 405 a server answers.
   var matchOut = document.getElementById("matchOut");
   var respOut = document.getElementById("respOut");
-  function send() {
-    var m = document.getElementById("methodSel").value;
-    var p = document.getElementById("pathInput").value.trim() || "/";
-    var r = dispatch(m, p);
-    if (r.route) {
-      var ps = Object.keys(r.params).length
-        ? "  ·  params: " + Object.keys(r.params).map(function (k) { return k + "=" + r.params[k]; }).join(", ")
-        : "";
-      matchOut.textContent = m + " " + r.route.p + ps;
-    } else if (r.status === 405) {
-      matchOut.textContent = "no " + m + " route for this path (allow: " + r.allow.join(", ") + ")";
+  var methodSel = document.getElementById("methodSel");
+  var pathInput = document.getElementById("pathInput");
+  var sendBtn = document.getElementById("sendBtn");
+  var engine = null;
+  var REASON = {
+    200: "OK", 201: "Created", 204: "No Content", 307: "Temporary Redirect",
+    404: "Not Found", 405: "Method Not Allowed", 422: "Unprocessable Content"
+  };
+  function line(status) {
+    return status + " " + (REASON[status] || "");
+  }
+  async function send() {
+    var m = methodSel.value;
+    var p = (pathInput.value || "").trim() || "/";
+    if (!engine) {
+      matchOut.textContent = "loading the application …";
+      return;
+    }
+    var answer;
+    try {
+      answer = JSON.parse(await engine.dispatch(m, p));
+    } catch (e) {
+      matchOut.textContent = "the application did not answer";
+      respOut.textContent = String(e);
+      return;
+    }
+    var route = answer.route || {};
+    if (route.path) {
+      var keys = Object.keys(route.params || {});
+      matchOut.textContent = m + " " + route.path + (keys.length
+        ? "  ·  params: " + keys.map(function (k) { return k + "=" + route.params[k]; }).join(", ")
+        : "");
+    } else if (route.allow) {
+      matchOut.textContent = "no " + m + " route for this path  ·  allow: " + route.allow;
     } else {
       matchOut.textContent = "no route owns this path";
     }
-    var head = (r.status === 405 ? "405 Method Not Allowed" : (r.status === 404 ? "404 Not Found" : r.status + " OK"));
-    var allowLine = r.allow ? "\nAllow: " + r.allow.join(", ") : "";
-    respOut.textContent = m + " " + p + " -> " + head + allowLine + "\n" + r.body;
+    var headers = answer.headers || {};
+    var head = m + " " + p + " -> " + line(answer.status);
+    if (headers.location) head += "\nlocation: " + headers.location;
+    if (headers.allow) head += "\nallow: " + headers.allow;
+    respOut.textContent = head + "\n" + (answer.body || "(no body)");
   }
-  document.getElementById("sendBtn").addEventListener("click", send);
+  sendBtn.disabled = true;
+  sendBtn.addEventListener("click", send);
   Array.prototype.slice.call(document.querySelectorAll("#examples .chip")).forEach(function (c) {
     c.addEventListener("click", function () {
-      document.getElementById("methodSel").value = c.getAttribute("data-m");
-      document.getElementById("pathInput").value = c.getAttribute("data-p");
+      methodSel.value = c.getAttribute("data-m");
+      pathInput.value = c.getAttribute("data-p");
       send();
     });
   });
-  send();
+  matchOut.textContent = "loading the application …";
+  respOut.textContent = "the engine is loading";
+  import("./engine/moonapi.js").then(function (mod) {
+    engine = mod;
+    sendBtn.disabled = false;
+    return send();
+  }).catch(function () {
+    matchOut.textContent = "the application is built when the site is";
+    respOut.textContent = "This page sends its requests to moonapi compiled to JavaScript. That build is part of the deployed site, so open it there.";
+  });
 })();
 </script>
 </body>
