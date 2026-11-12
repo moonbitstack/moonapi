@@ -218,3 +218,17 @@ test "ToSchema trait bridges to the associated schema function" {
   // Generic entry point returns the same descriptor as the associated fn.
   assert_eq(schema_of(u) == User::schema(), true)
 }
+
+///|
+/// The Pydantic-style list a failed `enum` check carries: members quoted, a
+/// comma between them, and an `or` before the last. A value that is not a
+/// string is the JSON it was given as.
+test "enum_expected: the members a value had to be one of" {
+  assert_eq(enum_expected([Json("red")]), "'red'")
+  assert_eq(enum_expected([Json("red"), Json("green")]), "'red' or 'green'")
+  assert_eq(
+    enum_expected([Json("red"), Json("green"), Json("blue")]),
+    "'red', 'green' or 'blue'",
+  )
+  assert_eq(enum_expected([Json(1), Json::null()]), "1 or null")
+}

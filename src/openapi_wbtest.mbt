@@ -1000,3 +1000,15 @@ test "openapi: every document reads back unchanged" {
     assert_eq(@moonjson.dumps(back), @moonjson.dumps(written))
   }
 }
+
+///|
+/// The document a client fetches is the one a person reads too: one member per
+/// line, two spaces in, so `/openapi.json` is legible in a browser tab.
+test "openapi: the served document is indented" {
+  let app = App::new()
+  app.get("/pets", _ctx => @status.text(200, "pets"))
+  let text = app.openapi_json()
+  assert_true(text.starts_with("{\n  \"openapi\": \"3.1.0\""))
+  assert_true(text.contains("\n  \"paths\": {"))
+  assert_true(text.has_suffix("\n}"))
+}
