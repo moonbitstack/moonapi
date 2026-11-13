@@ -46,7 +46,7 @@ fn Matcher::bind(self : Matcher, path : StringView) -> Map[String, String]? {
   guard path.has_prefix(self.prefix) else { return None }
   let rest = path.exact_view(start=self.prefix.length()).to_owned()
   let found = self.compiled.full(rest) catch { _ => return None }
-  found.map(m => m.groupdict(default=Some("")))
+  found.map(m => m.groupdict(default=""))
 }
 
 ///|
