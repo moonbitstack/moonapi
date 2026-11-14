@@ -76,36 +76,15 @@ pub fn expose(app : @moonapi.App, exposure~ : Exposure = exposure) -> Unit {
 fn lazy_service(app : @moonapi.App, settings : Exposure) -> @moonasgi.AsgiApp {
   let built : Ref[@moonasgi.AsgiApp?] = Ref(None)
   (scope, receive, send) => {
-    match scope {
-      Http(hs) if hs.http_method != "POST" => {
-        // This endpoint answers requests and offers no server-to-client stream,
-        // which the specification says to state with a 405 rather than to leave
-        // a client waiting for headers that will not come: a client that opens
-        // the stream reads the 405 and carries on without it.
-        send(
-          HttpResponseStart(
-            status=405,
-            headers=[
-              ("allow", "POST"),
-              ("content-type", "text/plain; charset=utf-8"),
-            ],
-            trailers=false,
-          ),
-        )
-        send(HttpResponseBody(body=b"Method Not Allowed", more_body=false))
-      }
-      _ => {
-        let service = match built.val {
-          Some(service) => service
-          None => {
-            let service = service_of(app, settings)
-            built.val = Some(service)
-            service
-          }
-        }
-        service(scope, receive, send)
+    let service = match built.val {
+      Some(service) => service
+      None => {
+        let service = service_of(app, settings)
+        built.val = Some(service)
+        service
       }
     }
+    service(scope, receive, send)
   }
 }
 

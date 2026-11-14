@@ -19,6 +19,7 @@ import json
 import os
 import socket
 import sys
+import time
 
 # A client talking to the loopback address is not talking to the internet, so
 # the run says so rather than inheriting a proxy from whoever started it: a
@@ -152,12 +153,33 @@ def main():
         reply = ws.recv(timeout=10)
     check("a WebSocket a client can hold", reply == "echo: hello", repr(reply))
 
+    head_at, status, kind = mcp_listen()
+    check("the MCP listening stream answers its head at once",
+          status == 200 and kind.startswith("text/event-stream") and head_at < 1.0,
+          f"{status} {kind} after {head_at:.2f}s")
+
     mcp_tools, mcp_answer = mcp_round_trip()
     check("the MCP service, through the reference client",
           "get_health" in mcp_tools and mcp_answer == "ok",
           f"{len(mcp_tools)} tools, get_health -> {mcp_answer!r}")
 
     print(f"\n{len(PASSED)} checks passed against {BASE}")
+
+
+def mcp_listen():
+    """Open the stream a 2025-06-18 client listens on, and time its head: no event is due on
+    it, so a server that held the head until the first one would leave the client waiting."""
+    conn = http.client.HTTPConnection(HOST, PORT, timeout=10)
+    try:
+        begin = time.monotonic()
+        conn.request("GET", "/mcp", headers={
+            "accept": "text/event-stream",
+            "mcp-protocol-version": "2025-06-18",
+        })
+        response = conn.getresponse()
+        return time.monotonic() - begin, response.status, response.getheader("content-type", "")
+    finally:
+        conn.close()
 
 
 def mcp_round_trip():

@@ -1,6 +1,6 @@
 name = "moonbitstack/moonapi"
 
-version = "0.18.1"
+version = "0.18.2"
 
 readme = "README.md"
 
@@ -69,13 +69,13 @@ import {
   "moonbitstack/moondate@0.1.7",
   "moonbitstack/moonhttp@0.16.0",
   "moonbitstack/moonjson@0.5.0",
-  "moonbitstack/moonknob@0.1.0",
+  "moonbitstack/moonknob@0.2.0",
   "moonbitstack/moonmime@0.3.0",
-  "moonbitstack/moonmodel@0.1.4",
-  "moonbitstack/moonpug@0.1.5",
+  "moonbitstack/moonmodel@0.2.0",
+  "moonbitstack/moonpug@0.2.0",
   "moonbitstack/moonregex@0.2.0",
-  "moonbitstack/moonschema@0.2.5",
-  "moonbitstack/moonurl@0.2.6",
-  "moonbitstack/moonzip@0.3.8",
-  "moonbitstack/moonmcp@0.1.12",
+  "moonbitstack/moonschema@0.3.0",
+  "moonbitstack/moonurl@0.3.0",
+  "moonbitstack/moonzip@0.4.0",
+  "moonbitstack/moonmcp@0.2.0",
 }
