@@ -163,7 +163,7 @@ async fn call(
       headers.push(("content-type", "application/json"))
       @moonjson.dump(given)
     }
-    _ => Bytes::new(0)
+    _ => b""
   }
   let resp = app.handle({
     http_method: op.verb,

@@ -10,7 +10,7 @@ pub(all) suberror HttpException {
   HttpException(
     status~ : Int32,
     detail~ : Json,
-    headers~ : Array[(String, String)]
+    headers~ : Array[(String, String)],
   )
 }
 

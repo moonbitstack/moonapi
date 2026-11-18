@@ -1,5 +1,4 @@
 import {
-  "moonbitlang/core/json",
   "moonbitstack/moonapi",
   "moonbitstack/moonapi-ecosystem/full-example/services",
 }

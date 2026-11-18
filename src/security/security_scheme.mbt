@@ -20,7 +20,7 @@ pub(all) enum SecurityScheme {
     authorization_url~ : String,
     token_url~ : String,
     refresh_url~ : String,
-    scopes~ : Array[(String, String)]
+    scopes~ : Array[(String, String)],
   )
   HttpBearer(bearer_format~ : String)
   ApiKeyHeader(name~ : String)

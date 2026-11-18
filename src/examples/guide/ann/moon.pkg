@@ -4,7 +4,6 @@ import {
   "moonbitstack/moonapi/schema",
   "moonbitstack/moonapi/exceptions",
   "moonbitstack/moonasgi",
-  "moonbitlang/core/json",
 }
 
 formatter(ignore: [ "routes.g.mbt" ])

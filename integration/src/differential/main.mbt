@@ -6,17 +6,15 @@ fn subject() -> @moonapi.App {
   let app = @moonapi.App::new(docs=None)
   app.get("/", _ctx => @moonapi.text(200, "root"))
   app.post("/users", _ctx => @moonapi.text(201, "created"), status_code=201)
-  app.get(
-    "/users/{id:int}",
-    ctx => @moonapi.text(200, "user " + ctx.param("id").unwrap_or("")),
-  )
-  app.get(
-    "/search",
-    ctx => @moonapi.json(200, {
+  app.get("/users/{id:int}", ctx => {
+    @moonapi.text(200, "user " + ctx.param("id").unwrap_or(""))
+  })
+  app.get("/search", ctx => {
+    @moonapi.json(200, {
       "q": Json(ctx.query("q").unwrap_or("")),
       "limit": Json(ctx.query("limit").unwrap_or("")),
-    }),
-  )
+    })
+  })
   app.get("/items/{id}", ctx => {
     @moonapi.text(200, "item " + ctx.param("id").unwrap_or(""))
   })
@@ -72,13 +70,7 @@ async fn main {
       body: b"",
     })
     let allow : Json = match reply.header("allow") {
-      Some(a) =>
-        Json::array(
-          a
-          .split(", ")
-          .map(s => Json(s))
-          .collect(),
-        )
+      Some(a) => Json::array(a.split(", ").map(s => Json(s)).collect())
       None => Json::null()
     }
     println(

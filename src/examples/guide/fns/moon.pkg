@@ -3,5 +3,4 @@ import {
   "moonbitstack/moonapi",
   "moonbitstack/moonapi/schema",
   "moonbitstack/moonapi/exceptions",
-  "moonbitlang/core/json",
 }
