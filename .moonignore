@@ -7,3 +7,6 @@ _build/
 target/
 # An example with an ORM and a vendored SQLite in its dependencies. It is not part of the library.
 integration/
+
+# Examples are read in the repository and run in CI; they do not ship.
+src/examples/
